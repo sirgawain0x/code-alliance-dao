@@ -4,7 +4,7 @@ import { useDaoTokenBalances } from "@/hooks/useDaoTokenBalances";
 
 export function TokenBalancesTest() {
   const { tokens, isLoading, error } = useDaoTokenBalances({
-    chainid: "1",
+    chainid: "8453", // Base mainnet
     safeAddress: "0x1234567890123456789012345678901234567890"
   });
 

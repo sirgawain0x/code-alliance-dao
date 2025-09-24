@@ -53,7 +53,7 @@ export const useDaos = ({
       const hydratedDaos = daores.daos.map((dao) => {
         return {
           ...dao,
-          profile: addParsedContent<DaoProfile>(dao.rawProfile[0]),
+          profile: undefined, // No profile data available in Base chain
         };
       });
 

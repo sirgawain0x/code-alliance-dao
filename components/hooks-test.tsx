@@ -7,7 +7,7 @@ export function HooksTest() {
   
   // Test the useDaos hook
   const { daos, isLoading, error } = useDaos({
-    chainid: "1", // Ethereum mainnet
+    chainid: "8453", // Base mainnet
     queryOptions: {
       first: 5,
       orderBy: "createdAt",

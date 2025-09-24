@@ -42,7 +42,7 @@ export const useDao = ({
       })) as {
         dao: DaoItem;
       };
-      const profile = addParsedContent<DaoProfile>(daores.dao.rawProfile[0]);
+      const profile = undefined; // No profile data available in Base chain
 
       return {
         dao: { ...daores.dao, profile },

@@ -9,20 +9,9 @@ export const LIST_ALL_DAOS = `
     ) {
       id
       createdAt
-      updatedAt
       name
-      description
-      rawProfile
       safeAddress
-      treasuryAddress
-      tokenAddress
-      tokenSymbol
-      tokenName
-      tokenDecimals
-      totalSupply
       activeMemberCount
-      totalProposalCount
-      activeProposalCount
       totalShares
       totalLoot
       gracePeriod
@@ -31,10 +20,6 @@ export const LIST_ALL_DAOS = `
       quorumPercent
       sponsorThreshold
       minRetentionPercent
-      newMemberOffering
-      votingTransferable
-      nvTransferable
-      chainId
     }
   }
 `;
@@ -44,32 +29,33 @@ export const FIND_DAO = `
     dao(id: $daoid) {
       id
       createdAt
-      updatedAt
-      name
-      description
-      rawProfile
+      createdBy
+      txHash
       safeAddress
-      treasuryAddress
-      tokenAddress
-      tokenSymbol
-      tokenName
-      tokenDecimals
-      totalSupply
-      activeMemberCount
-      totalProposalCount
-      activeProposalCount
-      totalShares
-      totalLoot
+      lootPaused
+      sharesPaused
       gracePeriod
       votingPeriod
       proposalOffering
       quorumPercent
       sponsorThreshold
       minRetentionPercent
-      newMemberOffering
-      votingTransferable
-      nvTransferable
-      chainId
+      shareTokenName
+      shareTokenSymbol
+      sharesAddress
+      lootTokenName
+      lootTokenSymbol
+      lootAddress
+      totalShares
+      totalLoot
+      latestSponsoredProposalId
+      proposalCount
+      activeMemberCount
+      existingSafe
+      delegatedVaultManager
+      forwarder
+      referrer
+      name
     }
   }
 `;
@@ -85,20 +71,9 @@ export const SEARCH_DAOS = `
     ) {
       id
       createdAt
-      updatedAt
       name
-      description
-      rawProfile
       safeAddress
-      treasuryAddress
-      tokenAddress
-      tokenSymbol
-      tokenName
-      tokenDecimals
-      totalSupply
       activeMemberCount
-      totalProposalCount
-      activeProposalCount
       totalShares
       totalLoot
       gracePeriod
@@ -107,10 +82,6 @@ export const SEARCH_DAOS = `
       quorumPercent
       sponsorThreshold
       minRetentionPercent
-      newMemberOffering
-      votingTransferable
-      nvTransferable
-      chainId
     }
   }
 `;
@@ -126,24 +97,14 @@ export const LIST_ALL_DAOS_FOR_ADDRESS = `
     ) {
       id
       createdAt
-      updatedAt
       memberAddress
       shares
       loot
-      isActive
       dao {
         id
         name
         safeAddress
-        treasuryAddress
-        tokenAddress
-        tokenSymbol
-        tokenName
-        tokenDecimals
-        totalSupply
         activeMemberCount
-        totalProposalCount
-        activeProposalCount
         totalShares
         totalLoot
         gracePeriod
@@ -152,10 +113,6 @@ export const LIST_ALL_DAOS_FOR_ADDRESS = `
         quorumPercent
         sponsorThreshold
         minRetentionPercent
-        newMemberOffering
-        votingTransferable
-        nvTransferable
-        chainId
       }
     }
   }
@@ -191,24 +148,14 @@ export const FIND_MEMBER = `
     member(id: $memberid) {
       id
       createdAt
-      updatedAt
       memberAddress
       shares
       loot
-      isActive
       dao {
         id
         name
         safeAddress
-        treasuryAddress
-        tokenAddress
-        tokenSymbol
-        tokenName
-        tokenDecimals
-        totalSupply
         activeMemberCount
-        totalProposalCount
-        activeProposalCount
         totalShares
         totalLoot
         gracePeriod
@@ -217,10 +164,6 @@ export const FIND_MEMBER = `
         quorumPercent
         sponsorThreshold
         minRetentionPercent
-        newMemberOffering
-        votingTransferable
-        nvTransferable
-        chainId
       }
     }
   }
@@ -285,7 +228,6 @@ export const FIND_PROPOSAL = `
     proposal(id: $proposalid) {
       id
       createdAt
-      updatedAt
       title
       description
       contentURI
@@ -312,15 +254,7 @@ export const FIND_PROPOSAL = `
         id
         name
         safeAddress
-        treasuryAddress
-        tokenAddress
-        tokenSymbol
-        tokenName
-        tokenDecimals
-        totalSupply
         activeMemberCount
-        totalProposalCount
-        activeProposalCount
         totalShares
         totalLoot
         gracePeriod
@@ -329,10 +263,6 @@ export const FIND_PROPOSAL = `
         quorumPercent
         sponsorThreshold
         minRetentionPercent
-        newMemberOffering
-        votingTransferable
-        nvTransferable
-        chainId
       }
       proposer
       votes {
@@ -452,20 +382,11 @@ export const FIND_YEETER = `
     yeeter(id: $yeeterid) {
       id
       createdAt
-      updatedAt
       dao {
         id
         name
         safeAddress
-        treasuryAddress
-        tokenAddress
-        tokenSymbol
-        tokenName
-        tokenDecimals
-        totalSupply
         activeMemberCount
-        totalProposalCount
-        activeProposalCount
         totalShares
         totalLoot
         gracePeriod
@@ -474,10 +395,6 @@ export const FIND_YEETER = `
         quorumPercent
         sponsorThreshold
         minRetentionPercent
-        newMemberOffering
-        votingTransferable
-        nvTransferable
-        chainId
       }
       startTime
       endTime
@@ -498,7 +415,6 @@ export const FIND_YEETER_PROFILE = `
   query FindYeeterProfile($yeeterid: String!) {
     yeeter(id: $yeeterid) {
       id
-      rawProfile
     }
   }
 `;

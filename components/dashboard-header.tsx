@@ -1,15 +1,21 @@
-import { Button } from "@/components/ui/button"
+"use client"
+
 import { Badge } from "@/components/ui/badge"
+import { useDaos } from "@/hooks/useDaos"
 
 export function DashboardHeader() {
+  const { dao } = useDaos({
+    chainid: "8453",
+  });
+
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
       <div className="flex items-center justify-between px-6 py-4 md:px-6 pl-20 md:pl-6">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">All chains</span>
+            <span className="text-sm text-muted-foreground">DAO</span>
             <Badge variant="secondary" className="text-xs">
-              15
+              {dao?.name || "Loading..."}
             </Badge>
           </div>
           <div className="flex space-x-2">
@@ -24,7 +30,9 @@ export function DashboardHeader() {
             </Badge>
           </div>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">Log in</Button>
+        <div className="hidden md:block">
+          <appkit-button />
+        </div>
       </div>
     </header>
   )

@@ -2,7 +2,7 @@ import { GraphQLClient } from "graphql-request";
 import { useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { LIST_ALL_DAOS } from "../utils/queries";
+import { LIST_SINGLE_DAO } from "../utils/queries";
 import {
   DaoItem,
   DaoProfile,
@@ -41,11 +41,8 @@ export const useDaos = ({
     queryFn: async (): Promise<{
       daos: DaoItem[];
     }> => {
-      const daores = (await graphQLClient.request(LIST_ALL_DAOS, {
-        first: queryOptions?.first || 100,
-        skip: queryOptions?.skip || 0,
-        orderBy: queryOptions?.orderBy || "createdAt",
-        orderDirection: queryOptions?.orderDirection || "desc",
+      const daores = (await graphQLClient.request(LIST_SINGLE_DAO, {
+        daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS || "",
       })) as {
         daos: DaoItem[];
       };
@@ -53,7 +50,7 @@ export const useDaos = ({
       const hydratedDaos = daores.daos.map((dao) => {
         return {
           ...dao,
-          profile: undefined, // No profile data available in Base chain
+          profile: undefined, // Profile data not available in Base chain subgraph
         };
       });
 
@@ -65,6 +62,7 @@ export const useDaos = ({
 
   return {
     daos: data?.daos,
+    dao: data?.daos?.[0],
     ...rest,
   };
 };

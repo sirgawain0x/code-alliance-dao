@@ -1,41 +1,10 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, TrendingDown, DollarSign, PieChart, Shield } from "lucide-react"
-
-const treasuryStats = [
-  {
-    label: "Total Assets",
-    value: "$2,400,000",
-    change: "+8.5%",
-    changeType: "positive",
-    icon: DollarSign,
-    color: "text-green-400",
-  },
-  {
-    label: "Monthly Inflow",
-    value: "$180,000",
-    change: "+12.3%",
-    changeType: "positive",
-    icon: TrendingUp,
-    color: "text-blue-400",
-  },
-  {
-    label: "Monthly Outflow",
-    value: "$145,000",
-    change: "-5.2%",
-    changeType: "negative",
-    icon: TrendingDown,
-    color: "text-purple-400",
-  },
-  {
-    label: "Diversification Score",
-    value: "85%",
-    change: "Excellent",
-    changeType: "neutral",
-    icon: PieChart,
-    color: "text-orange-400",
-  },
-]
+import { useDaos } from "@/hooks/useDaos"
+import { formatEther } from "viem"
 
 const riskMetrics = [
   { label: "Liquidity Risk", level: 15, status: "low" },
@@ -53,6 +22,50 @@ const fundAllocation = [
 ]
 
 export function TreasuryOverviewDashboard() {
+  const { dao, isLoading } = useDaos({
+    chainid: "8453",
+  });
+
+  if (isLoading || !dao) {
+    return <div className="animate-pulse h-96 bg-muted rounded-lg"></div>
+  }
+
+  const treasuryStats = [
+    {
+      label: "Total Shares",
+      value: Math.round(Number(formatEther(BigInt(dao.totalShares || "0")))).toLocaleString(),
+      subValue: dao.shareTokenSymbol,
+      change: "+8.5%",
+      changeType: "positive",
+      icon: DollarSign,
+      color: "text-green-400",
+    },
+    {
+      label: "Total Loot",
+      value: Math.round(Number(formatEther(BigInt(dao.totalLoot || "0")))).toLocaleString(),
+      subValue: dao.lootTokenSymbol,
+      change: "+12.3%",
+      changeType: "positive",
+      icon: TrendingUp,
+      color: "text-blue-400",
+    },
+    {
+      label: "Monthly Outflow",
+      value: "$145,000",
+      change: "-5.2%",
+      changeType: "negative",
+      icon: TrendingDown,
+      color: "text-purple-400",
+    },
+    {
+      label: "Diversification Score",
+      value: "85%",
+      change: "Excellent",
+      changeType: "neutral",
+      icon: PieChart,
+      color: "text-orange-400",
+    },
+  ]
   const getRiskColor = (status: string) => {
     switch (status) {
       case "low":
@@ -77,13 +90,12 @@ export function TreasuryOverviewDashboard() {
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                 <p
-                  className={`text-xs ${
-                    stat.changeType === "positive"
+                  className={`text-xs ${stat.changeType === "positive"
                       ? "text-green-400"
                       : stat.changeType === "negative"
                         ? "text-red-400"
                         : "text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   {stat.change}
                 </p>

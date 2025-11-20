@@ -1,86 +1,112 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Clock, User, MessageSquare, Vote } from "lucide-react"
+import { Clock, User, Vote } from "lucide-react"
+import { useDaoProposals } from "@/hooks/useDaoProposals"
+import { useDaos } from "@/hooks/useDaos"
+import Link from "next/link"
+import { useMemo } from "react"
 
-const activeProposals = [
-  {
-    id: "PROP-007",
-    title: "Establish AI Research SubDAO",
-    description:
-      "Create a specialized SubDAO focused on artificial intelligence research and development projects with initial funding of $500K.",
-    author: "alice.eth",
-    category: "SubDAO Creation",
-    status: "active",
-    timeLeft: "3 days, 14 hours",
-    votingPower: {
-      for: 1247,
-      against: 234,
-      abstain: 89,
-      total: 1570,
-      quorum: 2000,
-    },
-    comments: 45,
-    votingType: "Token Voting",
-    yourVote: null,
-  },
-  {
-    id: "PROP-008",
-    title: "Treasury Diversification Strategy",
-    description:
-      "Implement a diversified treasury strategy to reduce risk and increase long-term sustainability of the DAO ecosystem.",
-    author: "treasury.dao",
-    category: "Treasury",
-    status: "active",
-    timeLeft: "1 day, 8 hours",
-    votingPower: {
-      for: 892,
-      against: 445,
-      abstain: 123,
-      total: 1460,
-      quorum: 2000,
-    },
-    comments: 67,
-    votingType: "Quadratic Voting",
-    yourVote: "for",
-  },
-  {
-    id: "PROP-009",
-    title: "Community Mentorship Program",
-    description:
-      "Launch a comprehensive mentorship program connecting experienced members with newcomers to improve onboarding.",
-    author: "community.lead",
-    category: "Community",
-    status: "active",
-    timeLeft: "5 days, 2 hours",
-    votingPower: {
-      for: 1567,
-      against: 89,
-      abstain: 234,
-      total: 1890,
-      quorum: 2000,
-    },
-    comments: 23,
-    votingType: "Reputation Voting",
-    yourVote: null,
-  },
-]
+function formatTimeRemaining(votingEnds: string): string {
+  const now = Math.floor(Date.now() / 1000)
+  const ends = Number(votingEnds)
+  const diff = ends - now
+
+  if (diff <= 0) return "Ended"
+
+  const days = Math.floor(diff / 86400)
+  const hours = Math.floor((diff % 86400) / 3600)
+
+  if (days > 0) return `${days}d ${hours}h`
+  return `${hours}h`
+}
+
+function getStatus(proposal: { processed: boolean; cancelled: boolean; votingEnds: string }): string {
+  if (proposal.cancelled) return "Cancelled"
+  if (proposal.processed) return "Processed"
+  const now = Math.floor(Date.now() / 1000)
+  if (Number(proposal.votingEnds) > now) return "Active"
+  return "Ended"
+}
+
+function getStatusColor(status: string): string {
+  switch (status) {
+    case "Active":
+      return "bg-green-500/10 text-green-400 border-green-500/20"
+    case "Processed":
+      return "bg-blue-500/10 text-blue-400 border-blue-500/20"
+    case "Cancelled":
+      return "bg-red-500/10 text-red-400 border-red-500/20"
+    default:
+      return "bg-gray-500/10 text-gray-400 border-gray-500/20"
+  }
+}
 
 export function ActiveProposals() {
+  const { dao, isLoading: daoLoading } = useDaos({
+    chainid: "8453",
+  })
+
+  const { proposals, isLoading: proposalsLoading } = useDaoProposals({
+    chainid: "8453",
+    daoid: dao?.id?.toLowerCase(),
+    queryOptions: {
+      orderBy: "createdAt",
+      orderDirection: "desc",
+    },
+  })
+
+  const isLoading = daoLoading || proposalsLoading
+
   const getVotePercentage = (votes: number, total: number) => {
     return total > 0 ? (votes / total) * 100 : 0
   }
 
   const getQuorumPercentage = (total: number, quorum: number) => {
-    return (total / quorum) * 100
+    return quorum > 0 ? (total / quorum) * 100 : 0
+  }
+
+  if (isLoading) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">All Proposals</h3>
+          </div>
+          <div className="animate-pulse space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-muted rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
+  if (!proposals || proposals.length === 0) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">All Proposals</h3>
+            <Button size="sm">Create Proposal</Button>
+          </div>
+          <p className="text-muted-foreground">
+            {isLoading ? "Loading proposals..." : "No proposals found. Create a proposal to get started."}
+          </p>
+        </div>
+      </Card>
+    )
   }
 
   return (
     <Card className="stat-card-gradient p-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-foreground">Active Proposals</h3>
+          <h3 className="text-lg font-semibold text-foreground">All Proposals</h3>
           <div className="flex space-x-2">
             <Button variant="outline" size="sm">
               Filter
@@ -90,136 +116,129 @@ export function ActiveProposals() {
         </div>
 
         <div className="space-y-6">
-          {activeProposals.map((proposal) => (
-            <div
-              key={proposal.id}
-              className="border border-border rounded-lg p-6 space-y-4 dao-card-hover cursor-pointer"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div className="space-y-2 flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-muted-foreground">{proposal.id}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {proposal.category}
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      {proposal.votingType}
-                    </Badge>
-                    {proposal.yourVote && (
-                      <Badge variant="default" className="text-xs">
-                        You voted: {proposal.yourVote}
-                      </Badge>
+          {proposals.map((proposal) => {
+            const status = getStatus(proposal)
+            const timeRemaining = formatTimeRemaining(proposal.votingEnds)
+            const yesVotes = Number(proposal.yesVotes || 0)
+            const noVotes = Number(proposal.noVotes || 0)
+            const totalVotes = yesVotes + noVotes
+            const quorum = Number(proposal.dao?.totalShares || 0)
+            const quorumPercent = Number(proposal.dao?.quorumPercent || 0)
+            const requiredQuorum = Math.ceil((quorum * quorumPercent) / 100)
+            const quorumProgress = requiredQuorum > 0 ? (totalVotes / requiredQuorum) * 100 : 0
+
+            return (
+              <Link key={proposal.id} href={`/governance/proposal/${(proposal as any).proposalId || proposal.id}`}>
+                <div className="border border-border rounded-lg p-6 space-y-4 dao-card-hover cursor-pointer">
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-muted-foreground">#{(proposal as any).proposalId || proposal.id.split('-').pop() || proposal.id}</span>
+                        <Badge variant="secondary" className={`text-xs ${getStatusColor(status)}`}>
+                          {status}
+                        </Badge>
+                        {proposal.proposalType && (
+                          <Badge variant="outline" className="text-xs">
+                            {proposal.proposalType}
+                          </Badge>
+                        )}
+                      </div>
+                      <h4 className="font-semibold text-foreground text-lg">
+                        {proposal.title || `Proposal ${proposal.proposalId}`}
+                      </h4>
+                      {proposal.description && (
+                        <p className="text-sm text-muted-foreground">{proposal.description}</p>
+                      )}
+
+                      <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                        {proposal.proposedBy && (
+                          <div className="flex items-center space-x-1">
+                            <User className="h-3 w-3" />
+                            <span className="truncate max-w-[120px]">
+                              {proposal.proposedBy.slice(0, 6)}...{proposal.proposedBy.slice(-4)}
+                            </span>
+                          </div>
+                        )}
+                        {status === "Active" && (
+                          <div className="flex items-center space-x-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{timeRemaining} remaining</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Voting Progress */}
+                  {status === "Active" && (
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Voting Progress</span>
+                        <span className="text-foreground">
+                          {totalVotes} / {requiredQuorum} votes
+                        </span>
+                      </div>
+
+                      <Progress value={Math.min(quorumProgress, 100)} className="h-2" />
+
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-green-400">For</span>
+                            <span className="text-foreground">{yesVotes}</span>
+                          </div>
+                          <Progress
+                            value={getVotePercentage(yesVotes, totalVotes)}
+                            className="h-1"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-red-400">Against</span>
+                            <span className="text-foreground">{noVotes}</span>
+                          </div>
+                          <Progress
+                            value={getVotePercentage(noVotes, totalVotes)}
+                            className="h-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2">
+                    <Button variant="outline" size="sm" onClick={(e) => e.preventDefault()}>
+                      View Details
+                    </Button>
+
+                    {status === "Active" && (
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          Vote Against
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <Vote className="h-4 w-4 mr-2" />
+                          Vote For
+                        </Button>
+                      </div>
                     )}
                   </div>
-                  <h4 className="font-semibold text-foreground text-lg">{proposal.title}</h4>
-                  <p className="text-sm text-muted-foreground">{proposal.description}</p>
-
-                  <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                    <div className="flex items-center space-x-1">
-                      <User className="h-3 w-3" />
-                      <span>{proposal.author}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{proposal.timeLeft} remaining</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <MessageSquare className="h-3 w-3" />
-                      <span>{proposal.comments} comments</span>
-                    </div>
-                  </div>
                 </div>
-              </div>
-
-              {/* Voting Progress */}
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Voting Progress</span>
-                  <span className="text-foreground">
-                    {proposal.votingPower.total} / {proposal.votingPower.quorum} votes
-                  </span>
-                </div>
-
-                <Progress
-                  value={getQuorumPercentage(proposal.votingPower.total, proposal.votingPower.quorum)}
-                  className="h-2"
-                />
-
-                <div className="grid grid-cols-3 gap-4 text-xs">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-400">For</span>
-                      <span className="text-foreground">{proposal.votingPower.for}</span>
-                    </div>
-                    <Progress
-                      value={getVotePercentage(proposal.votingPower.for, proposal.votingPower.total)}
-                      className="h-1"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-red-400">Against</span>
-                      <span className="text-foreground">{proposal.votingPower.against}</span>
-                    </div>
-                    <Progress
-                      value={getVotePercentage(proposal.votingPower.against, proposal.votingPower.total)}
-                      className="h-1"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Abstain</span>
-                      <span className="text-foreground">{proposal.votingPower.abstain}</span>
-                    </div>
-                    <Progress
-                      value={getVotePercentage(proposal.votingPower.abstain, proposal.votingPower.total)}
-                      className="h-1"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center justify-between pt-2">
-                <Button variant="outline" size="sm">
-                  View Details
-                </Button>
-
-                {!proposal.yourVote ? (
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent"
-                    >
-                      Vote Against
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-400 border-gray-400/20 hover:bg-gray-400/10 bg-transparent"
-                    >
-                      Abstain
-                    </Button>
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                      <Vote className="h-4 w-4 mr-2" />
-                      Vote For
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">Vote cast</span>
-                    <Button variant="outline" size="sm">
-                      Change Vote
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       </div>
     </Card>

@@ -24,6 +24,26 @@ export const LIST_ALL_DAOS = `
   }
 `;
 
+export const LIST_SINGLE_DAO = `
+  query ListSingleDao($daoid: String!) {
+    daos(where: { id: $daoid }) {
+      id
+      createdAt
+      name
+      safeAddress
+      activeMemberCount
+      totalShares
+      totalLoot
+      gracePeriod
+      votingPeriod
+      proposalOffering
+      quorumPercent
+      sponsorThreshold
+      minRetentionPercent
+    }
+  }
+`;
+
 export const FIND_DAO = `
   query FindDao($daoid: String!) {
     dao(id: $daoid) {
@@ -181,16 +201,12 @@ export const LIST_ALL_DAO_PROPOSALS = `
     ) {
       id
       createdAt
-      updatedAt
       title
       description
       contentURI
       contentURIType
       sponsored
-      sponsoredAt
-      sponsoredBy
       processed
-      processedAt
       processedBy
       passed
       actionFailed
@@ -204,19 +220,23 @@ export const LIST_ALL_DAO_PROPOSALS = `
       yesBalance
       noBalance
       maxTotalSharesAndLootAtYesVote
+      cancelled
+      cancelledBy
       dao {
         id
         name
+        totalShares
+        quorumPercent
+        minRetentionPercent
       }
-      proposer
       votes {
         id
         createdAt
-        memberAddress
-        uintVote
-        proposal {
+        approved
+        balance
+        member {
           id
-          title
+          memberAddress
         }
       }
     }
@@ -233,10 +253,7 @@ export const FIND_PROPOSAL = `
       contentURI
       contentURIType
       sponsored
-      sponsoredAt
-      sponsoredBy
       processed
-      processedAt
       processedBy
       passed
       actionFailed
@@ -250,6 +267,8 @@ export const FIND_PROPOSAL = `
       yesBalance
       noBalance
       maxTotalSharesAndLootAtYesVote
+      cancelled
+      cancelledBy
       dao {
         id
         name
@@ -264,15 +283,14 @@ export const FIND_PROPOSAL = `
         sponsorThreshold
         minRetentionPercent
       }
-      proposer
       votes {
         id
         createdAt
-        memberAddress
-        uintVote
-        proposal {
+        approved
+        balance
+        member {
           id
-          title
+          memberAddress
         }
       }
     }

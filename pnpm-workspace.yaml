@@ -1,2 +1,5 @@
 onlyBuiltDependencies:
+  - '@reown/appkit'
   - '@tailwindcss/oxide'
+  - bufferutil
+  - utf-8-validate

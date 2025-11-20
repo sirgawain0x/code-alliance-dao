@@ -1,38 +1,12 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Vote, Users, Clock, TrendingUp } from "lucide-react"
-
-const governanceStats = [
-  {
-    label: "Your Voting Power",
-    value: "1,247",
-    subtitle: "CA Tokens",
-    icon: Vote,
-    color: "text-blue-400",
-  },
-  {
-    label: "Active Proposals",
-    value: "12",
-    subtitle: "Awaiting votes",
-    icon: Clock,
-    color: "text-orange-400",
-  },
-  {
-    label: "Participation Rate",
-    value: "78%",
-    subtitle: "Last 30 days",
-    icon: Users,
-    color: "text-green-400",
-  },
-  {
-    label: "Proposals Passed",
-    value: "85%",
-    subtitle: "Success rate",
-    icon: TrendingUp,
-    color: "text-purple-400",
-  },
-]
+import { useMemo } from "react"
+import { useDaoProposals } from "@/hooks/useDaoProposals"
+import { useDaos } from "@/hooks/useDaos"
 
 const votingMechanisms = [
   {
@@ -62,6 +36,63 @@ const votingMechanisms = [
 ]
 
 export function GovernanceOverview() {
+  const { dao, isLoading: daoLoading } = useDaos({
+    chainid: "8453",
+  });
+
+  const { proposals, isLoading: proposalsLoading } = useDaoProposals({
+    chainid: "8453",
+    daoid: dao?.id?.toLowerCase(),
+  });
+
+  // Calculate active proposals
+  const activeProposals = useMemo(() => {
+    if (!proposals) return [];
+    const now = new Date().getTime() / 1000;
+    return proposals.filter((p) => {
+      return !p.processed && !p.cancelled && Number(p.votingEnds) > now;
+    });
+  }, [proposals]);
+
+  if (proposalsLoading || daoLoading || !dao) {
+    return <div className="animate-pulse h-96 bg-muted rounded-lg"></div>
+  }
+
+  const passedProposals = proposals?.filter(p => p.passed).length || 0;
+  const totalProposals = proposals?.length || 0;
+  const passedRate = totalProposals > 0 ? Math.round((passedProposals / totalProposals) * 100) : 0;
+
+  const governanceStats = [
+    {
+      label: "Your Voting Power",
+      value: "0", // Placeholder as we don't have user wallet connection yet
+      subtitle: "CA Tokens",
+      icon: Vote,
+      color: "text-blue-400",
+    },
+    {
+      label: "Active Proposals",
+      value: activeProposals?.length.toString() || "0",
+      subtitle: "Awaiting votes",
+      icon: Clock,
+      color: "text-orange-400",
+    },
+    {
+      label: "Participation Rate",
+      value: "78%", // Hardcoded for now, requires complex calculation
+      subtitle: "Last 30 days",
+      icon: Users,
+      color: "text-green-400",
+    },
+    {
+      label: "Proposals Passed",
+      value: `${passedRate}%`,
+      subtitle: `${passedProposals} of ${totalProposals} passed`,
+      icon: TrendingUp,
+      color: "text-purple-400",
+    },
+  ]
+
   return (
     <div className="space-y-6">
       {/* Stats Grid */}

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { FIND_DAO } from "../utils/queries";
 import { DaoItem, DaoProfile } from "../utils/daotypes";
-import { addParsedContent } from "../utils/yeeter-data-helpers";
+// import { addParsedContent } from "../utils/yeeter-data-helpers";
 import { getGraphUrl } from "../utils/endpoints";
 import { DaoHooksContext } from "../contexts/DaoHooksContext";
 
@@ -42,10 +42,11 @@ export const useDao = ({
       })) as {
         dao: DaoItem;
       };
-      const profile = undefined; // No profile data available in Base chain
+
+      // const profile = addParsedContent<DaoProfile>(daores.dao.rawProfile[0]);
 
       return {
-        dao: { ...daores.dao, profile },
+        dao: { ...daores.dao }, //, profile },
       };
     },
   });

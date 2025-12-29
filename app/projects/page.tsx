@@ -8,7 +8,7 @@ export default function ProjectsPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 ml-64">
+      <main className="flex-1 min-w-0 relative z-0">
         <DashboardHeader />
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between">

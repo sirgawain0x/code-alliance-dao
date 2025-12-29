@@ -1,3 +1,5 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,83 +10,107 @@ import { Clock, User, MessageSquare, Vote } from "lucide-react"
 
 interface ProposalDetailProps {
   proposalId: string
+  initialMetadata?: any
 }
 
-// Mock data - in real app this would come from API
-const proposalData = {
-  id: "PROP-007",
-  title: "Establish AI Research SubDAO",
-  description:
-    "Create a specialized SubDAO focused on artificial intelligence research and development projects with initial funding of $500K.",
-  fullDescription: `This proposal aims to establish a new SubDAO dedicated to artificial intelligence research and development within the Code Alliance ecosystem.
+import { useProposal } from "@/hooks/useProposal"
+import { useDao } from "@/hooks/useDao"
+import { useMember } from "@/hooks/useMember"
 
-## Objectives
-- Create a specialized governance structure for AI research projects
-- Establish funding mechanisms for AI/ML initiatives
-- Build partnerships with academic institutions and research organizations
-- Develop open-source AI tools and frameworks for the community
+import { useAccount } from "wagmi"
+import { Skeleton } from "./ui/skeleton"
 
-## Funding Request
-- Initial Treasury Allocation: $500,000
-- Monthly Operating Budget: $50,000
-- Research Grant Pool: $200,000
+export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailProps) {
+  const { dao } = useDao({
+    chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
+  });
 
-## Timeline
-- Phase 1 (Month 1-2): SubDAO setup and governance structure
-- Phase 2 (Month 3-6): Team recruitment and initial projects
-- Phase 3 (Month 6-12): Full operation and first research outputs
+  const { proposal, isLoading } = useProposal({
+    chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+    proposalid: proposalId
+  });
 
-## Success Metrics
-- Number of active research projects
-- Community engagement and participation
-- Research publications and open-source contributions
-- Partnership agreements with external organizations`,
-  author: "alice.eth",
-  category: "SubDAO Creation",
-  status: "active",
-  created: "5 days ago",
-  timeLeft: "3 days, 14 hours",
-  votingPower: {
-    for: 1247,
-    against: 234,
-    abstain: 89,
-    total: 1570,
-    quorum: 2000,
-  },
-  comments: 45,
-  votingType: "Token Voting",
-  yourVote: null,
-  yourVotingPower: 125,
-}
+  const { address } = useAccount();
 
-const comments = [
-  {
-    author: "bob.dao",
-    content: "This is an excellent proposal. AI research is crucial for our ecosystem's future.",
-    timestamp: "2 days ago",
-    votes: 12,
-  },
-  {
-    author: "carol.research",
-    content: "I support this initiative but think we should allocate more funding for partnerships.",
-    timestamp: "1 day ago",
-    votes: 8,
-  },
-  {
-    author: "david.tech",
-    content: "What specific AI domains will this SubDAO focus on? We should be more specific.",
-    timestamp: "18 hours ago",
-    votes: 5,
-  },
-]
+  const { member } = useMember({
+    chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+    memberaddress: address?.toLowerCase()
+  });
 
-export function ProposalDetail({ proposalId }: ProposalDetailProps) {
   const getVotePercentage = (votes: number, total: number) => {
     return total > 0 ? (votes / total) * 100 : 0
   }
 
   const getQuorumPercentage = (total: number, quorum: number) => {
-    return (total / quorum) * 100
+    return quorum > 0 ? (total / quorum) * 100 : 0
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    )
+  }
+
+  if (!proposal) {
+    return (
+      <Card className="p-6">
+        <div className="text-center text-muted-foreground">Proposal not found</div>
+      </Card>
+    )
+  }
+
+  const yesVotes = Number(proposal.yesVotes || 0)
+  const noVotes = Number(proposal.noVotes || 0)
+  // Assuming abstain is not strictly tracked in this subgraph schema or defaults to 0
+  const abstainVotes = 0
+  const totalVotes = yesVotes + noVotes + abstainVotes
+  const quorum = Number(proposal.dao?.totalShares || 0)
+  const quorumPercent = Number(proposal.dao?.quorumPercent || 0)
+  const requiredQuorum = Math.ceil((quorum * quorumPercent) / 100)
+
+  // Use metadata description if available, otherwise fall back to on-chain description/details
+  const description = initialMetadata?.full_description || proposal.description || proposal.details || "No description provided"
+
+  // Calculate relative time strings (simplified)
+  const now = Math.floor(Date.now() / 1000)
+  const votingEnds = Number(proposal.votingEnds)
+  const timeLeftSeconds = votingEnds - now
+  const timeLeft = timeLeftSeconds > 0
+    ? `${Math.floor(timeLeftSeconds / 86400)}d ${Math.floor((timeLeftSeconds % 86400) / 3600)}h`
+    : "Ended"
+
+  const status = proposal.cancelled ? "Cancelled" : (proposal.processed ? "Processed" : (timeLeftSeconds > 0 ? "Active" : "Ended"))
+
+  // Check if user has voted
+  const userVote = proposal.votes?.find(vote => vote.member.memberAddress.toLowerCase() === address?.toLowerCase());
+
+  const proposalData = {
+    id: proposalId,
+    title: proposal.title,
+    description: description,
+    fullDescription: description, // Assuming full description is same for now
+    author: proposal.proposedBy,
+    category: proposal.proposalType,
+    status: status,
+    created: new Date(Number(proposal.createdAt) * 1000).toLocaleDateString(),
+    timeLeft: timeLeft,
+    votingPower: {
+      for: yesVotes,
+      against: noVotes,
+      abstain: abstainVotes,
+      total: totalVotes,
+      quorum: requiredQuorum,
+    },
+    comments: 0, // No comments in subgraph
+    votingType: "Token Voting",
+    yourVote: userVote ? (userVote.approved ? "For" : "Against") : null,
+    yourVotingPower: member?.shares ? Number(member.shares) : 0,
   }
 
   return (
@@ -193,27 +219,33 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
             {/* Voting Actions */}
             <div className="space-y-4">
               <div className="text-sm text-muted-foreground">
-                Choose your vote and optionally add a comment explaining your decision.
+                {proposalData.yourVote ? (
+                  <span className="text-foreground font-semibold">You voted: {proposalData.yourVote}</span>
+                ) : (
+                  "Choose your vote and optionally add a comment explaining your decision."
+                )}
               </div>
 
-              <div className="space-y-3">
-                <Button className="w-full bg-green-600 hover:bg-green-700">
-                  <Vote className="h-4 w-4 mr-2" />
-                  Vote For
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent"
-                >
-                  Vote Against
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full text-gray-400 border-gray-400/20 hover:bg-gray-400/10 bg-transparent"
-                >
-                  Abstain
-                </Button>
-              </div>
+              {!proposalData.yourVote && (
+                <div className="space-y-3">
+                  <Button className="w-full bg-green-600 hover:bg-green-700">
+                    <Vote className="h-4 w-4 mr-2" />
+                    Vote For
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent"
+                  >
+                    Vote Against
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full text-gray-400 border-gray-400/20 hover:bg-gray-400/10 bg-transparent"
+                  >
+                    Abstain
+                  </Button>
+                </div>
+              )}
 
               <Textarea
                 placeholder="Add a comment explaining your vote (optional)"
@@ -245,24 +277,11 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">Discussion</h3>
-                <Button size="sm">Add Comment</Button>
+                <Button size="sm" disabled>Add Comment</Button>
               </div>
 
               <div className="space-y-4">
-                {comments.map((comment, index) => (
-                  <div key={index} className="border border-border rounded-lg p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-foreground">{comment.author}</span>
-                        <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
-                      </div>
-                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                        <span>{comment.votes} votes</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{comment.content}</p>
-                  </div>
-                ))}
+                <p className="text-muted-foreground text-sm">Comments are not yet supported on-chain.</p>
               </div>
             </div>
           </Card>

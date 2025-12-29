@@ -1,7 +1,7 @@
 'use client'
 
 import { cookieStorage, createStorage, http } from 'wagmi'
-import { base } from 'wagmi/chains'
+import { base, polygon, optimism } from 'wagmi/chains'
 import { walletConnect, injected } from 'wagmi/connectors'
 import { createConfig, type Config } from 'wagmi'
 
@@ -21,7 +21,7 @@ export function getConfig(): Config {
         // For SSR, return a minimal config without connectors
         // This prevents walletConnect from trying to access indexedDB
         return createConfig({
-            chains: [base],
+            chains: [base, polygon, optimism],
             connectors: [],
             storage: createStorage({
                 storage: cookieStorage,
@@ -29,6 +29,8 @@ export function getConfig(): Config {
             ssr: true,
             transports: {
                 [base.id]: http(),
+                [polygon.id]: http(),
+                [optimism.id]: http(),
             },
         }) as Config
     }
@@ -41,9 +43,9 @@ export function getConfig(): Config {
         }
         try {
             configInstance = createConfig({
-                chains: [base],
+                chains: [base, polygon, optimism],
                 connectors: [
-                    walletConnect({ projectId }),
+                    walletConnect({ projectId, showQrModal: false, metadata: { name: 'Code Alliance DAO', description: 'Code Alliance DAO', url: window.location.origin, icons: [] } }),
                     injected(),
                 ],
                 storage: createStorage({
@@ -52,13 +54,15 @@ export function getConfig(): Config {
                 ssr: true,
                 transports: {
                     [base.id]: http(),
+                    [polygon.id]: http(),
+                    [optimism.id]: http(),
                 },
             }) as Config
         } catch (error) {
             // Fallback to minimal config if connector initialization fails
             console.warn('Failed to initialize wallet connectors:', error)
             configInstance = createConfig({
-                chains: [base],
+                chains: [base, polygon, optimism],
                 connectors: [],
                 storage: createStorage({
                     storage: cookieStorage,
@@ -66,6 +70,8 @@ export function getConfig(): Config {
                 ssr: true,
                 transports: {
                     [base.id]: http(),
+                    [polygon.id]: http(),
+                    [optimism.id]: http(),
                 },
             }) as Config
         }

@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { TrendingUp, FileText, Vote, Users } from "lucide-react"
-import { useDaos } from "@/hooks/useDaos"
+import { useDao } from "@/hooks/useDao"
 import { useProposals } from "@/hooks/useProposals"
 import { formatEther } from "viem"
 
@@ -18,8 +18,9 @@ const safeFormatEther = (val: string | undefined | null) => {
 }
 
 export function StatsOverview() {
-  const { dao, isLoading: daoLoading } = useDaos({
+  const { dao, isLoading: daoLoading } = useDao({
     chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
   });
   const { proposals, activeProposals, isLoading: proposalsLoading } = useProposals({
     chainid: "8453",

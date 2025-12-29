@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Clock, User, Vote } from "lucide-react"
 import { useDaoProposals } from "@/hooks/useDaoProposals"
-import { useDaos } from "@/hooks/useDaos"
+import { useDao } from "@/hooks/useDao"
 import Link from "next/link"
 import { useMemo } from "react"
 
@@ -46,19 +46,22 @@ function getStatusColor(status: string): string {
 }
 
 export function ActiveProposals() {
-  const { dao, isLoading: daoLoading } = useDaos({
+  const { dao, isLoading: daoLoading } = useDao({
     chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
   })
 
+  // useDaoProposals requires explicit daoid
   const { proposals, isLoading: proposalsLoading } = useDaoProposals({
     chainid: "8453",
-    daoid: dao?.id?.toLowerCase(),
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
     queryOptions: {
       orderBy: "createdAt",
       orderDirection: "desc",
     },
   })
 
+  // Combine loading states
   const isLoading = daoLoading || proposalsLoading
 
   const getVotePercentage = (votes: number, total: number) => {
@@ -128,7 +131,7 @@ export function ActiveProposals() {
             const quorumProgress = requiredQuorum > 0 ? (totalVotes / requiredQuorum) * 100 : 0
 
             return (
-              <Link key={proposal.id} href={`/governance/proposal/${(proposal as any).proposalId || proposal.id}`}>
+              <Link key={proposal.id} href={`/governance/proposal/${(proposal as any).proposalId || proposal.id.split('-').pop()}`}>
                 <div className="border border-border rounded-lg p-6 space-y-4 dao-card-hover cursor-pointer">
                   {/* Header */}
                   <div className="flex items-start justify-between">

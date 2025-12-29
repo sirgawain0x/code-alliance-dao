@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, TrendingDown, DollarSign, PieChart, Shield } from "lucide-react"
-import { useDaos } from "@/hooks/useDaos"
+import { useDao } from "@/hooks/useDao"
 import { formatEther } from "viem"
 
 const riskMetrics = [
@@ -22,8 +22,9 @@ const fundAllocation = [
 ]
 
 export function TreasuryOverviewDashboard() {
-  const { dao, isLoading } = useDaos({
+  const { dao, isLoading } = useDao({
     chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
   });
 
   if (isLoading || !dao) {
@@ -91,10 +92,10 @@ export function TreasuryOverviewDashboard() {
                 <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                 <p
                   className={`text-xs ${stat.changeType === "positive"
-                      ? "text-green-400"
-                      : stat.changeType === "negative"
-                        ? "text-red-400"
-                        : "text-muted-foreground"
+                    ? "text-green-400"
+                    : stat.changeType === "negative"
+                      ? "text-red-400"
+                      : "text-muted-foreground"
                     }`}
                 >
                   {stat.change}

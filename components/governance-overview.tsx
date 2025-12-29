@@ -6,7 +6,9 @@ import { Progress } from "@/components/ui/progress"
 import { Vote, Users, Clock, TrendingUp } from "lucide-react"
 import { useMemo } from "react"
 import { useDaoProposals } from "@/hooks/useDaoProposals"
-import { useDaos } from "@/hooks/useDaos"
+import { useDao } from "@/hooks/useDao"
+
+
 
 const votingMechanisms = [
   {
@@ -36,13 +38,14 @@ const votingMechanisms = [
 ]
 
 export function GovernanceOverview() {
-  const { dao, isLoading: daoLoading } = useDaos({
+  const { dao, isLoading: daoLoading } = useDao({
     chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
   });
 
   const { proposals, isLoading: proposalsLoading } = useDaoProposals({
     chainid: "8453",
-    daoid: dao?.id?.toLowerCase(),
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
   });
 
   // Calculate active proposals

@@ -3,8 +3,8 @@
 import { getConfig, projectId } from '@/config/wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
-import { base } from '@reown/appkit/networks'
-import React, { type ReactNode, useMemo, useEffect, useRef } from 'react'
+import { base, polygon, optimism } from '@reown/appkit/networks'
+import React, { type ReactNode, useMemo } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 
 // Set up queryClient
@@ -18,24 +18,24 @@ if (typeof window !== 'undefined') {
     console.warn = (...args: unknown[]) => {
         // Check if this is the "Restore will override. history" warning
         const message = args[0]
-        const isHistoryRestoreWarning = 
+        const isHistoryRestoreWarning =
             (typeof message === 'string' && message.includes('Restore will override')) ||
-            (typeof message === 'object' && message !== null && 
-             'msg' in message && 
-             typeof (message as { msg?: string }).msg === 'string' &&
-             (message as { msg: string }).msg.includes('Restore will override')) ||
             (typeof message === 'object' && message !== null &&
-             'context' in message &&
-             (message as { context?: string }).context === 'core/history' &&
-             'msg' in message &&
-             typeof (message as { msg?: string }).msg === 'string' &&
-             (message as { msg: string }).msg.includes('Restore will override'))
-        
+                'msg' in message &&
+                typeof (message as { msg?: string }).msg === 'string' &&
+                (message as { msg: string }).msg.includes('Restore will override')) ||
+            (typeof message === 'object' && message !== null &&
+                'context' in message &&
+                (message as { context?: string }).context === 'core/history' &&
+                'msg' in message &&
+                typeof (message as { msg?: string }).msg === 'string' &&
+                (message as { msg: string }).msg.includes('Restore will override'))
+
         // Suppress the harmless history restoration warning
         if (isHistoryRestoreWarning) {
             return // Don't log this warning
         }
-        
+
         // Log all other warnings normally
         originalWarn.apply(console, args)
     }
@@ -52,7 +52,7 @@ function getMetadata() {
             icons: ['https://avatars.githubusercontent.com/u/179229932']
         }
     }
-    
+
     return {
         name: 'Code Alliance DAO',
         description: 'Code Alliance DAO Governance Platform',
@@ -67,13 +67,13 @@ let isInitializing = false
 
 function getModal(): ReturnType<typeof createAppKit> | null {
     if (typeof window === 'undefined') return null
-    
+
     // Return existing modal if already created
     if (modal) return modal
-    
+
     // Prevent concurrent initialization attempts
     if (isInitializing) return null
-    
+
     // Initialize AppKit when first accessed
     // Note: Reown AppKit automatically preloads its font (KHTeka-Medium.woff2) when initialized.
     // The font is only used when the modal opens, which may trigger a browser warning
@@ -85,7 +85,7 @@ function getModal(): ReturnType<typeof createAppKit> | null {
             modal = createAppKit({
                 adapters: [],
                 projectId,
-                networks: [base],
+                networks: [base, polygon, optimism],
                 defaultNetwork: base,
                 metadata: getMetadata(), // Use dynamic metadata with current URL
                 features: {
@@ -99,7 +99,7 @@ function getModal(): ReturnType<typeof createAppKit> | null {
             return null
         }
     }
-    
+
     return modal
 }
 
@@ -110,9 +110,7 @@ export function AppKitProvider({
     children: ReactNode
     cookies: string | null
 }) {
-    // Use ref to track if initialization has been attempted
-    // This prevents double initialization in React Strict Mode
-    const hasInitialized = useRef(false)
+
 
     // Get config on client side only
     const config = useMemo(() => getConfig(), [])
@@ -121,26 +119,15 @@ export function AppKitProvider({
         return cookieToInitialState(config as Config, cookies)
     }, [config, cookies])
 
-    // Initialize AppKit after mount - only once
-    // Note: AppKit will preload its font (KHTeka-Medium.woff2) when initialized.
-    // The font is only used when the modal opens, which may trigger a browser warning
-    // about preloaded resources not being used immediately. This is expected behavior
-    // and harmless - the font will be used when the user connects their wallet.
-    useEffect(() => {
-        // Prevent double initialization in React Strict Mode
-        if (hasInitialized.current) return
-        
-        if (typeof window !== 'undefined' && projectId) {
-            hasInitialized.current = true
-            try {
-                getModal()
-            } catch (error) {
-                console.warn('AppKit initialization error:', error)
-                // Reset flag on error so it can be retried if needed
-                hasInitialized.current = false
-            }
+    // Initialize AppKit synchronously if on client
+    // This ensures it's ready before any children hooks run
+    if (typeof window !== 'undefined' && projectId && !modal) {
+        try {
+            getModal()
+        } catch (error) {
+            console.warn('AppKit initialization error:', error)
         }
-    }, [])
+    }
 
     return (
         <WagmiProvider config={config as Config} initialState={initialState}>

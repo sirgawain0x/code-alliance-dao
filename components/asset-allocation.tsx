@@ -1,83 +1,51 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { TrendingUp, TrendingDown, Coins } from "lucide-react"
+import { useDaoTokenBalances } from "@/hooks/useDaoTokenBalances"
+import { formatUnits } from "viem"
 
-const assets = [
-  {
-    name: "USDC",
-    type: "Stablecoin",
-    amount: 850000,
-    percentage: 35.4,
-    change: "+2.1%",
-    changeType: "positive",
-    risk: "low",
-    yield: "4.2%",
-  },
-  {
-    name: "ETH",
-    type: "Cryptocurrency",
-    amount: 480000,
-    percentage: 20.0,
-    change: "+15.3%",
-    changeType: "positive",
-    risk: "high",
-    yield: "5.8%",
-  },
-  {
-    name: "Treasury Bills",
-    type: "Traditional",
-    amount: 360000,
-    percentage: 15.0,
-    change: "+1.2%",
-    changeType: "positive",
-    risk: "low",
-    yield: "3.1%",
-  },
-  {
-    name: "BTC",
-    type: "Cryptocurrency",
-    amount: 240000,
-    percentage: 10.0,
-    change: "+8.7%",
-    changeType: "positive",
-    risk: "high",
-    yield: "0%",
-  },
-  {
-    name: "USDT",
-    type: "Stablecoin",
-    amount: 216000,
-    percentage: 9.0,
-    change: "+0.1%",
-    changeType: "positive",
-    risk: "low",
-    yield: "3.8%",
-  },
-  {
-    name: "Money Market",
-    type: "Traditional",
-    amount: 144000,
-    percentage: 6.0,
-    change: "+0.8%",
-    changeType: "positive",
-    risk: "low",
-    yield: "2.9%",
-  },
-  {
-    name: "Other Assets",
-    type: "Mixed",
-    amount: 110400,
-    percentage: 4.6,
-    change: "+3.2%",
-    changeType: "positive",
-    risk: "medium",
-    yield: "4.5%",
-  },
-]
+// Helper to determine token type based on symbol
+function getTokenType(symbol: string): string {
+  const stablecoins = ["USDC", "USDT", "DAI", "FRAX", "BUSD", "TUSD"];
+  const wrappedTokens = ["WETH", "WBTC"];
+
+  if (stablecoins.includes(symbol.toUpperCase())) {
+    return "Stablecoin";
+  }
+  if (wrappedTokens.includes(symbol.toUpperCase())) {
+    return "Wrapped";
+  }
+  if (symbol.toUpperCase() === "ETH") {
+    return "Native";
+  }
+  return "Token";
+}
+
+// Helper to determine risk level based on token type
+function getTokenRisk(type: string): string {
+  switch (type) {
+    case "Stablecoin":
+      return "low";
+    case "Native":
+    case "Wrapped":
+      return "medium";
+    default:
+      return "medium";
+  }
+}
 
 export function AssetAllocation() {
+  const daoAddress = process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS;
+
+  const { tokens, isLoading, error } = useDaoTokenBalances({
+    chainid: "8453", // Base Mainnet
+    safeAddress: daoAddress,
+  });
+
   const getRiskColor = (risk: string) => {
     switch (risk) {
       case "low":
@@ -95,13 +63,94 @@ export function AssetAllocation() {
     switch (type) {
       case "Stablecoin":
         return "text-blue-400"
-      case "Cryptocurrency":
+      case "Native":
+      case "Wrapped":
         return "text-purple-400"
-      case "Traditional":
+      case "Token":
         return "text-green-400"
       default:
         return "text-gray-400"
     }
+  }
+
+  // Calculate total value and percentages
+  const totalValue = tokens?.reduce((sum, token) => {
+    if (!token.token?.decimals) return sum;
+    const value = Number(formatUnits(BigInt(token.balance), token.token.decimals));
+    return sum + value;
+  }, 0) || 0;
+
+  const assets = tokens?.filter(token => token.token != null).map((token) => {
+    const decimals = token.token!.decimals ?? 18;
+    const balance = Number(formatUnits(BigInt(token.balance), decimals));
+    const percentage = totalValue > 0 ? (balance / totalValue) * 100 : 0;
+    const type = getTokenType(token.token!.symbol ?? "UNKNOWN");
+    const risk = getTokenRisk(type);
+
+    return {
+      name: token.token!.symbol ?? "UNKNOWN",
+      fullName: token.token!.name ?? "Unknown Token",
+      type,
+      amount: balance,
+      percentage,
+      risk,
+      logoUri: token.token!.logoUri ?? null,
+      tokenAddress: token.tokenAddress,
+    };
+  }) || [];
+
+  // Sort by percentage (highest first)
+  assets.sort((a, b) => b.percentage - a.percentage);
+
+  if (isLoading) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
+            <Button variant="outline" size="sm" disabled>
+              Rebalance
+            </Button>
+          </div>
+          <div className="animate-pulse space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 bg-muted rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
+          </div>
+          <div className="text-center py-8">
+            <p className="text-red-400">Error loading assets: {error.message}</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!tokens || tokens.length === 0) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
+          </div>
+          <div className="text-center py-8">
+            <Coins className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground">No assets found in treasury</p>
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   return (
@@ -116,17 +165,32 @@ export function AssetAllocation() {
 
         <div className="space-y-3">
           {assets.map((asset) => (
-            <div key={asset.name} className="border border-border rounded-lg p-4 space-y-3">
+            <div key={asset.tokenAddress || asset.name} className="border border-border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
+                  {asset.logoUri && (
+                    <img
+                      src={asset.logoUri}
+                      alt={asset.name}
+                      className="w-8 h-8 rounded-full"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
                   <div>
                     <h4 className="font-medium text-foreground">{asset.name}</h4>
                     <p className={`text-xs ${getAssetTypeColor(asset.type)}`}>{asset.type}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-foreground">${(asset.amount / 1000).toFixed(0)}K</p>
-                  <p className="text-xs text-muted-foreground">{asset.percentage}%</p>
+                  <p className="font-medium text-foreground">
+                    {asset.amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 6
+                    })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{asset.percentage.toFixed(1)}%</p>
                 </div>
               </div>
 
@@ -135,19 +199,11 @@ export function AssetAllocation() {
                   <Badge className={getRiskColor(asset.risk)} variant="outline">
                     {asset.risk} risk
                   </Badge>
-                  <span className="text-muted-foreground">Yield: {asset.yield}</span>
-                </div>
-                <div
-                  className={`flex items-center space-x-1 ${
-                    asset.changeType === "positive" ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {asset.changeType === "positive" ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3" />
-                  )}
-                  <span>{asset.change}</span>
+                  <span className="text-muted-foreground" title={asset.fullName ?? undefined}>
+                    {(asset.fullName ?? "Unknown").length > 20
+                      ? `${(asset.fullName ?? "Unknown").substring(0, 20)}...`
+                      : (asset.fullName ?? "Unknown")}
+                  </span>
                 </div>
               </div>
 
@@ -158,8 +214,8 @@ export function AssetAllocation() {
 
         <div className="pt-2 border-t border-border">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total Portfolio Value</span>
-            <span className="font-medium text-foreground">$2,400,000</span>
+            <span className="text-muted-foreground">Total Assets</span>
+            <span className="font-medium text-foreground">{assets.length} tokens</span>
           </div>
         </div>
       </div>

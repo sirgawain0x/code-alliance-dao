@@ -1,11 +1,12 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
-import { useDaos } from "@/hooks/useDaos"
+import { useDao } from "@/hooks/useDao"
 
 export function DashboardHeader() {
-  const { dao } = useDaos({
+  const { dao } = useDao({
     chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
   });
 
   return (

@@ -3,8 +3,24 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Users, Building2, TrendingUp, Shield } from "lucide-react"
+import { getParentDaoData } from "@/app/actions"
 
-export function ParentDAOOverview() {
+export async function ParentDAOOverview() {
+  const data = await getParentDaoData()
+
+  // Fallback values if DB is empty or not connected
+  const stats = {
+    totalMembers: data?.total_members || 1247,
+    activeSubdaos: data?.active_subdaos || 8,
+    treasuryValue: data?.treasury_value ? `$${Number(data.treasury_value).toLocaleString()}` : "$2.4M",
+    governanceScore: data?.governance_score || 94,
+    voterParticipation: Number(data?.voter_participation || 78),
+    proposalSuccessRate: Number(data?.proposal_success_rate || 85),
+    communityEngagement: Number(data?.community_engagement || 92),
+    mission: data?.mission || "To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.",
+    vision: data?.vision || "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources."
+  }
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
@@ -37,7 +53,7 @@ export function ParentDAOOverview() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Members</p>
-              <p className="text-2xl font-bold text-foreground">1,247</p>
+              <p className="text-2xl font-bold text-foreground">{stats.totalMembers.toLocaleString()}</p>
               <p className="text-xs text-green-400">+12% this month</p>
             </div>
             <Users className="h-8 w-8 text-blue-400" />
@@ -48,7 +64,7 @@ export function ParentDAOOverview() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Active SubDAOs</p>
-              <p className="text-2xl font-bold text-foreground">8</p>
+              <p className="text-2xl font-bold text-foreground">{stats.activeSubdaos}</p>
               <p className="text-xs text-green-400">+2 this quarter</p>
             </div>
             <Building2 className="h-8 w-8 text-purple-400" />
@@ -59,7 +75,7 @@ export function ParentDAOOverview() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Treasury Value</p>
-              <p className="text-2xl font-bold text-foreground">$2.4M</p>
+              <p className="text-2xl font-bold text-foreground">{stats.treasuryValue}</p>
               <p className="text-xs text-green-400">+8.5% this month</p>
             </div>
             <TrendingUp className="h-8 w-8 text-green-400" />
@@ -70,7 +86,7 @@ export function ParentDAOOverview() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Governance Score</p>
-              <p className="text-2xl font-bold text-foreground">94%</p>
+              <p className="text-2xl font-bold text-foreground">{stats.governanceScore}%</p>
               <p className="text-xs text-green-400">Excellent</p>
             </div>
             <Shield className="h-8 w-8 text-orange-400" />
@@ -86,15 +102,13 @@ export function ParentDAOOverview() {
             <div>
               <h4 className="font-medium text-foreground mb-2">Our Mission</h4>
               <p className="text-sm text-muted-foreground">
-                To democratically govern and support innovative projects through a decentralized incubator ecosystem
-                that bridges traditional and blockchain technologies.
+                {stats.mission}
               </p>
             </div>
             <div>
               <h4 className="font-medium text-foreground mb-2">Our Vision</h4>
               <p className="text-sm text-muted-foreground">
-                To become the leading DAO-governed incubator that empowers diverse teams to build the future of
-                technology through collaborative governance and shared resources.
+                {stats.vision}
               </p>
             </div>
           </div>
@@ -109,23 +123,23 @@ export function ParentDAOOverview() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Voter Participation</span>
-                <span className="text-foreground">78%</span>
+                <span className="text-foreground">{stats.voterParticipation}%</span>
               </div>
-              <Progress value={78} className="h-2" />
+              <Progress value={stats.voterParticipation} className="h-2" />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Proposal Success Rate</span>
-                <span className="text-foreground">85%</span>
+                <span className="text-foreground">{stats.proposalSuccessRate}%</span>
               </div>
-              <Progress value={85} className="h-2" />
+              <Progress value={stats.proposalSuccessRate} className="h-2" />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Community Engagement</span>
-                <span className="text-foreground">92%</span>
+                <span className="text-foreground">{stats.communityEngagement}%</span>
               </div>
-              <Progress value={92} className="h-2" />
+              <Progress value={stats.communityEngagement} className="h-2" />
             </div>
           </div>
         </div>
@@ -133,3 +147,4 @@ export function ParentDAOOverview() {
     </div>
   )
 }
+

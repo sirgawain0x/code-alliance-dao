@@ -46,16 +46,16 @@ function getMetadata() {
     if (typeof window === 'undefined') {
         // SSR fallback - will be updated on client
         return {
-            name: 'Code Alliance DAO',
-            description: 'Code Alliance DAO Governance Platform',
+            name: 'Creative Organization DAO',
+            description: 'Creative Organization DAO Governance Platform',
             url: 'https://code-alliance.com',
             icons: ['https://avatars.githubusercontent.com/u/179229932']
         }
     }
 
     return {
-        name: 'Code Alliance DAO',
-        description: 'Code Alliance DAO Governance Platform',
+        name: 'Creative Organization DAO',
+        description: 'Creative Organization DAO Governance Platform',
         url: window.location.origin, // Dynamically match current page URL
         icons: ['https://avatars.githubusercontent.com/u/179229932']
     }

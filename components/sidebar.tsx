@@ -87,7 +87,7 @@ export function Sidebar() {
                   <span className="text-primary-foreground font-bold text-sm">CA</span>
                 </div>
               )}
-              <span className="text-lg font-semibold text-sidebar-foreground truncate">{dao?.name || "Code Alliance"}</span>
+              <span className="text-lg font-semibold text-sidebar-foreground truncate">{dao?.name || "Creative Organization DAO"}</span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <ThemeToggle />
@@ -123,11 +123,11 @@ export function Sidebar() {
               <Link key={item.name} href={item.href} passHref>
                 <Button
                   variant={item.current ? "secondary" : "ghost"}
-                  className={`w-full justify-start text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent ${item.current ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+                  className={`menu-item-hover w-full justify-start text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent ${item.current ? "menu-item-active bg-sidebar-accent text-sidebar-accent-foreground" : ""
                     }`}
                   onClick={() => setIsMobileOpen(false)}
                 >
-                  <item.icon className="mr-3 h-4 w-4" />
+                  <item.icon className="menu-item-icon mr-3 h-4 w-4" />
                   {item.name}
                 </Button>
               </Link>
@@ -147,10 +147,10 @@ export function Sidebar() {
                   key={item.name}
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  className="menu-item-hover menu-item-external w-full justify-start text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
                   onClick={() => setIsMobileOpen(false)}
                 >
-                  <item.icon className="mr-3 h-4 w-4" />
+                  <item.icon className="menu-item-icon mr-3 h-4 w-4" />
                   {item.name}
                 </Button>
               ))}

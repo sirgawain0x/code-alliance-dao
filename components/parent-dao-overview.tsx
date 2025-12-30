@@ -31,7 +31,7 @@ export async function ParentDAOOverview() {
               <Building2 className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Code Alliance DAO</h1>
+              <h1 className="text-3xl font-bold text-foreground">Creative Organization DAO</h1>
               <p className="text-muted-foreground">Parent DAO governing the incubator ecosystem</p>
             </div>
           </div>

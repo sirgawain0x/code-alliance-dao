@@ -9,21 +9,23 @@ export default function MembersPage() {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 min-w-0 relative z-0">
-        <DashboardHeader />
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Member Management</h1>
-              <p className="text-muted-foreground">Manage members, roles, and permissions across the DAO ecosystem</p>
+        <div className="pt-16 md:pt-0">
+          <DashboardHeader />
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Member Management</h1>
+                <p className="text-muted-foreground">Manage members, roles, and permissions across the DAO ecosystem</p>
+              </div>
             </div>
-          </div>
-          <MembersOverview />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <MemberGrid />
-            </div>
-            <div>
-              <RoleManagement />
+            <MembersOverview />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <MemberGrid />
+              </div>
+              <div>
+                <RoleManagement />
+              </div>
             </div>
           </div>
         </div>

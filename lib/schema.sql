@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS proposal_metadata (
 -- Initial Seed Data (Optional - remove if not needed)
 INSERT INTO dao_info (name, mission, vision, total_members, active_subdaos, treasury_value, governance_score, voter_participation, proposal_success_rate, community_engagement)
 VALUES (
-  'Code Alliance DAO',
+  'Creative Organization DAO',
   'To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.',
   'To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources.',
   1247, 8, 2400000, 94, 78, 85, 92

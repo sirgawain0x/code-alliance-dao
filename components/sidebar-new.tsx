@@ -48,17 +48,16 @@ export function Sidebar() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-sidebar border-r border-sidebar-border z-40 transform transition-transform duration-300 ease-in-out ${
-        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:relative md:translate-x-0 md:flex-shrink-0`}>
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-sidebar border-r border-sidebar-border z-40 transform transition-transform duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:relative md:translate-x-0 md:flex-shrink-0`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">CA</span>
+                <span className="text-primary-foreground font-bold text-sm">CRTV</span>
               </div>
-              <span className="text-lg font-semibold text-sidebar-foreground">Code Alliance</span>
+              <span className="text-lg font-semibold text-sidebar-foreground">Creative Organization DAO</span>
             </div>
             <div className="flex items-center space-x-2">
               <ThemeToggle />
@@ -77,9 +76,9 @@ export function Sidebar() {
           <div className="px-6 pb-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search..." 
-                className="pl-10 bg-background/50 border-sidebar-border text-sidebar-foreground placeholder:text-muted-foreground focus:bg-background transition-colors" 
+              <Input
+                placeholder="Search..."
+                className="pl-10 bg-background/50 border-sidebar-border text-sidebar-foreground placeholder:text-muted-foreground focus:bg-background transition-colors"
               />
             </div>
           </div>
@@ -87,15 +86,14 @@ export function Sidebar() {
           {/* Navigation */}
           <nav className="flex-1 px-6 space-y-1">
             {navigation.map((item) => (
-              <Button 
-                key={item.name} 
-                variant={item.current ? "secondary" : "ghost"} 
-                className={`w-full justify-start text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent ${
-                  item.current ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
-                }`}
+              <Button
+                key={item.name}
+                variant={item.current ? "secondary" : "ghost"}
+                className={`menu-item-hover w-full justify-start text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent ${item.current ? "menu-item-active bg-sidebar-accent text-sidebar-accent-foreground" : ""
+                  }`}
                 onClick={() => setIsMobileOpen(false)}
               >
-                <item.icon className="mr-3 h-4 w-4" />
+                <item.icon className="menu-item-icon mr-3 h-4 w-4" />
                 {item.name}
               </Button>
             ))}
@@ -105,14 +103,14 @@ export function Sidebar() {
           <div className="px-6 py-4 border-t border-sidebar-border">
             <div className="space-y-1">
               {external.map((item) => (
-                <Button 
-                  key={item.name} 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full justify-start text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                <Button
+                  key={item.name}
+                  variant="ghost"
+                  size="sm"
+                  className="menu-item-hover menu-item-external w-full justify-start text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
                   onClick={() => setIsMobileOpen(false)}
                 >
-                  <item.icon className="mr-3 h-4 w-4" />
+                  <item.icon className="menu-item-icon mr-3 h-4 w-4" />
                   {item.name}
                 </Button>
               ))}

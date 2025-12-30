@@ -45,7 +45,7 @@ export function getConfig(): Config {
             configInstance = createConfig({
                 chains: [base, polygon, optimism],
                 connectors: [
-                    walletConnect({ projectId, showQrModal: false, metadata: { name: 'Code Alliance DAO', description: 'Code Alliance DAO', url: window.location.origin, icons: [] } }),
+                    walletConnect({ projectId, showQrModal: false, metadata: { name: 'Creative Organization DAO', description: 'Creative Organization DAO', url: window.location.origin, icons: [] } }),
                     injected(),
                 ],
                 storage: createStorage({

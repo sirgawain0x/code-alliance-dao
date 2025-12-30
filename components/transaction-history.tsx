@@ -86,7 +86,7 @@ export function TransactionHistory() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">Transaction History</h3>
-          <div className="flex space-x-2">
+          <div className="hidden sm:flex space-x-2">
             <Button variant="outline" size="sm">
               Export
             </Button>
@@ -98,54 +98,56 @@ export function TransactionHistory() {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <div className="relative flex-1 max-w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search transactions..." className="pl-10 bg-muted border-border" />
           </div>
 
-          <Select>
-            <SelectTrigger className="w-32 bg-muted border-border">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="incoming">Incoming</SelectItem>
-              <SelectItem value="outgoing">Outgoing</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 sm:gap-3">
+            <Select>
+              <SelectTrigger className="flex-1 sm:w-32 bg-muted border-border">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="incoming">Incoming</SelectItem>
+                <SelectItem value="outgoing">Outgoing</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select>
-            <SelectTrigger className="w-40 bg-muted border-border">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="subdao">SubDAO Funding</SelectItem>
-              <SelectItem value="grants">Grants</SelectItem>
-              <SelectItem value="operations">Operations</SelectItem>
-              <SelectItem value="investment">Investment</SelectItem>
-              <SelectItem value="yield">Yield</SelectItem>
-              <SelectItem value="revenue">Revenue</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select>
+              <SelectTrigger className="flex-1 sm:w-40 bg-muted border-border">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="subdao">SubDAO Funding</SelectItem>
+                <SelectItem value="grants">Grants</SelectItem>
+                <SelectItem value="operations">Operations</SelectItem>
+                <SelectItem value="investment">Investment</SelectItem>
+                <SelectItem value="yield">Yield</SelectItem>
+                <SelectItem value="revenue">Revenue</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Transaction List */}
         <div className="space-y-3">
           {transactions.map((tx) => (
-            <div key={tx.id} className="border border-border rounded-lg p-4 dao-card-hover cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+            <div key={tx.id} className="border border-border rounded-lg p-3 md:p-4 dao-card-hover cursor-pointer">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+                {/* Left side: Icon and Details */}
+                <div className="flex items-start md:items-center gap-3 md:gap-4 min-w-0 flex-1">
                   <div
-                    className={`p-2 rounded-full ${
-                      tx.type === "incoming"
-                        ? "bg-green-500/10"
-                        : tx.type === "outgoing"
-                          ? "bg-red-500/10"
-                          : "bg-yellow-500/10"
-                    }`}
+                    className={`p-2 rounded-full flex-shrink-0 ${tx.type === "incoming"
+                      ? "bg-green-500/10"
+                      : tx.type === "outgoing"
+                        ? "bg-red-500/10"
+                        : "bg-yellow-500/10"
+                      }`}
                   >
                     {tx.type === "incoming" ? (
                       <ArrowDownLeft className="h-4 w-4 text-green-400" />
@@ -156,34 +158,34 @@ export function TransactionHistory() {
                     )}
                   </div>
 
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-medium text-foreground">{tx.description}</h4>
-                      <Badge variant="outline" className="text-xs">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-medium text-foreground text-sm md:text-base truncate">{tx.description}</h4>
+                      <Badge variant="outline" className="text-xs flex-shrink-0">
                         {tx.category}
                       </Badge>
                     </div>
-                    <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                      <span>{tx.timestamp}</span>
-                      <span>•</span>
-                      <span className="font-mono">{tx.txHash}</span>
-                      <span>•</span>
-                      <span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-muted-foreground">
+                      <span className="flex-shrink-0">{tx.timestamp}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="font-mono truncate max-w-[120px] sm:max-w-[150px]">{tx.txHash}</span>
+                      <span className="hidden md:inline">•</span>
+                      <span className="truncate hidden md:block">
                         {tx.type === "incoming" ? "From" : "To"}: {tx.type === "incoming" ? tx.sender : tx.recipient}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-right">
+                {/* Right side: Amount and Status */}
+                <div className="flex items-center justify-between md:flex-col md:items-end md:justify-center gap-2 md:text-right flex-shrink-0">
                   <div
-                    className={`font-medium ${
-                      tx.type === "incoming"
-                        ? "text-green-400"
-                        : tx.type === "outgoing"
-                          ? "text-red-400"
-                          : "text-yellow-400"
-                    }`}
+                    className={`font-medium text-sm md:text-base ${tx.type === "incoming"
+                      ? "text-green-400"
+                      : tx.type === "outgoing"
+                        ? "text-red-400"
+                        : "text-yellow-400"
+                      }`}
                   >
                     {tx.type === "incoming" ? "+" : tx.type === "outgoing" ? "-" : ""}${tx.amount.toLocaleString()}{" "}
                     {tx.asset}

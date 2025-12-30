@@ -6,7 +6,7 @@ export async function getParentDaoData() {
     try {
         const result = await db.query(`
       SELECT * FROM dao_info 
-      WHERE name = 'Code Alliance DAO' 
+      WHERE name = 'Creative Organization DAO' 
       LIMIT 1
     `)
         return result.rows[0] || null

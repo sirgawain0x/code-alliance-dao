@@ -143,3 +143,60 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.1);
 }
+
+/* Menu item hover animations */
+.menu-item-hover {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.menu-item-hover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: hsl(var(--primary));
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0 2px 2px 0;
+}
+
+.menu-item-hover:hover::before {
+  height: 70%;
+}
+
+.menu-item-hover:hover {
+  transform: translateX(4px);
+  background-color: hsl(var(--sidebar-accent)) !important;
+}
+
+.menu-item-hover:hover .menu-item-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.menu-item-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glow effect for active menu items */
+.menu-item-active {
+  background: linear-gradient(90deg, hsl(var(--sidebar-accent)) 0%, hsl(var(--sidebar-accent) / 0.5) 100%);
+  border-left: 3px solid hsl(var(--primary));
+}
+
+/* Subtle pulse animation for external links */
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.menu-item-external:hover .menu-item-icon {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}

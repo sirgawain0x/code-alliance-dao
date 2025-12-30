@@ -4,11 +4,12 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Providers } from "@/components/providers"
 import { AppKitProvider } from "@/contexts/AppKitProvider"
+import { ScrollToTop } from "@/components/scroll-to-top"
 import { headers } from "next/headers"
 
 export const metadata: Metadata = {
-  title: "Code Alliance DAO",
-  description: "Decentralized governance for The Code Alliance Incubator",
+  title: "Creative Organization DAO",
+  description: "Decentralized governance for The Creative Organization DAO",
 }
 
 export default async function RootLayout({
@@ -21,7 +22,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <AppKitProvider cookies={cookies}>
           <Providers>
             <ThemeProvider
@@ -31,6 +32,7 @@ export default async function RootLayout({
               disableTransitionOnChange
             >
               {children}
+              <ScrollToTop />
             </ThemeProvider>
           </Providers>
         </AppKitProvider>

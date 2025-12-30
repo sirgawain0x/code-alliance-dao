@@ -10,14 +10,16 @@ export default function ParentDAOPage() {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 min-w-0 relative z-0">
-        <DashboardHeader />
-        <div className="p-6 space-y-6">
-          <ParentDAOOverview />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <GovernanceMetrics />
-            <TreasuryOverview />
+        <div className="pt-16 md:pt-0">
+          <DashboardHeader />
+          <div className="p-6 space-y-6">
+            <ParentDAOOverview />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <GovernanceMetrics />
+              <TreasuryOverview />
+            </div>
+            <RecentProposals />
           </div>
-          <RecentProposals />
         </div>
       </main>
     </div>

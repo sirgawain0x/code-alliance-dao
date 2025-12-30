@@ -9,17 +9,19 @@ export default function SubDAOsPage() {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 min-w-0 relative z-0">
-        <DashboardHeader />
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">SubDAO Management</h1>
-              <p className="text-muted-foreground">Manage and oversee all SubDAOs in the ecosystem</p>
+        <div className="pt-16 md:pt-0">
+          <DashboardHeader />
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">SubDAO Management</h1>
+                <p className="text-muted-foreground">Manage and oversee all SubDAOs in the ecosystem</p>
+              </div>
             </div>
+            <SubDAOStats />
+            <CreateSubDAOCard />
+            <SubDAOGrid />
           </div>
-          <SubDAOStats />
-          <CreateSubDAOCard />
-          <SubDAOGrid />
         </div>
       </main>
     </div>

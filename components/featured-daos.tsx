@@ -5,8 +5,8 @@ import { Search } from "lucide-react"
 
 const featuredDAOs = [
   {
-    name: "Code Alliance DAO",
-    description: "Main governance DAO for the Code Alliance Incubator ecosystem.",
+    name: "Creative Organization DAO",
+    description: "Main governance DAO for the Creative Organization ecosystem.",
     icon: "🏛️",
     verified: true,
     type: "Parent DAO",

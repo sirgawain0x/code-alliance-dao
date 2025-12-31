@@ -7,6 +7,7 @@ export { useDaosForAddress } from "./useDaosForAddress";
 // Member hooks
 export { useDaoMembers } from "./useDaoMembers";
 export { useMember } from "./useMember";
+export { useNounsDao } from "./useNounsDao";
 
 // Proposal hooks
 export { useDaoProposals } from "./useDaoProposals";

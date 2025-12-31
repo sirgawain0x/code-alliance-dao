@@ -1,12 +1,13 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { Card } from "./ui/card"
+import { Button } from "./ui/button"
+import { Progress } from "./ui/progress"
 import { Vote, Users, Clock, TrendingUp } from "lucide-react"
 import { useMemo } from "react"
-import { useDaoProposals } from "@/hooks/useDaoProposals"
-import { useDao } from "@/hooks/useDao"
+import { useDaoProposals } from "../hooks/useDaoProposals"
+import { useDao } from "../hooks/useDao"
+import { ProposalItem } from "../utils/daotypes"
 
 
 
@@ -52,7 +53,7 @@ export function GovernanceOverview() {
   const activeProposals = useMemo(() => {
     if (!proposals) return [];
     const now = new Date().getTime() / 1000;
-    return proposals.filter((p) => {
+    return proposals.filter((p: ProposalItem) => {
       return !p.processed && !p.cancelled && Number(p.votingEnds) > now;
     });
   }, [proposals]);
@@ -61,7 +62,7 @@ export function GovernanceOverview() {
     return <div className="animate-pulse h-96 bg-muted rounded-lg"></div>
   }
 
-  const passedProposals = proposals?.filter(p => p.passed).length || 0;
+  const passedProposals = proposals?.filter((p: ProposalItem) => p.passed).length || 0;
   const totalProposals = proposals?.length || 0;
   const passedRate = totalProposals > 0 ? Math.round((passedProposals / totalProposals) * 100) : 0;
 

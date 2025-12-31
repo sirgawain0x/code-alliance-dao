@@ -44,7 +44,6 @@ export const getGraphUrl = ({
   const subgraphHash = SUBGRAPH_IDS[subgraphKey]?.[hexChainId];
 
   if (!subgraphHash) {
-    console.error(`Invalid chainid (${chainid}/${hexChainId}) or subgraphKey (${subgraphKey})`);
     throw new Error(`Unsupported chain ID: ${chainid} or subgraph key: ${subgraphKey}`);
   }
 

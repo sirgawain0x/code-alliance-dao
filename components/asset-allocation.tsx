@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, TrendingDown, Coins } from "lucide-react"
 import { useDaoTokenBalances } from "@/hooks/useDaoTokenBalances"
-import { formatUnits } from "viem"
+import { formatUnits } from "ethers"
 
 // Helper to determine token type based on symbol
 function getTokenType(symbol: string): string {
@@ -76,13 +76,13 @@ export function AssetAllocation() {
   // Calculate total value and percentages
   const totalValue = tokens?.reduce((sum, token) => {
     if (!token.token?.decimals) return sum;
-    const value = Number(formatUnits(BigInt(token.balance), token.token.decimals));
+    const value = Number(formatUnits(token.balance, token.token.decimals));
     return sum + value;
   }, 0) || 0;
 
   const assets = tokens?.filter(token => token.token != null).map((token) => {
     const decimals = token.token!.decimals ?? 18;
-    const balance = Number(formatUnits(BigInt(token.balance), decimals));
+    const balance = Number(formatUnits(token.balance, decimals));
     const percentage = totalValue > 0 ? (balance / totalValue) * 100 : 0;
     const type = getTokenType(token.token!.symbol ?? "UNKNOWN");
     const risk = getTokenRisk(type);

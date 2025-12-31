@@ -1,0 +1,76 @@
+---
+trigger: model_decision
+description: The Swap feature allows users to exchange one cryptocurrency for another directly within the AppKit modal.
+---
+
+# Swaps
+
+The Swap feature allows users to exchange one cryptocurrency for another directly within the AppKit modal.
+This feature is designed to provide a seamless and efficient swapping experience, leveraging our collaboration with [1inch](https://1inch.io/) as the swap provider.
+
+## Availability
+
+* **Requirement**: The Swap feature is available only to users who log in via email or social login. This is consistent with other wallet features such as sending tokens.
+* **Transaction Fee**: Reown charges a 0.85% transaction fee on all swaps.
+* **Supported Tokens**: The tokens available for swapping are limited to those supported by 1Inch. Note that the availability of tokens may vary depending on the network.
+* **Network Availability**: The Swap feature is not available on Sepolia or other testnets at this time.
+
+## How to Use
+
+1. **Connect**: Ensure you are logged in via email or social login.
+2. **Access Swap**: Navigate to the Swap feature within the account view.
+3. **Select Tokens**: Choose the tokens you wish to swap from the available options.
+4. **Type amount**: Enter your desired swap values. You can use the Max button to swap your all tokens or enter any specific number.
+5. **See swap details**: Once you type amount value. You'll see the available quote details as received amount, network fee, maximum slippage, or price impact.
+6. **Confirm Swap**: Review the swap details, including the transaction fee, and confirm the swap.
+
+## Integration
+
+The Swaps feature is enabled by default, so no additional configuration is required.
+
+If you prefer to disable it, set the `swaps` flag to `false` in the configuration of the `createAppKit` function.
+
+```ts {7} theme={null}
+const modal = createAppKit({
+  adapters: [wagmiAdapter],
+  projectId,
+  networks: [mainnet, arbitrum],
+  metadata: metadata,
+  features: {
+    swaps: false // Optional - true by default
+  }
+})
+```
+
+## Setting Default Tokens
+
+You can programmatically open the Swap view with pre-selected tokens and amounts using the `open` function from the [`useAppKit`](/appkit/react/core/hooks#useappkit) hook. This allows you to customize the default swap experience for your users.
+
+```ts  theme={null}
+import { useAppKit } from '@reown/appkit/react'
+
+function Component() {
+  const { open } = useAppKit()
+
+  const openSwapWithDefaults = () => {
+    open({
+      view: 'Swap',
+      arguments: {
+        amount: '100',      // Optional: pre-fill the swap amount
+        fromToken: 'USDC',  // Optional: set the token to swap from
+        toToken: 'ETH'      // Optional: set the token to swap to
+      }
+    })
+  }
+
+  return <button onClick={openSwapWithDefaults}>Swap USDC to ETH</button>
+}
+```
+
+### Parameters
+
+* `amount` (optional): Pre-fill the amount to swap
+* `fromToken` (optional): Set the default token to swap from (e.g., 'USDC', 'ETH', 'DAI')
+* `toToken` (optional): Set the default token to swap to (e.g., 'ETH', 'USDC', 'USDT')
+
+This is particularly useful when you want to guide users to swap specific tokens or create custom swap buttons for different token pairs in your application.

@@ -17,7 +17,7 @@ import { useProposal } from "@/hooks/useProposal"
 import { useDao } from "@/hooks/useDao"
 import { useMember } from "@/hooks/useMember"
 
-import { useAccount } from "wagmi"
+import { useAppKitAccount } from "@reown/appkit/react"
 import { Skeleton } from "./ui/skeleton"
 
 export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailProps) {
@@ -32,7 +32,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
     proposalid: proposalId
   });
 
-  const { address } = useAccount();
+  const { address } = useAppKitAccount();
 
   const { member } = useMember({
     chainid: "8453",

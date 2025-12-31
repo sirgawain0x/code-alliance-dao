@@ -4,14 +4,14 @@ import { Card } from "@/components/ui/card"
 import { TrendingUp, FileText, Vote, Users } from "lucide-react"
 import { useDao } from "@/hooks/useDao"
 import { useProposals } from "@/hooks/useProposals"
-import { formatEther } from "viem"
+import { formatEther } from "ethers"
 
 const safeFormatEther = (val: string | undefined | null) => {
   try {
     if (!val) return "0";
     const cleanVal = val.toString().split('.')[0];
     if (cleanVal === "") return "0";
-    return formatEther(BigInt(cleanVal));
+    return formatEther(cleanVal);
   } catch (e) {
     return "0";
   }

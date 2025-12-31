@@ -16,6 +16,7 @@ const SUBGRAPH_IDS: KeychainList = {
   DAOHAUS: {
     "0xaa36a7": `3k93SNY5Y1r4YYWEuPY9mpCm2wnGoYDKRtk82QZJ3Kvw`,
     "0x64": `6x9FK3iuhVFaH9sZ39m8bKB5eckax8sjxooBPNKWWK8r`,
+    "0x89": `A4su27JYXR5TkPZmiFHzzqMJnmYttfU3FyrdNBDnnu8T`,
     "0xa": `CgH5vtz9CJPdcSmD3XEh8fCVDjQjnRwrSawg71T1ySXW`,
     "0xa4b1": `GPACxuMWrrPSEJpFqupnePJNMfuArpFabrXLnWvXU2bp`,
     "0x2105": `7yh4eHJ4qpHEiLPAk9BXhL5YgYrTrRE6gWy8x4oHyAqW`,
@@ -38,10 +39,10 @@ export const getGraphUrl = ({
 
   // Convert chainid to hex format if it's decimal
   const hexChainId = chainid.startsWith('0x') ? chainid : `0x${parseInt(chainid).toString(16)}`;
-  
+
   // Get the subgraph hash for the specific chain and subgraph key
   const subgraphHash = SUBGRAPH_IDS[subgraphKey]?.[hexChainId];
-  
+
   if (!subgraphHash) {
     console.error(`Invalid chainid (${chainid}/${hexChainId}) or subgraphKey (${subgraphKey})`);
     throw new Error(`Unsupported chain ID: ${chainid} or subgraph key: ${subgraphKey}`);
@@ -49,7 +50,7 @@ export const getGraphUrl = ({
 
   // Base URL for DAO Haus subgraphs
   const baseUrl = "https://gateway-arbitrum.network.thegraph.com/api";
-  
+
   return `${baseUrl}/${graphKey}/subgraphs/id/${subgraphHash}`;
 };
 
@@ -95,20 +96,19 @@ export const getTokenIndexerUrl = ({
     "4002": "https://fantom-testnet-indexer.sequence.app",
     "338": "https://cronos-testnet-indexer.sequence.app",
     "10200": "https://gnosis-testnet-indexer.sequence.app",
-    "1287": "https://moonbase-indexer.sequence.app",
-    "592": "https://astar-testnet-indexer.sequence.app",
+    "81": "https://astar-testnet-indexer.sequence.app", // Shibuya
     "599": "https://metis-testnet-indexer.sequence.app",
     "28882": "https://boba-testnet-indexer.sequence.app",
     "1666700000": "https://harmony-testnet-indexer.sequence.app",
     "256": "https://heco-testnet-indexer.sequence.app",
     "65": "https://okc-testnet-indexer.sequence.app",
-    "8217": "https://klaytn-testnet-indexer.sequence.app",
-    "106": "https://velas-testnet-indexer.sequence.app",
-    "40": "https://telos-testnet-indexer.sequence.app",
+    "1001": "https://klaytn-testnet-indexer.sequence.app", // Baobab
+    "111": "https://velas-testnet-indexer.sequence.app", // Velas Testnet
+    "41": "https://telos-testnet-indexer.sequence.app", // Telos Testnet
   };
 
   const indexerUrl = indexerUrls[chainid];
-  
+
   if (!indexerUrl) {
     throw new Error(`Unsupported chain ID: ${chainid}`);
   }
@@ -164,13 +164,13 @@ export const getRpcUrl = ({
     "1666700000": "https://api.s0.b.hmny.io",
     "256": "https://http-testnet.hecochain.com",
     "65": "https://exchaintestrpc.okex.org",
-    "8217": "https://api.baobab.klaytn.net:8651",
-    "106": "https://evmexplorer.testnet.velas.com/rpc",
-    "40": "https://testnet.telos.net/evm",
+    "1001": "https://api.baobab.klaytn.net:8651",
+    "111": "https://evmexplorer.testnet.velas.com/rpc",
+    "41": "https://testnet.telos.net/evm",
   };
 
   const rpcUrl = rpcUrls[chainid];
-  
+
   if (!rpcUrl) {
     throw new Error(`Unsupported chain ID: ${chainid}`);
   }
@@ -227,13 +227,13 @@ export const getBlockExplorerUrl = ({
     "1666700000": "https://explorer.pops.one",
     "256": "https://testnet.hecoinfo.com",
     "65": "https://www.oklink.com/en/okc-test",
-    "8217": "https://baobab.scope.klaytn.com",
-    "106": "https://evmexplorer.testnet.velas.com",
-    "40": "https://testnet.teloscan.io",
+    "1001": "https://baobab.scope.klaytn.com",
+    "111": "https://evmexplorer.testnet.velas.com",
+    "41": "https://testnet.teloscan.io",
   };
 
   const baseUrl = explorerUrls[chainid];
-  
+
   if (!baseUrl) {
     throw new Error(`Unsupported chain ID: ${chainid}`);
   }
@@ -241,10 +241,10 @@ export const getBlockExplorerUrl = ({
   if (txHash) {
     return `${baseUrl}/tx/${txHash}`;
   }
-  
+
   if (address) {
     return `${baseUrl}/address/${address}`;
   }
-  
+
   return baseUrl;
 };

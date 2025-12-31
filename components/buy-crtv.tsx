@@ -1,8 +1,10 @@
 "use client"
 
+import { base, polygon, optimism } from '@reown/appkit/networks'
+
 import { useState } from "react"
-import { useAccount, useChainId, useSwitchChain } from "wagmi"
-import { useAppKit } from "@reown/appkit/react"
+// import { useAccount, useChainId, useSwitchChain } from "wagmi" // Removed Wagmi
+import { useAppKit, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,9 +15,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function BuyCRTV() {
-    const { address, isConnected } = useAccount()
-    const chainId = useChainId()
-    const { switchChain } = useSwitchChain()
+    const { address, isConnected } = useAppKitAccount()
+    const { chainId, switchNetwork } = useAppKitNetwork()
+    // const { switchChain } = useSwitchChain() // Removed Wagmi
     const { open } = useAppKit()
 
     const isSupportedChain = SUPPORTED_CHAINS.includes(chainId as any)
@@ -75,9 +77,9 @@ export function BuyCRTV() {
                             </AlertDescription>
                         </Alert>
                         <div className="grid grid-cols-1 gap-2">
-                            <Button onClick={() => switchChain({ chainId: 8453 })}>Switch to Base</Button>
-                            <Button onClick={() => switchChain({ chainId: 137 })}>Switch to Polygon</Button>
-                            <Button onClick={() => switchChain({ chainId: 10 })}>Switch to Optimism</Button>
+                            <Button onClick={() => switchNetwork(base)}>Switch to Base</Button>
+                            <Button onClick={() => switchNetwork(polygon)}>Switch to Polygon</Button>
+                            <Button onClick={() => switchNetwork(optimism)}>Switch to Optimism</Button>
                         </div>
                     </div>
                 ) : (

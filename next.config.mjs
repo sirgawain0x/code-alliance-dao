@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  productionBrowserSourceMaps: true, // Enable source maps for better debugging
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -7,9 +8,10 @@ const nextConfig = {
     unoptimized: true,
   },
   // Optimize resource loading
-  experimental: {
-    optimizePackageImports: ['@reown/appkit', 'wagmi', '@tanstack/react-query'],
-  },
+  transpilePackages: ['@reown/appkit', '@reown/appkit-adapter-ethers5', '@phosphor-icons/webcomponents', 'lit'],
+  // experimental: {
+  //   optimizePackageImports: ['wagmi', '@tanstack/react-query'],
+  // },
   webpack: (config, { isServer }) => {
     config.externals.push(
       "pino-pretty",

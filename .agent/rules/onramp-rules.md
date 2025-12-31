@@ -1,0 +1,152 @@
+---
+trigger: model_decision
+description: AppKit seamlessly incorporates Coinbase Pay, enabling users to sign in to their Coinbase accounts and utilize fiat payment methods for purchasing cryptocurrencies.
+---
+
+# On-Ramp
+
+On-Ramp securely provides users access to over 100 cryptocurrencies from right within your app. In just a few clicks, users can purchase tokens to support in-app activity and transactions across multiple chains. Set up in minutes with just one line of code.
+
+<div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', height: 0 }}>
+  <iframe
+    style={{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    maxWidth: '720px',
+    margin: '0 auto'
+  }}
+    src="https://www.youtube.com/embed/B05eA3ufp-Y?si=hcRl_ZLf5qZ2l5pC"
+    title="YouTube video player"
+    frameBorder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerPolicy="strict-origin-when-cross-origin"
+    allowFullScreen
+  />
+</div>
+
+## Demo
+
+<CardGroup cols={2}>
+  <Card icon="flask" title="Try Demo" href="https://appkit-lab.reown.com/appkit/?name=wagmi" />
+</CardGroup>
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="React" icon="react" href="/appkit/react/transactions/onramp">
+    Get started with AppKit in React.
+  </Card>
+
+  <Card title="Next.js" icon="square-n" href="/appkit/next/transactions/onramp">
+    Get started with AppKit in Next.js.
+  </Card>
+
+  <Card title="Vue" icon="vuejs" href="/appkit/vue/transactions/onramp">
+    Get started with AppKit in Vue.
+  </Card>
+
+  <Card title="JavaScript" icon="js" href="/appkit/javascript/transactions/onramp">
+    Get started with AppKit in JavaScript.
+  </Card>
+</CardGroup>
+
+## Process Overview
+
+AppKit On-Ramp makes it easy for users to purchase crypto without the hassle of switching between multiple platforms and signing multiple messages - a simple, seamless, in-app experience for anyone looking to securely transact within web3.
+
+For a step-by-step guide on user flow with AppKit On-Ramp, refer to our Youtube video [here](https://youtu.be/m1E_N5b3r18?t=241\&feature=shared).
+
+<Note>
+  On-Ramp is supported in the latest version of AppKit. If you are using an
+  older version, make sure you upgrade.
+</Note>
+
+### Connect your wallet
+
+Head over to a AppKit-enabled application and click the "Connect Wallet" button. You will be prompted to connect your wallet.
+
+<Frame>
+  <img src="https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/1.png?fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=4d121614bbd85e09dbbdb129c1df9a02" data-og-width="1920" width="1920" data-og-height="1440" height="1440" data-path="images/w3m/onramp/1.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/1.png?w=280&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=83867d833ef45e0bb29e4aa8e31b1d8e 280w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/1.png?w=560&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=cf88302928d7116e3f9a76d3b9623281 560w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/1.png?w=840&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=4aa30e402ce340394603ba740bbacae3 840w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/1.png?w=1100&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=d7cc05c4831be6a4f14075d3935b22a2 1100w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/1.png?w=1650&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=b6d62b78d04cc6ef92144fe36077a83a 1650w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/1.png?w=2500&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=df1540c2465fc876def2cc8257f682de 2500w" />
+</Frame>
+
+### Select "Buy Crypto"
+
+Once connected, select "Buy Crypto" from the wallet modal.
+
+<Frame>
+  <img src="https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/2.png?fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=5c9b67f7131c260d93defd585801564a" data-og-width="1920" width="1920" data-og-height="1440" height="1440" data-path="images/w3m/onramp/2.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/2.png?w=280&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=0e5c6fd92d5c0f42f1e83cd02f7addf3 280w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/2.png?w=560&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=570cd18d0689b02b88af114e753ae3ff 560w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/2.png?w=840&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=5b9981c7c2fc49137789464e9201c2cd 840w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/2.png?w=1100&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=f14d6e2ad782409eba1c75834f46db72 1100w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/2.png?w=1650&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=138dd20a34666458d2caf574f9dd036e 1650w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/2.png?w=2500&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=43281dc22948f3ccb6ed5677f8cdc8df 2500w" />
+</Frame>
+
+### Choose your provider
+
+Select "Meld" as your provider.
+
+<Frame>
+  <img src="https://mintcdn.com/reown-5552f0bb/Ug_AGBE-MPjLDToT/images/w3m/onramp/3.png?fit=max&auto=format&n=Ug_AGBE-MPjLDToT&q=85&s=7d5bb799c17be3a15d7742ff2e5ac7eb" data-og-width="802" width="802" data-og-height="358" height="358" data-path="images/w3m/onramp/3.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/reown-5552f0bb/Ug_AGBE-MPjLDToT/images/w3m/onramp/3.png?w=280&fit=max&auto=format&n=Ug_AGBE-MPjLDToT&q=85&s=c63d51a1ebeeb4c9ed912a24557ac040 280w, https://mintcdn.com/reown-5552f0bb/Ug_AGBE-MPjLDToT/images/w3m/onramp/3.png?w=560&fit=max&auto=format&n=Ug_AGBE-MPjLDToT&q=85&s=f3090aa5970a6081f6f397f8d0ef253f 560w, https://mintcdn.com/reown-5552f0bb/Ug_AGBE-MPjLDToT/images/w3m/onramp/3.png?w=840&fit=max&auto=format&n=Ug_AGBE-MPjLDToT&q=85&s=95b2ed2d3d7b455694869d73adfe79ae 840w, https://mintcdn.com/reown-5552f0bb/Ug_AGBE-MPjLDToT/images/w3m/onramp/3.png?w=1100&fit=max&auto=format&n=Ug_AGBE-MPjLDToT&q=85&s=1a7be40bbb8b158c8dfd237b1e82baa2 1100w, https://mintcdn.com/reown-5552f0bb/Ug_AGBE-MPjLDToT/images/w3m/onramp/3.png?w=1650&fit=max&auto=format&n=Ug_AGBE-MPjLDToT&q=85&s=d4c5e0155a0625592715fecc8a29989b 1650w, https://mintcdn.com/reown-5552f0bb/Ug_AGBE-MPjLDToT/images/w3m/onramp/3.png?w=2500&fit=max&auto=format&n=Ug_AGBE-MPjLDToT&q=85&s=1908bc6380226c875360da58b99c469f 2500w" />
+</Frame>
+
+### Complete your purchase
+
+Complete your purchase using your selected provider. You will be prompted to sign in to your Meld account.
+If the payment page does not appear, you can copy link from the wallet modal and paste it in your browser.
+
+### Select assets and amount
+
+Choose the asset and amount you would like to purchase from your selected provider.
+
+<Frame>
+  <img src="https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/5.png?fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=cf2e4fc8c3b8948ad520c26df947bf8d" data-og-width="1920" width="1920" data-og-height="1440" height="1440" data-path="images/w3m/onramp/5.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/5.png?w=280&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=69599820b01e696352983481961945b2 280w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/5.png?w=560&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=f098447e16cfef9c9b8c803119c83cdf 560w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/5.png?w=840&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=7717e7bf264377b17e02a0e3b92d7ea9 840w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/5.png?w=1100&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=1f8d88b95ee22a657c16641376ee7a12 1100w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/5.png?w=1650&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=a0ecd62f3a7066557edf53adff9cb4a4 1650w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/5.png?w=2500&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=a3b6eac7d6ea01637f2fdcb974752a70 2500w" />
+</Frame>
+
+### Receive your crypto
+
+Once your purchase is complete, you will receive your crypto in your wallet.
+
+<Frame>
+  <img src="https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/6.png?fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=a536122d4717a2c8bd0eb5162fb7c327" data-og-width="1920" width="1920" data-og-height="1440" height="1440" data-path="images/w3m/onramp/6.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/6.png?w=280&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=b778d21c9b4450001ccb86615fc4a8f9 280w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/6.png?w=560&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=4f7dbbeeb4fd7bf2029781ce4e089009 560w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/6.png?w=840&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=850d93e7a281bd0a251dc8efdcb4a848 840w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/6.png?w=1100&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=5afcbd7389681573c5d8f926e78bc517 1100w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/6.png?w=1650&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=5f2918ec856e4eb7d9b17afd0855871e 1650w, https://mintcdn.com/reown-5552f0bb/pFjT1B7UtTo7EOJK/images/w3m/onramp/6.png?w=2500&fit=max&auto=format&n=pFjT1B7UtTo7EOJK&q=85&s=98f4a6018ecdb9f8939025289e3e141e 2500w" />
+</Frame>
+
+
+# On-Ramp
+
+AppKit seamlessly incorporates Coinbase Pay, enabling users to sign in to their Coinbase accounts and utilize fiat payment methods for purchasing cryptocurrencies.
+
+<Note>
+  On-Ramp is supported in the latest version of AppKit. If you are using an older version, make sure you upgrade.
+</Note>
+
+## Integration
+
+The On-Ramp feature is enabled by default, so no additional configuration is required.
+
+If you prefer to disable it, set the `onramp` flag to `false` in the configuration of the `createAppKit` function.
+
+<Note>
+  On-Ramp is now available on **Solana**. The configuration for On-Ramp on both EVM and Solana is the same. Please refer to the code snippet below.
+</Note>
+
+```ts {7} theme={null}
+const modal = createAppKit({
+  adapters: [wagmiAdapter],
+  projectId,
+  networks: [mainnet, arbitrum],
+  metadata: metadata,
+  features: {
+    onramp: false // Optional - true by default
+  }
+})
+```
+
+## On-Ramp API
+
+You can programmatically open the On-Ramp modal.
+
+```
+const { open } = useAppKit()
+
+open({ view: 'OnRampProviders' })
+```
+

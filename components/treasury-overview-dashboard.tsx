@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, TrendingDown, DollarSign, PieChart, Shield } from "lucide-react"
 import { useDao } from "@/hooks/useDao"
-import { formatEther } from "viem"
+import { formatEther } from "ethers"
 
 const riskMetrics = [
   { label: "Liquidity Risk", level: 15, status: "low" },
@@ -34,7 +34,7 @@ export function TreasuryOverviewDashboard() {
   const treasuryStats = [
     {
       label: "Total Shares",
-      value: Math.round(Number(formatEther(BigInt(dao.totalShares || "0")))).toLocaleString(),
+      value: Math.round(Number(formatEther(dao.totalShares || "0"))).toLocaleString(),
       subValue: dao.shareTokenSymbol,
       change: "+8.5%",
       changeType: "positive",
@@ -43,7 +43,7 @@ export function TreasuryOverviewDashboard() {
     },
     {
       label: "Total Loot",
-      value: Math.round(Number(formatEther(BigInt(dao.totalLoot || "0")))).toLocaleString(),
+      value: Math.round(Number(formatEther(dao.totalLoot || "0"))).toLocaleString(),
       subValue: dao.lootTokenSymbol,
       change: "+12.3%",
       changeType: "positive",

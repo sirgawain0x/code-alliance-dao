@@ -91,10 +91,10 @@ export function SubDAOGrid() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">All SubDAOs</h3>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">
             Filter
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">
             Sort
           </Button>
         </div>
@@ -119,7 +119,7 @@ export function SubDAOGrid() {
                     </Badge>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="transition-all duration-200 hover:scale-110 active:scale-95">
                   <Settings className="h-4 w-4" />
                 </Button>
               </div>
@@ -169,11 +169,18 @@ export function SubDAOGrid() {
 
               {/* Actions */}
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm" className="flex-1 bg-transparent">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 bg-transparent transition-all duration-200 hover:scale-105 active:scale-95"
+                >
                   View Details
                 </Button>
                 {subdao.status === "active" && (
-                  <Button size="sm" className="flex-1">
+                  <Button
+                    size="sm"
+                    className="flex-1 transition-all duration-200 hover:scale-105 active:scale-95"
+                  >
                     Manage
                   </Button>
                 )}

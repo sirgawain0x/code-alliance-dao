@@ -3,7 +3,8 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Providers } from "@/components/providers"
-import { AppKitProvider } from "@/contexts/AppKitProvider"
+
+import { AppKitWrapper } from "@/components/appkit-wrapper"
 import { ScrollToTop } from "@/components/scroll-to-top"
 import { headers } from "next/headers"
 
@@ -23,7 +24,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <AppKitProvider cookies={cookies}>
+        <AppKitWrapper cookies={cookies}>
           <Providers>
             <ThemeProvider
               attribute="class"
@@ -35,7 +36,7 @@ export default async function RootLayout({
               <ScrollToTop />
             </ThemeProvider>
           </Providers>
-        </AppKitProvider>
+        </AppKitWrapper>
       </body>
     </html>
   )

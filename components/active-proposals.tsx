@@ -95,7 +95,7 @@ export function ActiveProposals() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-foreground">All Proposals</h3>
-            <Button size="sm">Create Proposal</Button>
+            <Button size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">Create Proposal</Button>
           </div>
           <p className="text-muted-foreground">
             {isLoading ? "Loading proposals..." : "No proposals found. Create a proposal to get started."}
@@ -111,10 +111,10 @@ export function ActiveProposals() {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">All Proposals</h3>
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">
               Filter
             </Button>
-            <Button size="sm">Create Proposal</Button>
+            <Button size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">Create Proposal</Button>
           </div>
         </div>
 
@@ -213,7 +213,15 @@ export function ActiveProposals() {
 
                   {/* Actions */}
                   <div className="flex items-center justify-between pt-2">
-                    <Button variant="outline" size="sm" onClick={(e) => e.preventDefault()}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="transition-all duration-200 hover:scale-105 active:scale-95"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Navigation is handled by parent Link
+                      }}
+                    >
                       View Details
                     </Button>
 
@@ -222,15 +230,21 @@ export function ActiveProposals() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent"
-                          onClick={(e) => e.preventDefault()}
+                          className="text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent transition-all duration-200 hover:scale-105 active:scale-95"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // TODO: Implement vote against logic
+                          }}
                         >
                           Vote Against
                         </Button>
                         <Button
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={(e) => e.preventDefault()}
+                          className="bg-green-600 hover:bg-green-700 transition-all duration-200 hover:scale-105 active:scale-95"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // TODO: Implement vote for logic
+                          }}
                         >
                           <Vote className="h-4 w-4 mr-2" />
                           Vote For

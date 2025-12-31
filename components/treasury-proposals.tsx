@@ -54,7 +54,7 @@ export function TreasuryProposals() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">Treasury Proposals</h3>
-          <Button size="sm">New Proposal</Button>
+          <Button size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">New Proposal</Button>
         </div>
 
         <div className="space-y-4">
@@ -119,10 +119,17 @@ export function TreasuryProposals() {
                     </div>
 
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1 bg-transparent">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 bg-transparent transition-all duration-200 hover:scale-105 active:scale-95"
+                      >
                         View Details
                       </Button>
-                      <Button size="sm" className="flex-1">
+                      <Button
+                        size="sm"
+                        className="flex-1 transition-all duration-200 hover:scale-105 active:scale-95"
+                      >
                         <Vote className="h-3 w-3 mr-1" />
                         Vote
                       </Button>
@@ -133,7 +140,7 @@ export function TreasuryProposals() {
                 {proposal.status === "passed" && (
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-green-400">✓ Proposal passed and executed</span>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">
                       View Results
                     </Button>
                   </div>

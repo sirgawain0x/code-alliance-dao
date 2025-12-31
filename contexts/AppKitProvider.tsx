@@ -18,7 +18,7 @@ const metadata = {
 }
 
 // Create Ethers adapter
-const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'b56e18d47c72e2906fd4321949108048'
+const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'b56e18d47c72e2906fd4321949108048'
 
 // Initialize AppKit
 createAppKit({

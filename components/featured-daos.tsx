@@ -1,71 +1,16 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Card } from "./ui/card"
+import { Badge } from "./ui/badge"
+import { Button } from "./ui/button"
 import { Search, Users } from "lucide-react"
-import { useDao } from "@/hooks"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useDao, useNounsDao } from "../hooks"
+import { Skeleton } from "./ui/skeleton"
 import Link from "next/link"
 
-// Configuration for featured DAOs across multiple chains
-const FEATURED_DAOS_CONFIG = [
-  {
-    chainId: "0x2105",
-    address: "0x95c041ade16243665085323ad845051de57d78b1",
-    label: "Base Yeeter",
-    fallbackIcon: "🎯",
-  },
-  {
-    chainId: "0x89",
-    address: "0x9da29b87c2471feb00b931498919dc22340c8489",
-    label: "Polygon DAO",
-    fallbackIcon: "🟣",
-  },
-  {
-    chainId: "0xa4b1",
-    address: "0x880f006886af9eec4e219b7c9d0467bba0f16c06",
-    label: "Arbitrum DAO",
-    fallbackIcon: "🔵",
-  },
-  {
-    chainId: "0xa",
-    address: "0x61df03ea299790984c3619d734c81912a4710107",
-    label: "Optimism DAO",
-    fallbackIcon: "🔴",
-  },
-  {
-    chainId: "0xa",
-    address: "0x4281f0f00bbe9bfa54cf414a193711e17e7f1f02",
-    label: "Creative Kidz",
-    fallbackIcon: "🎨",
-    description:
-      "The future is here, and it's a beautiful sight. At Creative Organization DAO we want to help fuel this innovative process by providing underserved children with access to the tools they need for creative expression and art, such as tablets, digital pencils, and software.",
-    link: "https://nouns.build/dao/optimism/0x4281f0f00bbe9bfa54cf414a193711e17e7f1f02/22",
-    hideMembers: true,
-  },
-  {
-    chainId: "0x1",
-    address: "0x5da6ae3d2cce42dd0b805b0bc3befeab0e0b9cca",
-    label: "Creative Kidz",
-    fallbackIcon: "🎨",
-    description:
-      "The future is here, and it's a beautiful sight. At Creative Organization DAO we want to help fuel this innovative process by providing underserved children with access to the tools they need for creative expression and art, such as tablets, digital pencils, and software.",
-    link: "https://nouns.build/dao/ethereum/0x5da6ae3d2cce42dd0b805b0bc3befeab0e0b9cca/23",
-    hideMembers: true,
-  },
-]
+import { FEATURED_DAOS_CONFIG, CHAIN_NAMES, type FeaturedDao } from "../utils/featured-daos"
 
-// Chain display names
-const CHAIN_NAMES: Record<string, string> = {
-  "0x2105": "Base",
-  "0x89": "Polygon",
-  "0xa4b1": "Arbitrum",
-  "0xa": "Optimism",
-  "0x1": "Mainnet",
-}
-
-function DaoCardSkeleton() {
+export function DaoCardSkeleton() {
   return (
     <Card className="stat-card-gradient p-6">
       <div className="space-y-4">
@@ -87,7 +32,7 @@ function DaoCardSkeleton() {
   )
 }
 
-function DaoCard({
+export function DaoCard({
   chainId,
   address,
   label,
@@ -95,10 +40,26 @@ function DaoCard({
   description: customDescription,
   link,
   hideMembers,
-}: (typeof FEATURED_DAOS_CONFIG)[0] & { description?: string; link?: string; hideMembers?: boolean }) {
+  showManageButton,
+}: FeaturedDao & {
+  showManageButton?: boolean
+}) {
   const { dao, isLoading, isError } = useDao({ chainid: chainId, daoid: address })
 
-  if (isLoading) {
+  // Use Nouns hook for secondary data source (specifically for Creative Kids / Nouns Builder DAOs)
+  const {
+    memberCount: nounsMemberCount,
+    treasuryBalance: nounsTreasury,
+    isLoading: isNounsLoading,
+  } = useNounsDao({
+    // Only fetch if we have a valid chainId and address
+    chainId: chainId,
+    daoAddress: address,
+  })
+
+  // Combine loading states - use whichever one gives us data first, or wait if we have neither
+  // But for the skeleton, we generally want to wait if the main hook is loading
+  if (isLoading && isNounsLoading) {
     return <DaoCardSkeleton />
   }
 
@@ -107,7 +68,7 @@ function DaoCard({
   // However, we still try to load DAO data for member counts etc if possible.
   // If it errors but we have a custom link, we should probably still show the card.
 
-  if ((isError || !dao) && !link) {
+  if ((isError || !dao) && !link && !nounsMemberCount) {
     return (
       <Card className="stat-card-gradient p-6 opacity-50">
         <div className="space-y-4">
@@ -139,7 +100,8 @@ function DaoCard({
     `A DAO on ${CHAIN_NAMES[chainId]}`
 
   const avatarUrl = dao?.profile?.avatarImg
-  const memberCount = dao?.activeMemberCount || "0"
+  // Prefer Moloch V3 member count, fallback to Nouns/Contracts member count
+  const memberCount = dao?.activeMemberCount || nounsMemberCount || "0"
 
   // Choose the link target
   const targetLink = link || `https://admin.daohaus.club/#/molochv3/${chainId}/${address}`
@@ -182,9 +144,25 @@ function DaoCard({
           </div>
 
           {!hideMembers && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Users className="h-3 w-3" />
-              <span>{memberCount} members</span>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                <span>{memberCount} members</span>
+              </div>
+              {nounsTreasury && (
+                <div className="flex items-center gap-1">
+                  <span>💰</span>
+                  <span>{nounsTreasury}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {showManageButton && (
+            <div className="pt-2">
+              <Button size="sm" className="w-full">
+                Manage
+              </Button>
             </div>
           )}
         </div>

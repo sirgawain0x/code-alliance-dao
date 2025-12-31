@@ -69,7 +69,7 @@ export function GovernanceOverview() {
     {
       label: "Your Voting Power",
       value: "0", // Placeholder as we don't have user wallet connection yet
-      subtitle: "CA Tokens",
+      subtitle: "vCRTV Tokens",
       icon: Vote,
       color: "text-blue-400",
     },

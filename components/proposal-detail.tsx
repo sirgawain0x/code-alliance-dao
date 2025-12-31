@@ -150,7 +150,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-foreground">Cast Your Vote</h3>
             <div className="text-sm text-muted-foreground">
-              Your voting power: {proposalData.yourVotingPower} CA tokens
+              Your voting power: {proposalData.yourVotingPower} vCRTV tokens
             </div>
           </div>
 

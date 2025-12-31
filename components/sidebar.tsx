@@ -15,7 +15,6 @@ const navigation = [
   { name: "Projects", icon: FolderOpen, current: false, href: "/projects" },
   { name: "Treasury", icon: Wallet, current: false, href: "/treasury" },
   { name: "Members", icon: Users, current: false, href: "/members" },
-  { name: "Create", icon: Plus, current: false, href: "/create" },
   { name: "Buy CRTV", icon: CreditCard, current: false, href: "/buy" },
 ]
 

@@ -13,6 +13,7 @@ import { Loader2, AlertCircle, CreditCard, ArrowRight, Wallet, ExternalLink } fr
 import { CRTV_TOKEN_ADDRESSES, CRTV_POOL_ADDRESSES, SUPPORTED_CHAINS, TOKEN_SYMBOL } from "@/config/constants"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { BridgeForm } from "./bridge-form"
 
 export function BuyCRTV() {
     const { address, isConnected } = useAppKitAccount()
@@ -32,10 +33,7 @@ export function BuyCRTV() {
         // Try to open with the token address. If 1inch/AppKit supports address, this is best.
         // Otherwise, we might need to fallback to the symbol or a direct DEX link.
         open({
-            view: 'Swap',
-            arguments: {
-                toToken: tokenAddress || TOKEN_SYMBOL
-            }
+            view: 'Swap'
         })
     }
 
@@ -84,9 +82,10 @@ export function BuyCRTV() {
                     </div>
                 ) : (
                     <Tabs defaultValue="onramp" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
+                        <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="onramp">1. Get Funds</TabsTrigger>
-                            <TabsTrigger value="swap">2. Swap for {TOKEN_SYMBOL}</TabsTrigger>
+                            <TabsTrigger value="swap">2. Swap</TabsTrigger>
+                            <TabsTrigger value="bridge">3. Bridge</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="onramp" className="space-y-4 pt-4">
@@ -137,15 +136,34 @@ export function BuyCRTV() {
                             </div>
 
                             <Button
-                                className="w-full"
+                                className="w-full mb-3"
                                 size="lg"
-                                onClick={handleSwap}
+                                asChild
                             >
-                                Open Swap
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                                <a href={getDexLink()} target="_blank" rel="noopener noreferrer">
+                                    Buy on DEX (Recommended) <ExternalLink className="ml-2 h-4 w-4" />
+                                </a>
                             </Button>
 
-                            <div className="text-center">
+                            <Button
+                                className="w-full"
+                                variant="outline"
+                                onClick={handleSwap}
+                            >
+                                Open Wallet Swap
+                            </Button>
+
+                            <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md text-sm text-yellow-600 dark:text-yellow-400">
+                                <p className="flex items-start gap-2">
+                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                    <span>
+                                        <strong>Note:</strong> Since {TOKEN_SYMBOL} is a new token, it may not appear in the wallet's internal swap list yet.
+                                        Use the <strong>DEX link above</strong> to ensure you can find and trade the token.
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div className="text-center hidden">
                                 <span className="text-xs text-muted-foreground">Or buy directly on DEX:</span>
                                 <Button variant="link" size="sm" asChild className="h-auto p-0 ml-1">
                                     <a href={getDexLink()} target="_blank" rel="noopener noreferrer">
@@ -153,6 +171,10 @@ export function BuyCRTV() {
                                     </a>
                                 </Button>
                             </div>
+                        </TabsContent>
+
+                        <TabsContent value="bridge">
+                            <BridgeForm />
                         </TabsContent>
                     </Tabs>
                 )}

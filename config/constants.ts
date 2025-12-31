@@ -12,5 +12,17 @@ export const CRTV_POOL_ADDRESSES = {
 
 export const SUPPORTED_CHAINS = [8453, 137, 10] as const;
 
+export const CHAIN_SELECTORS = {
+  8453: "15971525489660198786", // Base
+  137: "4051577828743386545", // Polygon
+  10: "2664363617261496610", // Optimism
+} as const;
+
+export const CCIP_ROUTER_ADDRESSES = {
+  8453: "0x881e3A65B4d4a04dD529061dd0071cf975F58bCD", // Base
+  137: "0x3C3D92629A02a8D95D5CB9650fe59c482f4474e2", // Polygon
+  10: "0x261c05167db67B2b619f9d312e0753f3721c4906", // Optimism
+} as const;
+
 export const TOKEN_DECIMALS = 18;
 export const TOKEN_SYMBOL = "CRTV";

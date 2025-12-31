@@ -201,6 +201,7 @@ export const LIST_ALL_DAO_PROPOSALS = `
     ) {
       id
       createdAt
+      proposedBy
       title
       description
       contentURI
@@ -248,6 +249,7 @@ export const FIND_PROPOSAL = `
     proposal(id: $proposalid) {
       id
       createdAt
+      proposedBy
       title
       description
       contentURI

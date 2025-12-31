@@ -1,8 +1,6 @@
 import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { ProjectsOverview } from "@/components/projects-overview"
-import { ProjectGrid } from "@/components/project-grid"
-import { ProjectFilters } from "@/components/project-filters"
+import { EcosystemGrid } from "@/components/ecosystem-grid"
 
 export default function ProjectsPage() {
   return (
@@ -14,13 +12,11 @@ export default function ProjectsPage() {
           <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Project Management</h1>
-                <p className="text-muted-foreground">Track and manage projects across all SubDAOs</p>
+                <h1 className="text-3xl font-bold text-foreground">Our Ecosystem</h1>
+                <p className="text-muted-foreground">Explore the platforms powering the Creative economy</p>
               </div>
             </div>
-            <ProjectsOverview />
-            <ProjectFilters />
-            <ProjectGrid />
+            <EcosystemGrid />
           </div>
         </div>
       </main>

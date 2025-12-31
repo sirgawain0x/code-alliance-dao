@@ -1,50 +1,16 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Card } from "./ui/card"
+import { Badge } from "./ui/badge"
+import { Button } from "./ui/button"
 import { Search, Users } from "lucide-react"
-import { useDao } from "@/hooks"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useDao, useNounsDao } from "../hooks"
+import { Skeleton } from "./ui/skeleton"
 import Link from "next/link"
 
-// Configuration for featured DAOs across multiple chains
-const FEATURED_DAOS_CONFIG = [
-  {
-    chainId: "0x2105",
-    address: "0x95c041ade16243665085323ad845051de57d78b1",
-    label: "Base Yeeter",
-    fallbackIcon: "🎯",
-  },
-  {
-    chainId: "0x89",
-    address: "0x9da29b87c2471feb00b931498919dc22340c8489",
-    label: "Polygon DAO",
-    fallbackIcon: "🟣",
-  },
-  {
-    chainId: "0xa4b1",
-    address: "0x880f006886af9eec4e219b7c9d0467bba0f16c06",
-    label: "Arbitrum DAO",
-    fallbackIcon: "🔵",
-  },
-  {
-    chainId: "0xa",
-    address: "0x61df03ea299790984c3619d734c81912a4710107",
-    label: "Optimism DAO",
-    fallbackIcon: "🔴",
-  },
-]
+import { FEATURED_DAOS_CONFIG, CHAIN_NAMES, type FeaturedDao } from "../utils/featured-daos"
 
-// Chain display names
-const CHAIN_NAMES: Record<string, string> = {
-  "0x2105": "Base",
-  "0x89": "Polygon",
-  "0xa4b1": "Arbitrum",
-  "0xa": "Optimism",
-}
-
-function DaoCardSkeleton() {
+export function DaoCardSkeleton() {
   return (
     <Card className="stat-card-gradient p-6">
       <div className="space-y-4">
@@ -66,14 +32,43 @@ function DaoCardSkeleton() {
   )
 }
 
-function DaoCard({ chainId, address, label, fallbackIcon }: typeof FEATURED_DAOS_CONFIG[0]) {
+export function DaoCard({
+  chainId,
+  address,
+  label,
+  fallbackIcon,
+  description: customDescription,
+  link,
+  hideMembers,
+  showManageButton,
+}: FeaturedDao & {
+  showManageButton?: boolean
+}) {
   const { dao, isLoading, isError } = useDao({ chainid: chainId, daoid: address })
 
-  if (isLoading) {
+  // Use Nouns hook for secondary data source (specifically for Creative Kids / Nouns Builder DAOs)
+  const {
+    memberCount: nounsMemberCount,
+    treasuryBalance: nounsTreasury,
+    isLoading: isNounsLoading,
+  } = useNounsDao({
+    // Only fetch if we have a valid chainId and address
+    chainId: chainId,
+    daoAddress: address,
+  })
+
+  // Combine loading states - use whichever one gives us data first, or wait if we have neither
+  // But for the skeleton, we generally want to wait if the main hook is loading
+  if (isLoading && isNounsLoading) {
     return <DaoCardSkeleton />
   }
 
-  if (isError || !dao) {
+  // If a custom link is provided, we might not care as much about the DAO loading error
+  // provided we have the custom data we need (which we do in CONFIG)
+  // However, we still try to load DAO data for member counts etc if possible.
+  // If it errors but we have a custom link, we should probably still show the card.
+
+  if ((isError || !dao) && !link && !nounsMemberCount) {
     return (
       <Card className="stat-card-gradient p-6 opacity-50">
         <div className="space-y-4">
@@ -96,13 +91,23 @@ function DaoCard({ chainId, address, label, fallbackIcon }: typeof FEATURED_DAOS
     )
   }
 
-  const hasProfile = dao.rawProfile && dao.rawProfile.length > 0
-  const description = dao.profile?.description || dao.profile?.longDescription || `A DAO on ${CHAIN_NAMES[chainId]}`
-  const avatarUrl = dao.profile?.avatarImg
-  const memberCount = dao.activeMemberCount || "0"
+  // Use optional chaining carefully here as dao might be undefined if we're in the "link provided, dao fetch failed" case
+  const hasProfile = dao?.rawProfile && dao.rawProfile.length > 0
+  const description =
+    customDescription ||
+    dao?.profile?.description ||
+    dao?.profile?.longDescription ||
+    `A DAO on ${CHAIN_NAMES[chainId]}`
+
+  const avatarUrl = dao?.profile?.avatarImg
+  // Prefer Moloch V3 member count, fallback to Nouns/Contracts member count
+  const memberCount = dao?.activeMemberCount || nounsMemberCount || "0"
+
+  // Choose the link target
+  const targetLink = link || `https://admin.daohaus.club/#/molochv3/${chainId}/${address}`
 
   return (
-    <Link href={`https://admin.daohaus.club/#/molochv3/${chainId}/${address}`} target="_blank">
+    <Link href={targetLink} target="_blank">
       <Card className="stat-card-gradient p-6 dao-card-hover cursor-pointer h-full">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
@@ -110,7 +115,7 @@ function DaoCard({ chainId, address, label, fallbackIcon }: typeof FEATURED_DAOS
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
-                  alt={dao.name}
+                  alt={dao?.name || label}
                   className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
@@ -131,17 +136,35 @@ function DaoCard({ chainId, address, label, fallbackIcon }: typeof FEATURED_DAOS
 
           <div>
             <h3 className="font-semibold text-foreground mb-2 line-clamp-1">
-              {dao.name || label}
+              {dao?.name || label}
             </h3>
             <p className="text-sm text-muted-foreground line-clamp-2">
               {description}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Users className="h-3 w-3" />
-            <span>{memberCount} members</span>
-          </div>
+          {!hideMembers && (
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                <span>{memberCount} members</span>
+              </div>
+              {nounsTreasury && (
+                <div className="flex items-center gap-1">
+                  <span>💰</span>
+                  <span>{nounsTreasury}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {showManageButton && (
+            <div className="pt-2">
+              <Button size="sm" className="w-full">
+                Manage
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
     </Link>

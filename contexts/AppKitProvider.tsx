@@ -4,6 +4,7 @@ import { createAppKit } from '@reown/appkit/react'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 import { mainnet, optimism, polygon, base } from '@reown/appkit/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { CRTV_TOKEN_ADDRESSES } from '@/config/constants'
 import type { ReactNode } from 'react'
 
 // Set up queryClient
@@ -30,7 +31,23 @@ createAppKit({
         analytics: true,
         email: true,
         socials: ['google', 'x', 'github', 'discord', 'apple'],
-        emailShowWallets: true
+        emailShowWallets: true,
+        onramp: true,
+        swaps: true
+    },
+    tokens: {
+        'eip155:8453': {
+            address: CRTV_TOKEN_ADDRESSES[8453],
+            image: metadata.icons[0], // Use project icon
+        },
+        'eip155:137': {
+            address: CRTV_TOKEN_ADDRESSES[137],
+            image: metadata.icons[0],
+        },
+        'eip155:10': {
+            address: CRTV_TOKEN_ADDRESSES[10],
+            image: metadata.icons[0],
+        }
     }
 })
 

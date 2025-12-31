@@ -1,44 +1,62 @@
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+"use client"
+
+import { Card } from "./ui/card"
+import { Badge } from "./ui/badge"
+import { Button } from "./ui/button"
+import { Progress } from "./ui/progress"
 import { Users, Building2, TrendingUp, Shield } from "lucide-react"
-import { getParentDaoData } from "@/app/actions"
+import { useDao } from "../hooks/useDao"
+import { useMemo } from "react"
 
-export async function ParentDAOOverview() {
-  const data = await getParentDaoData()
+export function ParentDAOOverview() {
+  const { dao, isLoading } = useDao({
+    chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
+  });
 
-  // Fallback values if DB is empty or not connected
-  const stats = {
-    totalMembers: data?.total_members || 1247,
-    activeSubdaos: data?.active_subdaos || 8,
-    treasuryValue: data?.treasury_value ? `$${Number(data.treasury_value).toLocaleString()}` : "$2.4M",
-    governanceScore: data?.governance_score || 94,
-    voterParticipation: Number(data?.voter_participation || 78),
-    proposalSuccessRate: Number(data?.proposal_success_rate || 85),
-    communityEngagement: Number(data?.community_engagement || 92),
-    mission: data?.mission || "To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.",
-    vision: data?.vision || "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources."
+  const stats = useMemo(() => {
+    if (!dao) return null;
+
+    return {
+      totalMembers: Number(dao.activeMemberCount) || 0,
+      activeSubdaos: dao.shamen?.length || 0, // Using shamen as a proxy for subdaos/integrations
+      treasuryValue: "$2.4M", // Placeholder as treasury calculation is complex and requires token pricing
+      governanceScore: 94, // Placeholder metric
+      voterParticipation: Number(dao.proposalCount) > 0 ? 78 : 0, // Placeholder
+      proposalSuccessRate: 85, // Placeholder
+      communityEngagement: 92, // Placeholder
+      mission: dao.profile?.description || "To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.",
+      vision: dao.profile?.longDescription || "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources."
+    }
+  }, [dao]);
+
+  if (isLoading || !stats) {
+    return <div className="animate-pulse space-y-6">
+      <div className="h-24 bg-muted rounded-lg w-full"></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-muted rounded-lg"></div>)}
+      </div>
+    </div>
   }
 
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between flex-col md:flex-row gap-4">
         <div className="space-y-2">
           <div className="flex items-center space-x-3">
             <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
               <Building2 className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Creative Organization DAO</h1>
+              <h1 className="text-3xl font-bold text-foreground">{dao?.name || "Creative Organization DAO"}</h1>
               <p className="text-muted-foreground">Parent DAO governing the incubator ecosystem</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-2">
             <Badge className="bg-green-500/10 text-green-400 border-green-500/20">Active</Badge>
             <Badge variant="secondary">Parent DAO</Badge>
-            <Badge variant="outline">Established 2024</Badge>
+            <Badge variant="outline">Established {new Date(Number(dao?.createdAt) * 1000).getFullYear()}</Badge>
           </div>
         </div>
         <div className="flex space-x-2">
@@ -63,7 +81,7 @@ export async function ParentDAOOverview() {
         <Card className="stat-card-gradient p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Active SubDAOs</p>
+              <p className="text-sm text-muted-foreground">Active SubDAOs/Shamen</p>
               <p className="text-2xl font-bold text-foreground">{stats.activeSubdaos}</p>
               <p className="text-xs text-green-400">+2 this quarter</p>
             </div>

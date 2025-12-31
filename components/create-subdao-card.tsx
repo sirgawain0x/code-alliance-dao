@@ -1,5 +1,5 @@
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card } from "./ui/card"
+import { Button } from "./ui/button"
 import { Plus, FileText, Users, DollarSign } from "lucide-react"
 
 const requirements = [
@@ -29,9 +29,11 @@ export function CreateSubDAOCard() {
             <h3 className="text-lg font-semibold text-foreground">Create New SubDAO</h3>
             <p className="text-sm text-muted-foreground">Launch a specialized DAO for your project or initiative</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-2" />
-            Start Application
+          <Button className="bg-primary hover:bg-primary/90" asChild>
+            <a href="https://forms.gle/NUayP6QpKeX4ePxZ8" target="_blank" rel="noopener noreferrer">
+              <Plus className="h-4 w-4 mr-2" />
+              Start Application
+            </a>
           </Button>
         </div>
 

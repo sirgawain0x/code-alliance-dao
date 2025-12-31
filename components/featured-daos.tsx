@@ -34,6 +34,26 @@ const FEATURED_DAOS_CONFIG = [
     label: "Optimism DAO",
     fallbackIcon: "🔴",
   },
+  {
+    chainId: "0xa",
+    address: "0x4281f0f00bbe9bfa54cf414a193711e17e7f1f02",
+    label: "Creative Kidz",
+    fallbackIcon: "🎨",
+    description:
+      "The future is here, and it's a beautiful sight. At Creative Organization DAO we want to help fuel this innovative process by providing underserved children with access to the tools they need for creative expression and art, such as tablets, digital pencils, and software.",
+    link: "https://nouns.build/dao/optimism/0x4281f0f00bbe9bfa54cf414a193711e17e7f1f02/22",
+    hideMembers: true,
+  },
+  {
+    chainId: "0x1",
+    address: "0x5da6ae3d2cce42dd0b805b0bc3befeab0e0b9cca",
+    label: "Creative Kidz",
+    fallbackIcon: "🎨",
+    description:
+      "The future is here, and it's a beautiful sight. At Creative Organization DAO we want to help fuel this innovative process by providing underserved children with access to the tools they need for creative expression and art, such as tablets, digital pencils, and software.",
+    link: "https://nouns.build/dao/ethereum/0x5da6ae3d2cce42dd0b805b0bc3befeab0e0b9cca/23",
+    hideMembers: true,
+  },
 ]
 
 // Chain display names
@@ -42,6 +62,7 @@ const CHAIN_NAMES: Record<string, string> = {
   "0x89": "Polygon",
   "0xa4b1": "Arbitrum",
   "0xa": "Optimism",
+  "0x1": "Mainnet",
 }
 
 function DaoCardSkeleton() {
@@ -66,14 +87,27 @@ function DaoCardSkeleton() {
   )
 }
 
-function DaoCard({ chainId, address, label, fallbackIcon }: typeof FEATURED_DAOS_CONFIG[0]) {
+function DaoCard({
+  chainId,
+  address,
+  label,
+  fallbackIcon,
+  description: customDescription,
+  link,
+  hideMembers,
+}: (typeof FEATURED_DAOS_CONFIG)[0] & { description?: string; link?: string; hideMembers?: boolean }) {
   const { dao, isLoading, isError } = useDao({ chainid: chainId, daoid: address })
 
   if (isLoading) {
     return <DaoCardSkeleton />
   }
 
-  if (isError || !dao) {
+  // If a custom link is provided, we might not care as much about the DAO loading error
+  // provided we have the custom data we need (which we do in CONFIG)
+  // However, we still try to load DAO data for member counts etc if possible.
+  // If it errors but we have a custom link, we should probably still show the card.
+
+  if ((isError || !dao) && !link) {
     return (
       <Card className="stat-card-gradient p-6 opacity-50">
         <div className="space-y-4">
@@ -96,13 +130,22 @@ function DaoCard({ chainId, address, label, fallbackIcon }: typeof FEATURED_DAOS
     )
   }
 
-  const hasProfile = dao.rawProfile && dao.rawProfile.length > 0
-  const description = dao.profile?.description || dao.profile?.longDescription || `A DAO on ${CHAIN_NAMES[chainId]}`
-  const avatarUrl = dao.profile?.avatarImg
-  const memberCount = dao.activeMemberCount || "0"
+  // Use optional chaining carefully here as dao might be undefined if we're in the "link provided, dao fetch failed" case
+  const hasProfile = dao?.rawProfile && dao.rawProfile.length > 0
+  const description =
+    customDescription ||
+    dao?.profile?.description ||
+    dao?.profile?.longDescription ||
+    `A DAO on ${CHAIN_NAMES[chainId]}`
+
+  const avatarUrl = dao?.profile?.avatarImg
+  const memberCount = dao?.activeMemberCount || "0"
+
+  // Choose the link target
+  const targetLink = link || `https://admin.daohaus.club/#/molochv3/${chainId}/${address}`
 
   return (
-    <Link href={`https://admin.daohaus.club/#/molochv3/${chainId}/${address}`} target="_blank">
+    <Link href={targetLink} target="_blank">
       <Card className="stat-card-gradient p-6 dao-card-hover cursor-pointer h-full">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
@@ -110,7 +153,7 @@ function DaoCard({ chainId, address, label, fallbackIcon }: typeof FEATURED_DAOS
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
-                  alt={dao.name}
+                  alt={dao?.name || label}
                   className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
@@ -131,17 +174,19 @@ function DaoCard({ chainId, address, label, fallbackIcon }: typeof FEATURED_DAOS
 
           <div>
             <h3 className="font-semibold text-foreground mb-2 line-clamp-1">
-              {dao.name || label}
+              {dao?.name || label}
             </h3>
             <p className="text-sm text-muted-foreground line-clamp-2">
               {description}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Users className="h-3 w-3" />
-            <span>{memberCount} members</span>
-          </div>
+          {!hideMembers && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Users className="h-3 w-3" />
+              <span>{memberCount} members</span>
+            </div>
+          )}
         </div>
       </Card>
     </Link>

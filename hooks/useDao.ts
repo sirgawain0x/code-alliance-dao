@@ -8,6 +8,25 @@ import { DaoItem } from "../utils/daotypes";
 import { getGraphUrl } from "../utils/endpoints";
 import { DaoHooksContext } from "../contexts/DaoHooksContext";
 
+const DAOHAUS_SUPPORTED_CHAINS = new Set([
+  "0xaa36a7",
+  "0x64",
+  "0x89",
+  "0xa",
+  "0xa4b1",
+  "0x2105",
+]);
+
+function toHexChainId(chainid: string): string {
+  if (!chainid) return "";
+  if (chainid.startsWith("0x")) return chainid.toLowerCase();
+
+  const parsedChainId = parseInt(chainid, 10);
+  if (Number.isNaN(parsedChainId)) return "";
+
+  return `0x${parsedChainId.toString(16)}`;
+}
+
 export const useDao = ({
   chainid,
   daoid,
@@ -20,9 +39,14 @@ export const useDao = ({
   if (!hookContext) throw new Error("useDao must be used within a DaoHooksProvider");
 
   let dhUrl = "";
-  if (hookContext.config.graphKey && chainid) {
+  const normalizedChainId = chainid ? toHexChainId(chainid) : "";
+  const isDaohausSupportedChain = normalizedChainId
+    ? DAOHAUS_SUPPORTED_CHAINS.has(normalizedChainId)
+    : false;
+
+  if (hookContext.config.graphKey && normalizedChainId && isDaohausSupportedChain) {
     dhUrl = getGraphUrl({
-      chainid,
+      chainid: normalizedChainId,
       graphKey: hookContext.config.graphKey,
       subgraphKey: "DAOHAUS",
     });

@@ -3,7 +3,7 @@ import { GraphQLClient } from "graphql-request";
 import { useQuery } from "@tanstack/react-query";
 
 import { FIND_DAO } from "../utils/queries";
-import { DaoItem, DaoProfile } from "../utils/daotypes";
+import { DaoItem } from "../utils/daotypes";
 // import { addParsedContent } from "@/utils/yeeter-data-helpers";
 import { getGraphUrl } from "../utils/endpoints";
 import { DaoHooksContext } from "../contexts/DaoHooksContext";
@@ -17,21 +17,15 @@ export const useDao = ({
 }) => {
   const hookContext = useContext(DaoHooksContext);
 
-  if (!hookContext || !hookContext.config.graphKey) {
-    console.error(
-      "useDao: DaoHooksContext must be used within a DaoHooksProvider"
-    );
-  }
+  if (!hookContext) throw new Error("useDao must be used within a DaoHooksProvider");
 
   let dhUrl = "";
-  try {
+  if (hookContext.config.graphKey && chainid) {
     dhUrl = getGraphUrl({
-      chainid: chainid || "",
-      graphKey: hookContext?.config.graphKey || "",
+      chainid,
+      graphKey: hookContext.config.graphKey,
       subgraphKey: "DAOHAUS",
     });
-  } catch (e) {
-    console.warn("useDao: Failed to get graph URL", e);
   }
 
   const graphQLClient = new GraphQLClient(dhUrl || "http://localhost");

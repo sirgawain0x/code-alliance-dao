@@ -21,23 +21,22 @@ export const useDaoProposals = ({
 }) => {
   const hookContext = useContext(DaoHooksContext);
 
-  if (!hookContext || !hookContext.config.graphKey) {
-    console.error(
-      "useDaoProposals: DaoHooksContext must be used within a DaoHooksProvider"
-    );
+  if (!hookContext) throw new Error("useDaoProposals must be used within a DaoHooksProvider");
+
+  let dhUrl = "";
+  if (hookContext.config.graphKey && chainid) {
+    dhUrl = getGraphUrl({
+      chainid,
+      graphKey: hookContext.config.graphKey,
+      subgraphKey: "DAOHAUS",
+    });
   }
 
-  const dhUrl = getGraphUrl({
-    chainid: chainid || "",
-    graphKey: hookContext?.config.graphKey || "",
-    subgraphKey: "DAOHAUS",
-  });
-
-  const graphQLClient = new GraphQLClient(dhUrl);
+  const graphQLClient = new GraphQLClient(dhUrl || "http://localhost");
 
   const { data, ...rest } = useQuery({
     queryKey: [`list-proposals`, { chainid, daoid }],
-    enabled: Boolean(chainid && daoid),
+    enabled: Boolean(chainid && daoid && dhUrl),
     queryFn: async (): Promise<{
       proposals: ProposalItem[];
     }> => {

@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { StatsOverview } from "@/components/stats-overview"
 import { ChainGovernance } from "@/components/chain-governance"
 import { FeaturedDAOs } from "@/components/featured-daos"
+import { SubDAOStats } from "@/components/subdao-stats"
 
 export default function DashboardPage() {
   return (
@@ -12,6 +13,7 @@ export default function DashboardPage() {
         <div className="pt-16 md:pt-0">
           <DashboardHeader />
           <div className="p-6 space-y-6">
+            <SubDAOStats />
             <StatsOverview />
             <ChainGovernance />
             <FeaturedDAOs />

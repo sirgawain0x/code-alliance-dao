@@ -8,7 +8,7 @@ const nextConfig = {
     unoptimized: true,
   },
   // Optimize resource loading
-  transpilePackages: ['@reown/appkit', '@reown/appkit-adapter-ethers5', '@phosphor-icons/webcomponents', 'lit'],
+  transpilePackages: ['@reown/appkit', '@reown/appkit-adapter-ethers', '@phosphor-icons/webcomponents', 'lit'],
   // experimental: {
   //   optimizePackageImports: ['wagmi', '@tanstack/react-query'],
   // },

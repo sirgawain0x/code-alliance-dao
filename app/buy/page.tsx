@@ -16,7 +16,7 @@ export default function BuyPage() {
                                 Acquire CRTV tokens to participate in governance and access exclusive features.
                             </p>
                         </div>
-                        <div className="flex justify-center mt-12">
+                        <div className="mt-8">
                             <BuyCRTV />
                         </div>
                     </div>

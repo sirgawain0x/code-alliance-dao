@@ -1,184 +1,261 @@
 "use client"
 
-import { base, polygon, optimism } from '@reown/appkit/networks'
-
 import { useState } from "react"
-// import { useAccount, useChainId, useSwitchChain } from "wagmi" // Removed Wagmi
+import { BrowserProvider, Contract, formatUnits, parseUnits } from "ethers"
+import { base } from "@reown/appkit/networks"
 import { useAppKit, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { AlertCircle, ArrowRight, CheckCircle2, CreditCard, Loader2, Wallet } from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, AlertCircle, CreditCard, ArrowRight, Wallet, ExternalLink } from "lucide-react"
-import { CRTV_TOKEN_ADDRESSES, CRTV_POOL_ADDRESSES, SUPPORTED_CHAINS, TOKEN_SYMBOL } from "@/config/constants"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BridgeForm } from "./bridge-form"
+import { BASE_USDC_ADDRESS, CRTV_TOKEN_ADDRESSES, TOKEN_SYMBOL } from "@/config/constants"
+
+const ERC20_APPROVAL_ABI = [
+    "function allowance(address owner, address spender) view returns (uint256)",
+    "function approve(address spender, uint256 amount) returns (bool)",
+]
 
 export function BuyCRTV() {
+    const { open } = useAppKit()
     const { address, isConnected } = useAppKitAccount()
     const { chainId, switchNetwork } = useAppKitNetwork()
-    // const { switchChain } = useSwitchChain() // Removed Wagmi
-    const { open } = useAppKit()
+    const [amount, setAmount] = useState("25")
+    const [slippage, setSlippage] = useState("1")
+    const [quote, setQuote] = useState<CrtvSwapQuote | null>(null)
+    const [isQuoting, setIsQuoting] = useState(false)
+    const [isSwapping, setIsSwapping] = useState(false)
+    const [message, setMessage] = useState<SwapMessage | null>(null)
 
-    const isSupportedChain = SUPPORTED_CHAINS.includes(chainId as any)
-    const tokenAddress = isSupportedChain ? CRTV_TOKEN_ADDRESSES[chainId as keyof typeof CRTV_TOKEN_ADDRESSES] : null;
-    const poolAddress = isSupportedChain ? CRTV_POOL_ADDRESSES[chainId as keyof typeof CRTV_POOL_ADDRESSES] : null;
+    const tokenAddress = CRTV_TOKEN_ADDRESSES[8453]
+    const isBase = Number(chainId) === 8453
+    const canQuote = Boolean(isConnected && address && isBase && amount && Number(amount) > 0)
 
-    const handleOnRamp = () => {
-        open({ view: 'OnRampProviders' })
-    }
+    async function handleQuote() {
+        if (!canQuote || !address) return
 
-    const handleSwap = () => {
-        // Try to open with the token address. If 1inch/AppKit supports address, this is best.
-        // Otherwise, we might need to fallback to the symbol or a direct DEX link.
-        open({
-            view: 'Swap'
-        })
-    }
+        setIsQuoting(true)
+        setMessage(null)
+        setQuote(null)
 
-    const getDexLink = () => {
-        switch (chainId) {
-            case 8453: // Base
-                return `https://aerodrome.finance/swap?to=${tokenAddress}`
-            case 137: // Polygon
-                return `https://app.uniswap.org/swap?chain=polygon&outputCurrency=${tokenAddress}`
-            case 10: // Optimism
-                return `https://app.uniswap.org/swap?chain=optimism&outputCurrency=${tokenAddress}`
-            default:
-                return "#"
+        try {
+            const sellAmount = parseUnits(amount, 6).toString()
+            const response = await fetch("/api/crtv-swap/quote", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    taker: address,
+                    sellAmount,
+                    slippageBps: Math.round(Number(slippage) * 100),
+                }),
+            })
+            const result = await response.json()
+
+            if (!response.ok) throw new Error(result.error || "Unable to quote CRTV swap")
+
+            setQuote(result)
+            setMessage({ type: "success", text: "Quote ready. Review the expected CRTV before swapping." })
+        } catch (error) {
+            setMessage({ type: "error", text: getErrorMessage(error) })
+        } finally {
+            setIsQuoting(false)
         }
     }
 
+    async function handleSwap() {
+        if (!quote || !address) return
+
+        setIsSwapping(true)
+        setMessage(null)
+
+        try {
+            if (!window.ethereum) throw new Error("No browser wallet provider found")
+
+            const provider = new BrowserProvider(window.ethereum as unknown as Eip1193Provider)
+            const signer = await provider.getSigner()
+            const allowanceTarget = quote.allowanceTarget
+
+            if (allowanceTarget) {
+                const usdc = new Contract(BASE_USDC_ADDRESS, ERC20_APPROVAL_ABI, signer)
+                const allowance = await usdc.allowance(address, allowanceTarget)
+
+                if (allowance < BigInt(quote.sellAmount)) {
+                    setMessage({ type: "info", text: "Approve USDC for the swap router in your wallet." })
+                    const approvalTx = await usdc.approve(allowanceTarget, quote.sellAmount)
+                    await approvalTx.wait()
+                }
+            }
+
+            setMessage({ type: "info", text: "Confirm the CRTV swap in your connected wallet." })
+            const tx = await signer.sendTransaction({
+                to: quote.transaction.to,
+                data: quote.transaction.data,
+                value: quote.transaction.value,
+                gasLimit: quote.transaction.gas ? BigInt(quote.transaction.gas) : undefined,
+            })
+            setMessage({ type: "success", text: `Swap submitted: ${tx.hash}` })
+        } catch (error) {
+            setMessage({ type: "error", text: getErrorMessage(error) })
+        } finally {
+            setIsSwapping(false)
+        }
+    }
+
+    function handleOnRamp() {
+        open({ view: "OnRampProviders" })
+    }
+
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <Card className="w-full max-w-4xl mx-auto">
             <CardHeader>
                 <CardTitle>Buy {TOKEN_SYMBOL}</CardTitle>
-                <CardDescription>Get {TOKEN_SYMBOL} in two simple steps.</CardDescription>
+                <CardDescription>
+                    Swap USDC for {TOKEN_SYMBOL} on Base using the wallet already connected to the dashboard.
+                </CardDescription>
             </CardHeader>
-            <CardContent>
-                {!isConnected ? (
-                    <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Wallet not connected</AlertTitle>
-                        <AlertDescription>
-                            Please connect your wallet to purchase tokens.
-                        </AlertDescription>
-                    </Alert>
-                ) : !isSupportedChain ? (
-                    <div className="space-y-4">
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Unsupported Network</AlertTitle>
-                            <AlertDescription>
-                                Please switch to Base, Polygon, or Optimism to buy {TOKEN_SYMBOL}.
-                            </AlertDescription>
-                        </Alert>
-                        <div className="grid grid-cols-1 gap-2">
-                            <Button onClick={() => switchNetwork(base)}>Switch to Base</Button>
-                            <Button onClick={() => switchNetwork(polygon)}>Switch to Polygon</Button>
-                            <Button onClick={() => switchNetwork(optimism)}>Switch to Optimism</Button>
+            <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="space-y-5 rounded-xl border p-5 bg-muted/20">
+                    <div className="grid gap-2">
+                        <Label htmlFor="usdc-amount">You pay</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                id="usdc-amount"
+                                inputMode="decimal"
+                                min="0"
+                                value={amount}
+                                onChange={(event) => setAmount(event.target.value)}
+                                placeholder="25"
+                            />
+                            <div className="rounded-md border px-3 py-2 text-sm font-medium">USDC</div>
                         </div>
                     </div>
-                ) : (
-                    <Tabs defaultValue="onramp" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="onramp">1. Get Funds</TabsTrigger>
-                            <TabsTrigger value="swap">2. Swap</TabsTrigger>
-                            <TabsTrigger value="bridge">3. Bridge</TabsTrigger>
-                        </TabsList>
 
-                        <TabsContent value="onramp" className="space-y-4 pt-4">
-                            <div className="rounded-lg border p-4 bg-muted/50">
-                                <div className="flex items-start gap-4">
-                                    <div className="p-2 bg-background rounded-full border">
-                                        <CreditCard className="h-6 w-6 text-primary" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium">Need crypto?</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Buy ETH or USDC directly with your credit card or bank account using our secure on-ramp.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <Button className="w-full" size="lg" onClick={handleOnRamp}>
-                                Buy Crypto via Card (On-Ramp)
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
-                        </TabsContent>
+                    <div className="grid gap-2">
+                        <Label htmlFor="slippage">Slippage tolerance</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                id="slippage"
+                                inputMode="decimal"
+                                min="0.1"
+                                value={slippage}
+                                onChange={(event) => setSlippage(event.target.value)}
+                            />
+                            <div className="rounded-md border px-3 py-2 text-sm font-medium">%</div>
+                        </div>
+                    </div>
 
-                        <TabsContent value="swap" className="space-y-4 pt-4">
-                            <div className="rounded-lg border p-4 bg-muted/50">
-                                <div className="flex items-start gap-4">
-                                    <div className="p-2 bg-background rounded-full border">
-                                        <Wallet className="h-6 w-6 text-primary" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium">Swap for {TOKEN_SYMBOL}</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Swap your ETH or USDC for {TOKEN_SYMBOL} directly within the wallet.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                    <div className="rounded-lg border bg-background p-4">
+                        <p className="text-sm text-muted-foreground">You receive</p>
+                        <p className="mt-1 text-3xl font-bold">
+                            {quote ? formatTokenAmount(quote.buyAmount, 18) : "--"} {TOKEN_SYMBOL}
+                        </p>
+                        {quote?.price && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Indicative price: {quote.price} {TOKEN_SYMBOL} per USDC
+                            </p>
+                        )}
+                    </div>
 
-                            {/* Token Info */}
-                            <div className="space-y-2">
-                                <div className="text-sm text-muted-foreground">
-                                    <span className="font-medium">Contract Address:</span>
-                                    <div className="text-xs break-all font-mono mt-1 bg-muted p-2 rounded">{tokenAddress}</div>
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                    <span className="font-medium">Liquidity Pool:</span>
-                                    <div className="text-xs break-all font-mono mt-1 bg-muted p-2 rounded">{poolAddress}</div>
-                                </div>
-                            </div>
+                    {message && (
+                        <Alert variant={message.type === "error" ? "destructive" : "default"}>
+                            {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                            <AlertTitle>{message.type === "error" ? "Swap unavailable" : "Swap status"}</AlertTitle>
+                            <AlertDescription className="break-words">{message.text}</AlertDescription>
+                        </Alert>
+                    )}
 
-                            <Button
-                                className="w-full mb-3"
-                                size="lg"
-                                asChild
-                            >
-                                <a href={getDexLink()} target="_blank" rel="noopener noreferrer">
-                                    Buy on DEX (Recommended) <ExternalLink className="ml-2 h-4 w-4" />
-                                </a>
-                            </Button>
+                    {!isConnected ? (
+                        <Button className="w-full" size="lg" onClick={() => open()}>
+                            Connect wallet
+                            <Wallet className="ml-2 h-4 w-4" />
+                        </Button>
+                    ) : !isBase ? (
+                        <Button className="w-full" size="lg" onClick={() => switchNetwork(base)}>
+                            Switch to Base
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    ) : quote ? (
+                        <Button className="w-full" size="lg" onClick={handleSwap} disabled={isSwapping}>
+                            {isSwapping && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Swap USDC for {TOKEN_SYMBOL}
+                        </Button>
+                    ) : (
+                        <Button className="w-full" size="lg" onClick={handleQuote} disabled={!canQuote || isQuoting}>
+                            {isQuoting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Get live quote
+                        </Button>
+                    )}
+                </div>
 
-                            <Button
-                                className="w-full"
-                                variant="outline"
-                                onClick={handleSwap}
-                            >
-                                Open Wallet Swap
-                            </Button>
+                <div className="space-y-4">
+                    <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Single wallet flow</AlertTitle>
+                        <AlertDescription>
+                            This page signs approval and swap transactions with your existing AppKit wallet. No embedded DEX login is required.
+                        </AlertDescription>
+                    </Alert>
 
-                            <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md text-sm text-yellow-600 dark:text-yellow-400">
-                                <p className="flex items-start gap-2">
-                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                    <span>
-                                        <strong>Note:</strong> Since {TOKEN_SYMBOL} is a new token, it may not appear in the wallet's internal swap list yet.
-                                        Use the <strong>DEX link above</strong> to ensure you can find and trade the token.
-                                    </span>
-                                </p>
-                            </div>
+                    <div className="rounded-lg border p-4 bg-muted/50">
+                        <h4 className="font-medium">Base {TOKEN_SYMBOL}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Contract address:</p>
+                        <div
+                            className="text-xs font-mono mt-2 bg-background p-2 rounded"
+                            title={tokenAddress}
+                        >
+                            {shortenAddress(tokenAddress)}
+                        </div>
+                    </div>
 
-                            <div className="text-center hidden">
-                                <span className="text-xs text-muted-foreground">Or buy directly on DEX:</span>
-                                <Button variant="link" size="sm" asChild className="h-auto p-0 ml-1">
-                                    <a href={getDexLink()} target="_blank" rel="noopener noreferrer">
-                                        Launch DEX <ExternalLink className="ml-1 h-3 w-3" />
-                                    </a>
-                                </Button>
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="bridge">
-                            <BridgeForm />
-                        </TabsContent>
-                    </Tabs>
-                )}
+                    <Button className="w-full" size="lg" variant="outline" onClick={handleOnRamp}>
+                        Buy USDC with card
+                        <CreditCard className="ml-2 h-4 w-4" />
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     )
+}
+
+function formatTokenAmount(amount: string, decimals: number) {
+    return Number(formatUnits(amount, decimals)).toLocaleString(undefined, {
+        maximumFractionDigits: 6,
+    })
+}
+
+function shortenAddress(address: string) {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+function getErrorMessage(error: unknown) {
+    if (error instanceof Error) return error.message
+
+    return "Unable to complete the swap"
+}
+
+interface CrtvSwapQuote {
+    sellAmount: string
+    buyAmount: string
+    price?: string
+    allowanceTarget?: string
+    transaction: {
+        to: string
+        data: string
+        value: string
+        gas?: string
+    }
+}
+
+interface SwapMessage {
+    type: "info" | "success" | "error"
+    text: string
+}
+
+interface Eip1193Provider {
+    request(args: {
+        method: string
+        params?: unknown[]
+    }): Promise<unknown>
 }

@@ -6,7 +6,7 @@ import { useSubDAOStats } from "@/hooks/useSubDAOStats"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function SubDAOStats() {
-  const { data: dynamicStats, isLoading } = useSubDAOStats()
+  const { data: dynamicStats, isLoading, isError } = useSubDAOStats()
 
   if (isLoading) {
     return (
@@ -31,21 +31,21 @@ export function SubDAOStats() {
     {
       label: "Active SubDAOs",
       value: dynamicStats?.activeSubDAOs?.toString() || "0",
-      change: "Global Ecosystem", // removed specific "+2" claims
+      change: dynamicStats ? `${dynamicStats.networkCount} active networks` : "Global ecosystem",
       icon: Building2,
       color: "text-blue-400",
     },
     {
       label: "Total Members",
       value: dynamicStats?.totalMembers?.toLocaleString() || "0",
-      change: "Across all DAOs", // removed specific "+156" claims
+      change: isError ? "Live sync unavailable" : "Live contract total",
       icon: Users,
       color: "text-green-400",
     },
     {
       label: "Combined Treasury",
       value: `Ξ ${dynamicStats?.combinedTreasury?.toFixed(2) || "0.00"}`,
-      change: "Native Assets Only", // clarified it's native only
+      change: isError ? "Live sync unavailable" : "Native balances",
       icon: DollarSign,
       color: "text-purple-400",
     },

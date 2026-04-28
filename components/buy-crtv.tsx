@@ -1,183 +1,92 @@
 "use client"
 
-import { base, polygon, optimism } from '@reown/appkit/networks'
-
-import { useState } from "react"
-// import { useAccount, useChainId, useSwitchChain } from "wagmi" // Removed Wagmi
-import { useAppKit, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAppKit } from "@reown/appkit/react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader2, AlertCircle, CreditCard, ArrowRight, Wallet, ExternalLink } from "lucide-react"
-import { CRTV_TOKEN_ADDRESSES, CRTV_POOL_ADDRESSES, SUPPORTED_CHAINS, TOKEN_SYMBOL } from "@/config/constants"
+import { AlertCircle, CreditCard, ArrowRight, Wallet, ExternalLink } from "lucide-react"
+import { BASE_USDC_ADDRESS, BASE_WETH_ADDRESS, CRTV_TOKEN_ADDRESSES, TOKEN_SYMBOL } from "@/config/constants"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BridgeForm } from "./bridge-form"
 
 export function BuyCRTV() {
-    const { address, isConnected } = useAppKitAccount()
-    const { chainId, switchNetwork } = useAppKitNetwork()
-    // const { switchChain } = useSwitchChain() // Removed Wagmi
     const { open } = useAppKit()
+    const tokenAddress = CRTV_TOKEN_ADDRESSES[8453]
+    const aerodromeSrc = `https://aerodrome.finance/swap?from=${BASE_USDC_ADDRESS}&to=${tokenAddress}`
+    const aerodromeEthSrc = `https://aerodrome.finance/swap?from=${BASE_WETH_ADDRESS}&to=${tokenAddress}`
 
-    const isSupportedChain = SUPPORTED_CHAINS.includes(chainId as any)
-    const tokenAddress = isSupportedChain ? CRTV_TOKEN_ADDRESSES[chainId as keyof typeof CRTV_TOKEN_ADDRESSES] : null;
-    const poolAddress = isSupportedChain ? CRTV_POOL_ADDRESSES[chainId as keyof typeof CRTV_POOL_ADDRESSES] : null;
-
-    const handleOnRamp = () => {
+    function handleOnRamp() {
         open({ view: 'OnRampProviders' })
     }
 
-    const handleSwap = () => {
-        // Try to open with the token address. If 1inch/AppKit supports address, this is best.
-        // Otherwise, we might need to fallback to the symbol or a direct DEX link.
+    function handleSwap() {
         open({
-            view: 'Swap'
+            view: 'Swap',
+            arguments: {
+                fromToken: 'USDC',
+                toToken: TOKEN_SYMBOL,
+            },
         })
     }
 
-    const getDexLink = () => {
-        switch (chainId) {
-            case 8453: // Base
-                return `https://aerodrome.finance/swap?to=${tokenAddress}`
-            case 137: // Polygon
-                return `https://app.uniswap.org/swap?chain=polygon&outputCurrency=${tokenAddress}`
-            case 10: // Optimism
-                return `https://app.uniswap.org/swap?chain=optimism&outputCurrency=${tokenAddress}`
-            default:
-                return "#"
-        }
-    }
-
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <Card className="w-full max-w-6xl mx-auto">
             <CardHeader>
                 <CardTitle>Buy {TOKEN_SYMBOL}</CardTitle>
-                <CardDescription>Get {TOKEN_SYMBOL} in two simple steps.</CardDescription>
+                <CardDescription>
+                    Swap USDC or ETH for {TOKEN_SYMBOL} on Base through Aerodrome liquidity.
+                </CardDescription>
             </CardHeader>
-            <CardContent>
-                {!isConnected ? (
+            <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="overflow-hidden rounded-xl border bg-background">
+                    <iframe
+                        src={aerodromeSrc}
+                        title={`Aerodrome swap USDC to ${TOKEN_SYMBOL}`}
+                        className="h-[720px] w-full bg-background"
+                        allow="clipboard-write; web-share"
+                    />
+                </div>
+
+                <div className="space-y-4">
                     <Alert>
                         <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Wallet not connected</AlertTitle>
+                        <AlertTitle>CRTV pre-selected</AlertTitle>
                         <AlertDescription>
-                            Please connect your wallet to purchase tokens.
+                            The embedded swap is set to buy {TOKEN_SYMBOL} on Base. Connect a wallet in Aerodrome to complete the trade.
                         </AlertDescription>
                     </Alert>
-                ) : !isSupportedChain ? (
-                    <div className="space-y-4">
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Unsupported Network</AlertTitle>
-                            <AlertDescription>
-                                Please switch to Base, Polygon, or Optimism to buy {TOKEN_SYMBOL}.
-                            </AlertDescription>
-                        </Alert>
-                        <div className="grid grid-cols-1 gap-2">
-                            <Button onClick={() => switchNetwork(base)}>Switch to Base</Button>
-                            <Button onClick={() => switchNetwork(polygon)}>Switch to Polygon</Button>
-                            <Button onClick={() => switchNetwork(optimism)}>Switch to Optimism</Button>
+
+                    <div className="rounded-lg border p-4 bg-muted/50">
+                        <div className="flex items-start gap-4">
+                            <div className="p-2 bg-background rounded-full border">
+                                <Wallet className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                                <h4 className="font-medium">Base {TOKEN_SYMBOL}</h4>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Contract address:
+                                </p>
+                                <div className="text-xs break-all font-mono mt-2 bg-background p-2 rounded">
+                                    {tokenAddress}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                ) : (
-                    <Tabs defaultValue="onramp" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="onramp">1. Get Funds</TabsTrigger>
-                            <TabsTrigger value="swap">2. Swap</TabsTrigger>
-                            <TabsTrigger value="bridge">3. Bridge</TabsTrigger>
-                        </TabsList>
 
-                        <TabsContent value="onramp" className="space-y-4 pt-4">
-                            <div className="rounded-lg border p-4 bg-muted/50">
-                                <div className="flex items-start gap-4">
-                                    <div className="p-2 bg-background rounded-full border">
-                                        <CreditCard className="h-6 w-6 text-primary" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium">Need crypto?</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Buy ETH or USDC directly with your credit card or bank account using our secure on-ramp.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <Button className="w-full" size="lg" onClick={handleOnRamp}>
-                                Buy Crypto via Card (On-Ramp)
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
-                        </TabsContent>
+                    <Button className="w-full" size="lg" onClick={handleOnRamp}>
+                        Buy USDC or ETH with card
+                        <CreditCard className="ml-2 h-4 w-4" />
+                    </Button>
 
-                        <TabsContent value="swap" className="space-y-4 pt-4">
-                            <div className="rounded-lg border p-4 bg-muted/50">
-                                <div className="flex items-start gap-4">
-                                    <div className="p-2 bg-background rounded-full border">
-                                        <Wallet className="h-6 w-6 text-primary" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium">Swap for {TOKEN_SYMBOL}</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Swap your ETH or USDC for {TOKEN_SYMBOL} directly within the wallet.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                    <Button className="w-full" size="lg" variant="outline" onClick={handleSwap}>
+                        Open AppKit USDC swap
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
 
-                            {/* Token Info */}
-                            <div className="space-y-2">
-                                <div className="text-sm text-muted-foreground">
-                                    <span className="font-medium">Contract Address:</span>
-                                    <div className="text-xs break-all font-mono mt-1 bg-muted p-2 rounded">{tokenAddress}</div>
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                    <span className="font-medium">Liquidity Pool:</span>
-                                    <div className="text-xs break-all font-mono mt-1 bg-muted p-2 rounded">{poolAddress}</div>
-                                </div>
-                            </div>
-
-                            <Button
-                                className="w-full mb-3"
-                                size="lg"
-                                asChild
-                            >
-                                <a href={getDexLink()} target="_blank" rel="noopener noreferrer">
-                                    Buy on DEX (Recommended) <ExternalLink className="ml-2 h-4 w-4" />
-                                </a>
-                            </Button>
-
-                            <Button
-                                className="w-full"
-                                variant="outline"
-                                onClick={handleSwap}
-                            >
-                                Open Wallet Swap
-                            </Button>
-
-                            <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md text-sm text-yellow-600 dark:text-yellow-400">
-                                <p className="flex items-start gap-2">
-                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                    <span>
-                                        <strong>Note:</strong> Since {TOKEN_SYMBOL} is a new token, it may not appear in the wallet's internal swap list yet.
-                                        Use the <strong>DEX link above</strong> to ensure you can find and trade the token.
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div className="text-center hidden">
-                                <span className="text-xs text-muted-foreground">Or buy directly on DEX:</span>
-                                <Button variant="link" size="sm" asChild className="h-auto p-0 ml-1">
-                                    <a href={getDexLink()} target="_blank" rel="noopener noreferrer">
-                                        Launch DEX <ExternalLink className="ml-1 h-3 w-3" />
-                                    </a>
-                                </Button>
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="bridge">
-                            <BridgeForm />
-                        </TabsContent>
-                    </Tabs>
-                )}
+                    <Button className="w-full" variant="outline" asChild>
+                        <a href={aerodromeEthSrc} target="_blank" rel="noopener noreferrer">
+                            Swap ETH on Aerodrome <ExternalLink className="ml-2 h-4 w-4" />
+                        </a>
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     )

@@ -201,8 +201,11 @@ export function BuyCRTV() {
                     <div className="rounded-lg border p-4 bg-muted/50">
                         <h4 className="font-medium">Base {TOKEN_SYMBOL}</h4>
                         <p className="text-sm text-muted-foreground mt-1">Contract address:</p>
-                        <div className="text-xs break-all font-mono mt-2 bg-background p-2 rounded">
-                            {tokenAddress}
+                        <div
+                            className="text-xs font-mono mt-2 bg-background p-2 rounded"
+                            title={tokenAddress}
+                        >
+                            {shortenAddress(tokenAddress)}
                         </div>
                     </div>
 
@@ -220,6 +223,10 @@ function formatTokenAmount(amount: string, decimals: number) {
     return Number(formatUnits(amount, decimals)).toLocaleString(undefined, {
         maximumFractionDigits: 6,
     })
+}
+
+function shortenAddress(address: string) {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
 function getErrorMessage(error: unknown) {

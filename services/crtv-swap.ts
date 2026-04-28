@@ -15,7 +15,7 @@ export interface CrtvSwapQuoteRequest {
 export interface CrtvSwapQuote {
   buyAmount: string
   sellAmount: string
-  price: string
+  price?: string
   guaranteedPrice?: string
   route?: unknown
   transaction: {
@@ -45,7 +45,11 @@ export async function getCrtvSwapQuote({
   taker,
   slippageBps = 50,
 }: CrtvSwapQuoteRequest): Promise<CrtvSwapQuote> {
-  const apiKey = process.env.ZEROX_API_KEY || process.env.NEXT_PUBLIC_ZEROX_API_KEY
+  const apiKey =
+    process.env.ZERO_EX_API_KEY ||
+    process.env.ZEROEX_API_KEY ||
+    process.env.ZEROX_API_KEY ||
+    process.env.NEXT_PUBLIC_ZEROX_API_KEY
   if (!apiKey) throw new Error("Missing ZEROX_API_KEY")
 
   if (!isSupportedSellToken(sellToken)) throw new Error("Unsupported sell token")
@@ -92,6 +96,7 @@ function isSupportedSellToken(sellToken: string): boolean {
 
 function normalizeZeroXQuote(quote: unknown): CrtvSwapQuote {
   if (!isRecord(quote)) throw new Error("Swap quote was incomplete")
+  if (quote.liquidityAvailable === false) throw new Error("No CRTV swap liquidity is available for this amount")
 
   const transaction = quote.transaction || {}
   if (!isRecord(transaction)) throw new Error("Swap quote was incomplete")
@@ -108,7 +113,7 @@ function normalizeZeroXQuote(quote: unknown): CrtvSwapQuote {
   const data = getString(transaction.data) || getString(quote.data)
   const value = getDecimalString(transaction.value) || getDecimalString(quote.value) || "0"
 
-  if (!price || !to || !data) throw new Error("Swap quote was incomplete")
+  if (!to || !data) throw new Error("Swap quote was incomplete")
 
   return {
     buyAmount,

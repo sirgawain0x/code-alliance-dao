@@ -64,11 +64,12 @@ Areas: `contexts/AppKitProvider.tsx`, `components/appkit-wrapper.tsx`, `componen
 Testing workflow:
 
 1. Set `NEXT_PUBLIC_REOWN_PROJECT_ID` if testing real wallet login. The built-in fallback is acceptable for layout smoke tests only.
-2. Start `pnpm dev` and open `/buy`.
-3. Click the AppKit connect button and verify login options render.
-4. Connect a browser wallet or social/email option when validating authenticated behavior.
-5. Test Base, Polygon, and Optimism paths when touching token, pool, CCIP, onramp, or swap constants.
-6. To reset a sticky wallet session, clear local storage keys that start with `wc@`, `@w3m`, `@appkit`, `wagmi`, or contain `walletconnect`, then reload.
+2. Set `ZERO_EX_API_KEY` when testing the custom `/api/crtv-swap/quote` flow on `/buy`; `ZEROEX_API_KEY` and `ZEROX_API_KEY` are also accepted.
+3. Start `pnpm dev` and open `/buy`.
+4. Click the AppKit connect button and verify login options render.
+5. Connect a browser wallet or social/email option when validating authenticated behavior.
+6. Test Base, Polygon, and Optimism paths when touching token, pool, CCIP, onramp, or swap constants.
+7. To reset a sticky wallet session, clear local storage keys that start with `wc@`, `@w3m`, `@appkit`, `wagmi`, or contain `walletconnect`, then reload.
 
 ## Feature flags and mocks
 

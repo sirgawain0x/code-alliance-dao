@@ -54,6 +54,7 @@ export function BuyCRTV() {
             const result = await response.json()
 
             if (!response.ok) throw new Error(result.error || "Unable to quote CRTV swap")
+            if (!isCrtvSwapQuote(result)) throw new Error("Swap quote was incomplete")
 
             setQuote(result)
             setMessage({ type: "success", text: "Quote ready. Review the expected CRTV before swapping." })
@@ -220,9 +221,27 @@ export function BuyCRTV() {
 }
 
 function formatTokenAmount(amount: string, decimals: number) {
+    if (!isDecimalString(amount)) return "--"
+
     return Number(formatUnits(amount, decimals)).toLocaleString(undefined, {
         maximumFractionDigits: 6,
     })
+}
+
+function isCrtvSwapQuote(value: unknown): value is CrtvSwapQuote {
+    if (!isRecord(value)) return false
+    if (!isDecimalString(value.buyAmount) || !isDecimalString(value.sellAmount)) return false
+    if (!isRecord(value.transaction)) return false
+
+    return Boolean(value.transaction.to && value.transaction.data && isDecimalString(value.transaction.value))
+}
+
+function isDecimalString(value: unknown): value is string {
+    return typeof value === "string" && /^\d+$/.test(value)
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value && typeof value === "object" && !Array.isArray(value))
 }
 
 function shortenAddress(address: string) {

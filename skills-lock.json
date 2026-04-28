@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "0x-api": {
+      "source": "0xProject/0x-ai",
+      "sourceType": "github",
+      "skillPath": "skills/0x-api/SKILL.md",
+      "computedHash": "6e4514a2a87dbef10339a6346b978d83637bfb8416f813e739441e41ba1723c7"
+    }
+  }
+}

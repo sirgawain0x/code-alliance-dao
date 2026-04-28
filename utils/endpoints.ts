@@ -23,6 +23,35 @@ const SUBGRAPH_IDS: KeychainList = {
   },
 };
 
+function toNormalizedHexChainId(chainid: string): string {
+  if (!chainid) return "";
+
+  const normalizedChainId = chainid.toLowerCase();
+  if (!normalizedChainId.startsWith("0x")) {
+    const parsedChainId = parseInt(normalizedChainId, 10);
+    if (Number.isNaN(parsedChainId)) return "";
+    return `0x${parsedChainId.toString(16)}`;
+  }
+
+  const parsedChainId = parseInt(normalizedChainId, 16);
+  if (Number.isNaN(parsedChainId)) return "";
+
+  return `0x${parsedChainId.toString(16)}`;
+}
+
+export function isSupportedSubgraphChain({
+  chainid,
+  subgraphKey,
+}: {
+  chainid: string;
+  subgraphKey: string;
+}): boolean {
+  const normalizedHexChainId = toNormalizedHexChainId(chainid);
+  if (!normalizedHexChainId) return false;
+
+  return Boolean(SUBGRAPH_IDS[subgraphKey]?.[normalizedHexChainId]);
+}
+
 // Graph URL builder for DAO Haus subgraphs
 export const getGraphUrl = ({
   chainid,
@@ -38,7 +67,10 @@ export const getGraphUrl = ({
   }
 
   // Convert chainid to hex format if it's decimal
-  const hexChainId = chainid.startsWith('0x') ? chainid : `0x${parseInt(chainid).toString(16)}`;
+  const hexChainId = toNormalizedHexChainId(chainid);
+  if (!hexChainId) {
+    throw new Error(`Unsupported chain ID: ${chainid} or subgraph key: ${subgraphKey}`);
+  }
 
   // Get the subgraph hash for the specific chain and subgraph key
   const subgraphHash = SUBGRAPH_IDS[subgraphKey]?.[hexChainId];

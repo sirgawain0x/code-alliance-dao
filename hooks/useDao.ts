@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FIND_DAO } from "../utils/queries";
 import { DaoItem } from "../utils/daotypes";
 // import { addParsedContent } from "@/utils/yeeter-data-helpers";
-import { getGraphUrl } from "../utils/endpoints";
+import { getGraphUrl, isSupportedSubgraphChain } from "../utils/endpoints";
 import { DaoHooksContext } from "../contexts/DaoHooksContext";
 
 export const useDao = ({
@@ -20,7 +20,11 @@ export const useDao = ({
   if (!hookContext) throw new Error("useDao must be used within a DaoHooksProvider");
 
   let dhUrl = "";
-  if (hookContext.config.graphKey && chainid) {
+  const isDaohausSupportedChain = chainid
+    ? isSupportedSubgraphChain({ chainid, subgraphKey: "DAOHAUS" })
+    : false;
+
+  if (hookContext.config.graphKey && chainid && isDaohausSupportedChain) {
     dhUrl = getGraphUrl({
       chainid,
       graphKey: hookContext.config.graphKey,

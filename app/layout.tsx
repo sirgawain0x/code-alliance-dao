@@ -11,6 +11,9 @@ import { headers } from "next/headers"
 export const metadata: Metadata = {
   title: "Creative Organization DAO",
   description: "Decentralized governance for The Creative Organization DAO",
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default async function RootLayout({

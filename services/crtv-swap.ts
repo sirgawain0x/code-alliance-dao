@@ -90,27 +90,78 @@ function isSupportedSellToken(sellToken: string): boolean {
   ].includes(normalizedSellToken)
 }
 
-function normalizeZeroXQuote(quote: any): CrtvSwapQuote {
+function normalizeZeroXQuote(quote: unknown): CrtvSwapQuote {
+  if (!isRecord(quote)) throw new Error("Swap quote was incomplete")
+
   const transaction = quote.transaction || {}
+  if (!isRecord(transaction)) throw new Error("Swap quote was incomplete")
+
   const allowanceTarget =
-    quote.allowanceTarget ||
-    quote.issues?.allowance?.spender ||
-    transaction.to
+    getString(quote.allowanceTarget) ||
+    getString(getRecord(quote.issues)?.allowance, "spender") ||
+    getString(transaction.to)
+
+  const buyAmount = getRequiredDecimalString(quote.buyAmount)
+  const sellAmount = getRequiredDecimalString(quote.sellAmount)
+  const price = getString(quote.price)
+  const to = getString(transaction.to) || getString(quote.to)
+  const data = getString(transaction.data) || getString(quote.data)
+  const value = getDecimalString(transaction.value) || getDecimalString(quote.value) || "0"
+
+  if (!price || !to || !data) throw new Error("Swap quote was incomplete")
 
   return {
-    buyAmount: quote.buyAmount,
-    sellAmount: quote.sellAmount,
-    price: quote.price,
-    guaranteedPrice: quote.guaranteedPrice,
+    buyAmount,
+    sellAmount,
+    price,
+    guaranteedPrice: getString(quote.guaranteedPrice),
     route: quote.route,
     transaction: {
-      to: transaction.to || quote.to,
-      data: transaction.data || quote.data,
-      value: transaction.value || quote.value || "0",
-      gas: transaction.gas || quote.gas,
-      gasPrice: transaction.gasPrice || quote.gasPrice,
+      to,
+      data,
+      value,
+      gas: getDecimalString(transaction.gas) || getDecimalString(quote.gas),
+      gasPrice: getDecimalString(transaction.gasPrice) || getDecimalString(quote.gasPrice),
     },
     allowanceTarget,
-    issues: quote.issues,
+    issues: getQuoteIssues(quote.issues),
   }
+}
+
+function getRequiredDecimalString(value: unknown) {
+  const decimalString = getDecimalString(value)
+  if (!decimalString) throw new Error("Swap quote was incomplete")
+
+  return decimalString
+}
+
+function getDecimalString(value: unknown) {
+  if (typeof value !== "string" || !/^\d+$/.test(value)) return undefined
+
+  return value
+}
+
+function getString(value: unknown): string | undefined
+function getString(source: unknown, key: string): string | undefined
+function getString(source: unknown, key?: string) {
+  const value = key ? getRecord(source)?.[key] : source
+  if (typeof value !== "string" || !value) return undefined
+
+  return value
+}
+
+function getRecord(value: unknown) {
+  if (!isRecord(value)) return undefined
+
+  return value
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value))
+}
+
+function getQuoteIssues(value: unknown): CrtvSwapQuote["issues"] | undefined {
+  if (!isRecord(value)) return undefined
+
+  return value as CrtvSwapQuote["issues"]
 }

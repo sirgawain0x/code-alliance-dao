@@ -24,8 +24,8 @@ Source distilled from: https://docs.chain.link/ccip/llms-full.txt
    - `extraArgs`: gas limit and execution options
    - `feeToken`: token for CCIP fee payment (often LINK)
 2. Quote fee with router `getFee`.
-3. Ensure fee-token balance and approve router.
-4. Send via router `ccipSend`.
+3. Ensure fee-token balance and approve router (if using LINK/ERC-20 fees).
+4. Send via router `ccipSend` (include fee value in `msg.value` if using native fees).
 
 ## EVM receiver flow
 

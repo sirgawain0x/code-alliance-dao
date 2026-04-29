@@ -29,10 +29,10 @@ Use this skill when the task involves Chainlink CCIP architecture, setup, coding
    - sufficient gas token + LINK when paying fees in LINK
 2. Build sender:
    - construct `Client.EVM2AnyMessage`
-   - encode receiver and payload with `abi.encode(...)`
+   - encode receiver address and data payload separately as bytes
    - set `tokenAmounts`, `extraArgs`, and `feeToken`
    - estimate fees with router `getFee(...)`
-   - approve fee token and call `ccipSend(...)`
+   - approve fee token and call `ccipSend(...)` (LINK), or send with fee value for native mode
 3. Build receiver:
    - inherit CCIP receiver base contract
    - validate `sourceChainSelector` and sender allowlist as needed

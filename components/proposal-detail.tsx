@@ -233,6 +233,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
                   <Button
                     className="w-full bg-green-600 hover:bg-green-700"
                     disabled={!primaryProfile?.capabilities.canVote}
+                    aria-disabled={!primaryProfile?.capabilities.canVote}
                     title={
                       primaryProfile?.capabilities.canVote
                         ? "Submit vote"
@@ -244,19 +245,25 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent"
+                    className="w-full text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={!primaryProfile?.capabilities.canVote}
                   >
                     Vote Against
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full text-gray-400 border-gray-400/20 hover:bg-gray-400/10 bg-transparent"
+                    className="w-full text-gray-400 border-gray-400/20 hover:bg-gray-400/10 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={!primaryProfile?.capabilities.canVote}
                   >
                     Abstain
                   </Button>
                 </div>
+              )}
+
+              {!primaryProfile?.capabilities.canVote && (
+                <p className="text-xs text-muted-foreground">
+                  Voting actions are disabled until this wallet holds voting shares.
+                </p>
               )}
 
               <Textarea

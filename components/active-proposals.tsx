@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Clock, User, Vote, Plus, Filter } from "lucide-react"
 import { useDaoProposals } from "@/hooks/useDaoProposals"
 import { useDao } from "@/hooks/useDao"
+import { useOnchainMembershipProfile } from "@/hooks/useOnchainMembershipProfile"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
@@ -55,6 +56,7 @@ function getStatusColor(status: string): string {
 }
 
 export function ActiveProposals() {
+  const { primaryProfile } = useOnchainMembershipProfile({ chainId: "8453" })
   const { dao, isLoading: daoLoading } = useDao({
     chainid: "8453",
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
@@ -223,7 +225,16 @@ export function ActiveProposals() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h3 className="text-lg font-semibold text-foreground">Governance Proposals</h3>
-          <Button size="sm" className="gap-2 transition-all duration-200 hover:scale-105 active:scale-95">
+          <Button
+            size="sm"
+            className="gap-2 transition-all duration-200 hover:scale-105 active:scale-95"
+            disabled={!primaryProfile?.capabilities.canCreateProposal}
+            title={
+              primaryProfile?.capabilities.canCreateProposal
+                ? "Create proposal"
+                : "Requires voting shares or admin role"
+            }
+          >
             <Plus className="h-4 w-4" />
             Create Proposal
           </Button>

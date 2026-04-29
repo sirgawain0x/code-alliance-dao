@@ -19,6 +19,7 @@ import { useMember } from "@/hooks/useMember"
 
 import { useAppKitAccount } from "@reown/appkit/react"
 import { Skeleton } from "./ui/skeleton"
+import { useOnchainMembershipProfile } from "@/hooks/useOnchainMembershipProfile"
 
 export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailProps) {
   const { dao } = useDao({
@@ -33,6 +34,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
   });
 
   const { address } = useAppKitAccount();
+  const { primaryProfile } = useOnchainMembershipProfile({ chainId: "8453" })
 
   const { member } = useMember({
     chainid: "8453",
@@ -228,19 +230,29 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
 
               {!proposalData.yourVote && (
                 <div className="space-y-3">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
+                  <Button
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    disabled={!primaryProfile?.capabilities.canVote}
+                    title={
+                      primaryProfile?.capabilities.canVote
+                        ? "Submit vote"
+                        : "Requires voting shares in this DAO"
+                    }
+                  >
                     <Vote className="h-4 w-4 mr-2" />
                     Vote For
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full text-red-400 border-red-400/20 hover:bg-red-400/10 bg-transparent"
+                    disabled={!primaryProfile?.capabilities.canVote}
                   >
                     Vote Against
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full text-gray-400 border-gray-400/20 hover:bg-gray-400/10 bg-transparent"
+                    disabled={!primaryProfile?.capabilities.canVote}
                   >
                     Abstain
                   </Button>

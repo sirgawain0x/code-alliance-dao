@@ -8,6 +8,7 @@ import { useMemo } from "react"
 import { useDaoProposals } from "../hooks/useDaoProposals"
 import { useDao } from "../hooks/useDao"
 import { ProposalItem } from "../utils/daotypes"
+import { useOnchainMembershipProfile } from "@/hooks/useOnchainMembershipProfile"
 
 
 
@@ -39,6 +40,7 @@ const votingMechanisms = [
 ]
 
 export function GovernanceOverview() {
+  const { primaryProfile } = useOnchainMembershipProfile({ chainId: "8453" })
   const { dao, isLoading: daoLoading } = useDao({
     chainid: "8453",
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
@@ -69,7 +71,7 @@ export function GovernanceOverview() {
   const governanceStats = [
     {
       label: "Your Voting Power",
-      value: "0", // Placeholder as we don't have user wallet connection yet
+      value: String(primaryProfile?.holdings.shares || 0),
       subtitle: "vCRTV Tokens",
       icon: Vote,
       color: "text-blue-400",

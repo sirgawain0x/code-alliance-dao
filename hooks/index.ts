@@ -28,6 +28,7 @@ export { useDaoExits } from "./useDaoExits";
 
 // Token balance hooks
 export { useDaoTokenBalances } from "./useDaoTokenBalances";
+export { useOnchainMembershipProfile } from "./useOnchainMembershipProfile";
 
 // Context hooks
 export { useDaoHooks } from "./useDaoHooks";

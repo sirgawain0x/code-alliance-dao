@@ -33,22 +33,34 @@ const NFT_ABI = [
   },
 ] as const
 
+function normalizeChainIdToDecimal(chainIdFragment?: string): string {
+  if (!chainIdFragment) return ""
+  const trimmed = chainIdFragment.trim()
+  if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
+    const parsed = parseInt(trimmed, 16)
+    return Number.isNaN(parsed) ? "" : String(parsed)
+  }
+  return trimmed
+}
+
 function parseDaoChainAndAddress(daoId?: string): {
   chainId: string
   daoAddress: string
 } {
   if (!daoId) return { chainId: "", daoAddress: "" }
-  const [chainId, daoAddress] = daoId.split("-")
+  const [chainIdRaw, daoAddress] = daoId.split("-")
   return {
-    chainId: chainId || "",
+    chainId: normalizeChainIdToDecimal(chainIdRaw) || chainIdRaw || "",
     daoAddress: daoAddress || "",
   }
 }
 
 export function useOnchainMembershipProfile({
   chainId,
+  daoAddress,
 }: {
   chainId: string
+  daoAddress?: string
 }) {
   const { address } = useAppKitAccount()
   const walletAddress = address?.toLowerCase()
@@ -64,20 +76,30 @@ export function useOnchainMembershipProfile({
     })
 
   const profilesQuery = useQuery({
-    queryKey: ["onchain-membership-profile", chainId, walletAddress, memberships],
+    queryKey: [
+      "onchain-membership-profile",
+      chainId,
+      daoAddress,
+      walletAddress,
+      memberships,
+    ],
     enabled: Boolean(walletAddress && memberships?.length),
     queryFn: async (): Promise<MembershipProfile[]> => {
       if (!walletAddress || !memberships) return []
 
-      const provider = new ethers.JsonRpcProvider(getRpcUrl({ chainid: chainId }))
-
       return Promise.all(
         memberships.map(async (membership) => {
-          const { chainId: daoChainId, daoAddress } = parseDaoChainAndAddress(
-            membership.dao?.id
+          const { chainId: daoChainId, daoAddress: idDaoAddress } =
+            parseDaoChainAndAddress(membership.dao?.id)
+          const rpcChainId = daoChainId || chainId
+          const provider = new ethers.JsonRpcProvider(
+            getRpcUrl({ chainid: rpcChainId })
           )
+
           const normalizedDaoAddress =
-            daoAddress || membership.dao?.safeAddress?.toLowerCase() || ""
+            idDaoAddress?.toLowerCase() ||
+            membership.dao?.safeAddress?.toLowerCase() ||
+            ""
           const daoConfig = getDaoContractConfig({
             chainId: daoChainId || chainId,
             daoAddress: normalizedDaoAddress,
@@ -88,13 +110,17 @@ export function useOnchainMembershipProfile({
 
           let nftBalance = 0
           if (daoConfig?.nftAddress) {
-            const nftContract = new ethers.Contract(
-              daoConfig.nftAddress,
-              NFT_ABI,
-              provider
-            )
-            const balance = await nftContract.balanceOf(walletAddress)
-            nftBalance = Number(balance)
+            try {
+              const nftContract = new ethers.Contract(
+                daoConfig.nftAddress,
+                NFT_ABI,
+                provider
+              )
+              const balance = await nftContract.balanceOf(walletAddress)
+              nftBalance = Number(balance)
+            } catch {
+              nftBalance = 0
+            }
           }
 
           let ownerAddress: string | undefined
@@ -124,7 +150,7 @@ export function useOnchainMembershipProfile({
 
           return {
             daoId: membership.dao?.id || "",
-            chainId: daoChainId || chainId,
+            chainId: rpcChainId,
             daoAddress: normalizedDaoAddress,
             isMember,
             isVotingMember,
@@ -149,8 +175,14 @@ export function useOnchainMembershipProfile({
 
   const primaryProfile = useMemo(() => {
     if (!profilesQuery.data?.length) return undefined
+    const target = daoAddress?.toLowerCase()
+    if (target) {
+      return profilesQuery.data.find(
+        (profile) => profile.daoAddress.toLowerCase() === target
+      )
+    }
     return profilesQuery.data[0]
-  }, [profilesQuery.data])
+  }, [profilesQuery.data, daoAddress])
 
   return {
     walletAddress,

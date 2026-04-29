@@ -40,7 +40,10 @@ const votingMechanisms = [
 ]
 
 export function GovernanceOverview() {
-  const { primaryProfile } = useOnchainMembershipProfile({ chainId: "8453" })
+  const { primaryProfile } = useOnchainMembershipProfile({
+    chainId: "8453",
+    daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
   const { dao, isLoading: daoLoading } = useDao({
     chainid: "8453",
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS

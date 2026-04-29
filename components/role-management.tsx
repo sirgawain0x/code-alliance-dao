@@ -12,7 +12,10 @@ function formatWallet(address?: string): string {
 
 export function RoleManagement() {
   const { walletAddress, profiles, primaryProfile, isLoading, isConnected } =
-    useOnchainMembershipProfile({ chainId: "8453" })
+    useOnchainMembershipProfile({
+      chainId: "8453",
+      daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+    })
 
   if (!isConnected) {
     return (

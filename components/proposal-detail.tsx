@@ -34,7 +34,10 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
   });
 
   const { address } = useAppKitAccount();
-  const { primaryProfile } = useOnchainMembershipProfile({ chainId: "8453" })
+  const { primaryProfile } = useOnchainMembershipProfile({
+    chainId: "8453",
+    daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
 
   const { member } = useMember({
     chainid: "8453",

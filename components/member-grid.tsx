@@ -23,7 +23,10 @@ export function MemberGrid() {
     chainid: "8453",
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
   })
-  const { primaryProfile } = useOnchainMembershipProfile({ chainId: "8453" })
+  const { primaryProfile } = useOnchainMembershipProfile({
+    chainId: "8453",
+    daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
 
   const filteredMembers = useMemo(() => {
     if (!members) return []

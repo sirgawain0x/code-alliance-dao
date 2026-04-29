@@ -1,173 +1,148 @@
+ "use client"
+
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Crown, Shield, Users, Settings } from "lucide-react"
+import { useOnchainMembershipProfile } from "@/hooks/useOnchainMembershipProfile"
+import { Crown, Shield, Users, Wallet } from "lucide-react"
 
-const roles = [
-  {
-    name: "Administrator",
-    description: "Full system access and management",
-    members: 8,
-    permissions: ["System Admin", "Treasury", "Governance", "User Management"],
-    color: "text-red-400",
-    icon: Crown,
-    level: "system",
-  },
-  {
-    name: "Council Member",
-    description: "Strategic decision making and oversight",
-    members: 15,
-    permissions: ["Governance", "Treasury", "SubDAO Oversight"],
-    color: "text-purple-400",
-    icon: Crown,
-    level: "governance",
-  },
-  {
-    name: "Core Contributor",
-    description: "Key contributors with elevated privileges",
-    members: 45,
-    permissions: ["Governance", "Project Management", "Treasury View"],
-    color: "text-blue-400",
-    icon: Shield,
-    level: "contributor",
-  },
-  {
-    name: "Project Lead",
-    description: "Lead specific projects and initiatives",
-    members: 89,
-    permissions: ["Governance", "Project Management"],
-    color: "text-green-400",
-    icon: Shield,
-    level: "contributor",
-  },
-  {
-    name: "Contributor",
-    description: "Active contributors to DAO initiatives",
-    members: 234,
-    permissions: ["Governance", "Limited Project Access"],
-    color: "text-yellow-400",
-    icon: Users,
-    level: "member",
-  },
-  {
-    name: "Community Member",
-    description: "General community participation",
-    members: 856,
-    permissions: ["Governance"],
-    color: "text-gray-400",
-    icon: Users,
-    level: "member",
-  },
-]
-
-const permissions = [
-  { name: "System Admin", description: "Full system administration", critical: true },
-  { name: "Treasury", description: "Treasury management and oversight", critical: true },
-  { name: "Governance", description: "Voting and proposal creation", critical: false },
-  { name: "User Management", description: "Manage user roles and permissions", critical: true },
-  { name: "SubDAO Oversight", description: "Manage and oversee SubDAOs", critical: false },
-  { name: "Project Management", description: "Create and manage projects", critical: false },
-  { name: "Treasury View", description: "View treasury information", critical: false },
-]
+function formatWallet(address?: string): string {
+  if (!address) return "Not connected"
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
 
 export function RoleManagement() {
-  const totalMembers = roles.reduce((sum, role) => sum + role.members, 0)
+  const { walletAddress, profiles, primaryProfile, isLoading, isConnected } =
+    useOnchainMembershipProfile({
+      chainId: "8453",
+      daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+    })
+
+  if (!isConnected) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-foreground">On-chain Access</h3>
+          <p className="text-sm text-muted-foreground">
+            Connect a wallet to load DAO memberships, holdings, and permissions.
+          </p>
+        </div>
+      </Card>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <div className="space-y-3">
+          <div className="h-6 w-40 bg-muted animate-pulse rounded" />
+          <div className="h-4 w-full bg-muted animate-pulse rounded" />
+          <div className="h-4 w-2/3 bg-muted animate-pulse rounded" />
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      {/* Role Overview */}
       <Card className="stat-card-gradient p-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">Role Management</h3>
-            <Button size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Configure
-            </Button>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">On-chain Role Summary</h3>
+            <p className="text-xs text-muted-foreground">
+              Wallet {formatWallet(walletAddress)} is in {profiles.length} DAO(s)
+            </p>
           </div>
 
           <div className="space-y-3">
-            {roles.map((role) => (
-              <div key={role.name} className="border border-border rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <role.icon className={`h-4 w-4 ${role.color}`} />
-                    <span className="font-medium text-foreground text-sm">{role.name}</span>
-                  </div>
-                  <span className="text-sm text-foreground">{role.members}</span>
-                </div>
-
-                <p className="text-xs text-muted-foreground">{role.description}</p>
-
-                <div className="flex flex-wrap gap-1">
-                  {role.permissions.slice(0, 2).map((permission) => (
-                    <Badge key={permission} variant="outline" className="text-xs">
-                      {permission}
+            {profiles.map((profile) => (
+              <div key={profile.daoId} className="border border-border rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-mono text-muted-foreground">{profile.daoAddress}</span>
+                  <div className="flex gap-1">
+                    <Badge
+                      className={
+                        profile.isAdmin
+                          ? "bg-red-500/10 text-red-400 border-red-500/20"
+                          : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                      }
+                    >
+                      {profile.isAdmin ? "Admin" : profile.isVotingMember ? "Voting" : "Member"}
                     </Badge>
-                  ))}
-                  {role.permissions.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{role.permissions.length - 2}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <Progress value={(role.members / totalMembers) * 100} className="h-1" />
-                  <div className="text-xs text-muted-foreground text-right">
-                    {((role.members / totalMembers) * 100).toFixed(1)}% of members
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-
-      {/* Permission Matrix */}
-      <Card className="stat-card-gradient p-6">
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">Permissions</h3>
-
-          <div className="space-y-2">
-            {permissions.map((permission) => (
-              <div key={permission.name} className="flex items-center justify-between p-2 border border-border rounded">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-foreground">{permission.name}</span>
-                    {permission.critical && (
-                      <Badge variant="destructive" className="text-xs">
-                        Critical
+                    {profile.isNonVotingMember && (
+                      <Badge className="bg-gray-500/10 text-gray-300 border-gray-500/20">
+                        Non-voting
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{permission.description}</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="rounded border border-border p-2">
+                    <p className="text-muted-foreground">Shares</p>
+                    <p className="text-foreground font-semibold">{profile.holdings.shares}</p>
+                  </div>
+                  <div className="rounded border border-border p-2">
+                    <p className="text-muted-foreground">Loot</p>
+                    <p className="text-foreground font-semibold">{profile.holdings.loot}</p>
+                  </div>
+                  <div className="rounded border border-border p-2">
+                    <p className="text-muted-foreground">NFTs</p>
+                    <p className="text-foreground font-semibold">{profile.holdings.nftBalance}</p>
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Admin source: {profile.sources.adminSource}
+                  {profile.sources.ownerAddress && (
+                    <span className="font-mono"> ({formatWallet(profile.sources.ownerAddress)})</span>
+                  )}
                 </div>
               </div>
             ))}
+            {!profiles.length && (
+              <p className="text-sm text-muted-foreground">No DAO memberships found for this wallet.</p>
+            )}
           </div>
         </div>
       </Card>
 
-      {/* Quick Actions */}
       <Card className="stat-card-gradient p-6">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-
-          <div className="space-y-2">
-            <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
-              Create New Role
-            </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
-              Bulk Role Assignment
-            </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
-              Permission Audit
-            </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
-              Role Templates
-            </Button>
+          <h3 className="text-lg font-semibold text-foreground">Current DAO Capability Scope</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between border border-border rounded p-2">
+              <span className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-blue-400" />
+                View DAO data
+              </span>
+              <Badge variant="outline">{primaryProfile?.capabilities.canViewDao ? "Allowed" : "Blocked"}</Badge>
+            </div>
+            <div className="flex items-center justify-between border border-border rounded p-2">
+              <span className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-purple-400" />
+                Vote and create proposals
+              </span>
+              <Badge variant="outline">
+                {primaryProfile?.capabilities.canVote ? "Voting enabled" : "Needs voting shares"}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between border border-border rounded p-2">
+              <span className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-red-400" />
+                Manage members
+              </span>
+              <Badge variant="outline">
+                {primaryProfile?.capabilities.canManageMembers ? "Admin only enabled" : "Admin only blocked"}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between border border-border rounded p-2">
+              <span className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-green-400" />
+                View treasury
+              </span>
+              <Badge variant="outline">
+                {primaryProfile?.capabilities.canViewTreasury ? "Allowed" : "Blocked"}
+              </Badge>
+            </div>
           </div>
         </div>
       </Card>

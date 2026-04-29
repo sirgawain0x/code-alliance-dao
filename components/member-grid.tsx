@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Search, Filter, MoreHorizontal, Shield, Crown } from "lucide-react"
 import { useDaoMembers } from "@/hooks/useDaoMembers"
+import { useOnchainMembershipProfile } from "@/hooks/useOnchainMembershipProfile"
+import { Can } from "@/components/can"
 
 import { useMemo, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
@@ -20,6 +22,10 @@ export function MemberGrid() {
   const { members, isLoading } = useDaoMembers({
     chainid: "8453",
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
+  const { primaryProfile } = useOnchainMembershipProfile({
+    chainId: "8453",
+    daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
   })
 
   const filteredMembers = useMemo(() => {
@@ -64,10 +70,22 @@ export function MemberGrid() {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">All Members</h3>
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
-              Export
-            </Button>
-            <Button size="sm">Invite Members</Button>
+            <Can profile={primaryProfile} capability="canViewDao">
+              <Button variant="outline" size="sm">
+                Export
+              </Button>
+            </Can>
+            <Can
+              profile={primaryProfile}
+              capability="canManageMembers"
+              fallback={
+                <Button size="sm" disabled>
+                  Invite Members (Admin only)
+                </Button>
+              }
+            >
+              <Button size="sm">Invite Members</Button>
+            </Can>
           </div>
         </div>
 

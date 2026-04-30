@@ -1,9 +1,14 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, DollarSign, FileText, Settings, TrendingUp, Clock } from "lucide-react"
+import Link from "next/link"
+import { useOnchainMembershipProfile } from "@/hooks/useOnchainMembershipProfile"
+import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 
 interface SubDAODetailProps {
   subDAOId: string
@@ -62,6 +67,14 @@ const members = [
 ]
 
 export function SubDAODetail({ subDAOId }: SubDAODetailProps) {
+  const { primaryProfile } = useOnchainMembershipProfile({
+    chainId: "8453",
+    daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
+  const adminProposalsUrl = getDaoHausAdminProposalsUrl()
+  const canCreateProposal = Boolean(primaryProfile?.capabilities.canCreateProposal)
+  const createProposalReady = canCreateProposal && Boolean(adminProposalsUrl)
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -90,7 +103,29 @@ export function SubDAODetail({ subDAOId }: SubDAODetailProps) {
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </Button>
-          <Button>Create Proposal</Button>
+          {createProposalReady ? (
+            <Button asChild>
+              <Link
+                href={adminProposalsUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open DAOhaus Admin for the parent DAO (sub-DAO proposals use parent Moloch)"
+              >
+                Create Proposal
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              disabled
+              title={
+                !canCreateProposal
+                  ? "Requires voting shares or admin role"
+                  : "Set NEXT_PUBLIC_TARGET_DAO_ADDRESS to your Moloch v3 contract"
+              }
+            >
+              Create Proposal
+            </Button>
+          )}
         </div>
       </div>
 

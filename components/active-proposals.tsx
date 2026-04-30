@@ -9,6 +9,7 @@ import { Clock, User, Vote, Plus, Filter } from "lucide-react"
 import { useDaoProposals } from "@/hooks/useDaoProposals"
 import { useDao } from "@/hooks/useDao"
 import { useOnchainMembershipProfile } from "@/hooks/useOnchainMembershipProfile"
+import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
@@ -206,6 +207,10 @@ export function ActiveProposals() {
     }
   }, [proposals])
 
+  const adminProposalsUrl = getDaoHausAdminProposalsUrl()
+  const canCreateProposal = Boolean(primaryProfile?.capabilities.canCreateProposal)
+  const createProposalReady = canCreateProposal && Boolean(adminProposalsUrl)
+
   if (isLoading) {
     return (
       <Card className="stat-card-gradient p-6">
@@ -228,19 +233,37 @@ export function ActiveProposals() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h3 className="text-lg font-semibold text-foreground">Governance Proposals</h3>
-          <Button
-            size="sm"
-            className="gap-2 transition-all duration-200 hover:scale-105 active:scale-95"
-            disabled={!primaryProfile?.capabilities.canCreateProposal}
-            title={
-              primaryProfile?.capabilities.canCreateProposal
-                ? "Create proposal"
-                : "Requires voting shares or admin role"
-            }
-          >
-            <Plus className="h-4 w-4" />
-            Create Proposal
-          </Button>
+          {createProposalReady ? (
+            <Button
+              size="sm"
+              className="gap-2 transition-all duration-200 hover:scale-105 active:scale-95"
+              asChild
+            >
+              <Link
+                href={adminProposalsUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open DAOhaus Admin to create a proposal"
+              >
+                <Plus className="h-4 w-4" />
+                Create Proposal
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              className="gap-2 transition-all duration-200 hover:scale-105 active:scale-95"
+              disabled
+              title={
+                !canCreateProposal
+                  ? "Requires voting shares or admin role"
+                  : "Set NEXT_PUBLIC_TARGET_DAO_ADDRESS to your Moloch v3 contract"
+              }
+            >
+              <Plus className="h-4 w-4" />
+              Create Proposal
+            </Button>
+          )}
         </div>
 
         <Tabs defaultValue="all" className="w-full">

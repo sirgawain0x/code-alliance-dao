@@ -9,12 +9,15 @@ import { useDaoProposals } from "@/hooks/useDaoProposals"
 import { formatDistanceToNow } from "date-fns"
 import { formatUnits } from "ethers"
 import Link from "next/link"
+import { getDaoHausAdminProposalUrl, getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 
 export function TreasuryProposals() {
   const { proposals, isLoading } = useDaoProposals({
     chainid: "8453",
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
   })
+
+  const adminProposalsListUrl = getDaoHausAdminProposalsUrl()
 
   if (isLoading) {
     return (
@@ -38,16 +41,23 @@ export function TreasuryProposals() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">Treasury Proposals</h3>
-          <Button size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95" asChild>
-            <Link
-              href={`https://admin.daohaus.club/molochv3/0x2105/${process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS}/proposals`}
-              target="_blank"
-              rel="noopener noreferrer"
+          {adminProposalsListUrl ? (
+            <Button
+              size="sm"
+              className="transition-all duration-200 hover:scale-105 active:scale-95"
+              asChild
             >
+              <Link href={adminProposalsListUrl} target="_blank" rel="noopener noreferrer">
+                All Proposals
+                <ExternalLink className="ml-2 h-3 w-3" />
+              </Link>
+            </Button>
+          ) : (
+            <Button size="sm" disabled title="Set NEXT_PUBLIC_TARGET_DAO_ADDRESS">
               All Proposals
               <ExternalLink className="ml-2 h-3 w-3" />
-            </Link>
-          </Button>
+            </Button>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -68,6 +78,8 @@ export function TreasuryProposals() {
             const timeLeft = isActive
               ? formatDistanceToNow(new Date(Number(proposal.votingEnds) * 1000), { addSuffix: true })
               : "Ended"
+
+            const adminProposalUrl = getDaoHausAdminProposalUrl(String(proposal.proposalId))
 
             return (
               <div key={proposal.id} className="border border-border rounded-lg p-4 space-y-3">
@@ -111,16 +123,11 @@ export function TreasuryProposals() {
                   </div>
                 </div>
 
-                {status === "Active" && (
+                {status === "Active" && adminProposalUrl && (
                   <div className="pt-2 border-t border-border/50 flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs"
-                      asChild
-                    >
+                    <Button variant="ghost" size="sm" className="h-8 text-xs" asChild>
                       <Link
-                        href={`https://admin.daohaus.club/molochv3/0x2105/${process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS}/proposal/${proposal.proposalId}`}
+                        href={adminProposalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

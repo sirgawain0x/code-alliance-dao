@@ -30,3 +30,6 @@ export const CCIP_ROUTER_ADDRESSES = {
 
 export const TOKEN_DECIMALS = 18;
 export const TOKEN_SYMBOL = "CRTV";
+
+/** Served from `public/Creative_logo-200.svg` */
+export const CREATIVE_ORG_LOGO_SRC = "/Creative_logo-200.svg" as const;

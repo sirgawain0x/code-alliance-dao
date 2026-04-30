@@ -26,6 +26,7 @@ const external = [
 ]
 
 import { useDao } from "@/hooks/useDao"
+import { CREATIVE_ORG_LOGO_SRC } from "@/config/constants"
 
 export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
@@ -82,9 +83,11 @@ export function Sidebar() {
                   className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary-foreground font-bold text-sm">CA</span>
-                </div>
+                <img
+                  src={CREATIVE_ORG_LOGO_SRC}
+                  alt={dao?.name || "Creative Organization DAO"}
+                  className="h-8 w-auto max-w-[2.25rem] object-contain flex-shrink-0"
+                />
               )}
               <span className="text-lg font-semibold text-sidebar-foreground truncate">{dao?.name || "Creative Organization DAO"}</span>
             </div>

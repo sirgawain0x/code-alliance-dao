@@ -5,6 +5,7 @@ import { Home, Plus, FileText, ExternalLink, Building2, Vote, FolderOpen, Wallet
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { CREATIVE_ORG_LOGO_SRC } from "@/config/constants"
 
 const navigation = [
   { name: "Home", icon: Home, current: false, href: "/" },
@@ -54,9 +55,11 @@ export function Sidebar() {
           {/* Logo */}
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">CRTV</span>
-              </div>
+              <img
+                src={CREATIVE_ORG_LOGO_SRC}
+                alt="Creative Organization DAO"
+                className="h-8 w-auto max-w-[2.25rem] object-contain flex-shrink-0"
+              />
               <span className="text-lg font-semibold text-sidebar-foreground">Creative Organization DAO</span>
             </div>
             <div className="flex items-center space-x-2">

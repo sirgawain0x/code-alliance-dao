@@ -9,6 +9,7 @@ import { useDao } from "../hooks/useDao"
 import { useOnchainMembershipProfile } from "../hooks/useOnchainMembershipProfile"
 import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 import Link from "next/link"
+import { CREATIVE_ORG_LOGO_SRC } from "@/config/constants"
 import { useMemo } from "react"
 
 export function ParentDAOOverview() {
@@ -56,9 +57,11 @@ export function ParentDAOOverview() {
       <div className="flex items-start justify-between flex-col md:flex-row gap-4">
         <div className="space-y-2">
           <div className="flex items-center space-x-3">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-              <Building2 className="h-8 w-8 text-primary-foreground" />
-            </div>
+            <img
+              src={CREATIVE_ORG_LOGO_SRC}
+              alt={dao?.name || "Creative Organization DAO"}
+              className="h-16 w-auto max-w-[5rem] object-contain flex-shrink-0"
+            />
             <div>
               <h1 className="text-3xl font-bold text-foreground">{dao?.name || "Creative Organization DAO"}</h1>
               <p className="text-muted-foreground">Parent DAO governing the incubator ecosystem</p>

@@ -4,18 +4,20 @@ import { createAppKit } from '@reown/appkit/react'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 import { mainnet, optimism, polygon, base } from '@reown/appkit/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { CRTV_TOKEN_ADDRESSES } from '@/config/constants'
+import { CREATIVE_ORG_LOGO_SRC, CRTV_TOKEN_ADDRESSES } from '@/config/constants'
 import type { ReactNode } from 'react'
 
 // Set up queryClient
 const queryClient = new QueryClient()
 
-// Get metadata 
+const defaultAppUrl = 'https://dao.creativeplatform.xyz'
+const appUrl = typeof window !== 'undefined' ? window.location.origin : defaultAppUrl
+
 const metadata = {
     name: 'Creative Organization DAO',
     description: 'Creative Organization DAO Governance Platform',
-    url: typeof window !== 'undefined' ? window.location.origin : 'https://dao.creativeplatform.xyz',
-    icons: ['https://avatars.githubusercontent.com/u/179229932']
+    url: appUrl,
+    icons: [`${appUrl}${CREATIVE_ORG_LOGO_SRC}`]
 }
 
 // Create Ethers adapter

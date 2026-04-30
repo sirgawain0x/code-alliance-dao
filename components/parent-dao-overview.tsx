@@ -6,9 +6,16 @@ import { Button } from "./ui/button"
 import { Progress } from "./ui/progress"
 import { Users, Building2, TrendingUp, Shield } from "lucide-react"
 import { useDao } from "../hooks/useDao"
+import { useOnchainMembershipProfile } from "../hooks/useOnchainMembershipProfile"
+import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
+import Link from "next/link"
 import { useMemo } from "react"
 
 export function ParentDAOOverview() {
+  const { primaryProfile } = useOnchainMembershipProfile({
+    chainId: "8453",
+    daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
   const { dao, isLoading } = useDao({
     chainid: "8453",
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
@@ -29,6 +36,10 @@ export function ParentDAOOverview() {
       vision: dao.profile?.longDescription || "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources."
     }
   }, [dao]);
+
+  const adminProposalsUrl = getDaoHausAdminProposalsUrl()
+  const canCreateProposal = Boolean(primaryProfile?.capabilities.canCreateProposal)
+  const createProposalReady = canCreateProposal && Boolean(adminProposalsUrl)
 
   if (isLoading || !stats) {
     return <div className="animate-pulse space-y-6">
@@ -61,7 +72,29 @@ export function ParentDAOOverview() {
         </div>
         <div className="flex space-x-2">
           <Button variant="outline">View Constitution</Button>
-          <Button>Create Proposal</Button>
+          {createProposalReady ? (
+            <Button asChild>
+              <Link
+                href={adminProposalsUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open DAOhaus Admin to create a proposal"
+              >
+                Create Proposal
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              disabled
+              title={
+                !canCreateProposal
+                  ? "Requires voting shares or admin role"
+                  : "Set NEXT_PUBLIC_TARGET_DAO_ADDRESS to your Moloch v3 contract"
+              }
+            >
+              Create Proposal
+            </Button>
+          )}
         </div>
       </div>
 

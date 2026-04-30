@@ -5,10 +5,17 @@ import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import { Clock, User, MessageSquare } from "lucide-react"
 import { useDaoProposals } from "../hooks/useDaoProposals"
+import { useOnchainMembershipProfile } from "../hooks/useOnchainMembershipProfile"
+import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 import { ProposalItem } from "../utils/daotypes"
+import Link from "next/link"
 import { useMemo } from "react"
 
 export function RecentProposals() {
+  const { primaryProfile } = useOnchainMembershipProfile({
+    chainId: "8453",
+    daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
   const { proposals, isLoading } = useDaoProposals({
     chainid: "8453",
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
@@ -61,6 +68,10 @@ export function RecentProposals() {
     });
   }, [proposals]);
 
+  const adminProposalsUrl = getDaoHausAdminProposalsUrl()
+  const canCreateProposal = Boolean(primaryProfile?.capabilities.canCreateProposal)
+  const createProposalReady = canCreateProposal && Boolean(adminProposalsUrl)
+
   if (isLoading) {
     return (
       <Card className="stat-card-gradient p-6">
@@ -78,10 +89,41 @@ export function RecentProposals() {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">Recent Proposals</h3>
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
-              View All
-            </Button>
-            <Button size="sm">Create Proposal</Button>
+            {adminProposalsUrl ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={adminProposalsUrl} target="_blank" rel="noopener noreferrer">
+                  View All
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" disabled title="Set NEXT_PUBLIC_TARGET_DAO_ADDRESS">
+                View All
+              </Button>
+            )}
+            {createProposalReady ? (
+              <Button size="sm" asChild>
+                <Link
+                  href={adminProposalsUrl!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open DAOhaus Admin to create a proposal"
+                >
+                  Create Proposal
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                disabled
+                title={
+                  !canCreateProposal
+                    ? "Requires voting shares or admin role"
+                    : "Set NEXT_PUBLIC_TARGET_DAO_ADDRESS to your Moloch v3 contract"
+                }
+              >
+                Create Proposal
+              </Button>
+            )}
           </div>
         </div>
 

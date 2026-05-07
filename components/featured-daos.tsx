@@ -41,8 +41,11 @@ export function DaoCard({
   link,
   hideMembers,
   showManageButton,
+  detailHref,
 }: FeaturedDao & {
   showManageButton?: boolean
+  /** When set, card links to this in-app path instead of admin.daohaus */
+  detailHref?: string
 }) {
   const { dao, isLoading, isError } = useDao({ chainid: chainId, daoid: address })
 
@@ -103,11 +106,11 @@ export function DaoCard({
   // Prefer Moloch V3 member count, fallback to Nouns/Contracts member count
   const memberCount = dao?.activeMemberCount || nounsMemberCount || "0"
 
-  // Choose the link target
-  const targetLink = link || `https://admin.daohaus.club/#/molochv3/${chainId}/${address}`
+  const targetLink = detailHref || link || `https://admin.daohaus.club/#/molochv3/${chainId}/${address}`
+  const isInternal = targetLink.startsWith("/")
 
   return (
-    <Link href={targetLink} target="_blank">
+    <Link href={targetLink} target={isInternal ? undefined : "_blank"} rel={isInternal ? undefined : "noopener noreferrer"}>
       <Card className="stat-card-gradient p-6 dao-card-hover cursor-pointer h-full">
         <div className="space-y-4">
           <div className="flex items-start justify-between">

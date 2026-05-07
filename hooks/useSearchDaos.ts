@@ -56,7 +56,7 @@ export const useSearchDaos = ({
       const hydratedDaos = daores.daos.map((dao) => {
         return {
           ...dao,
-          profile: addParsedContent<DaoProfile>(dao.rawProfile[0]),
+          profile: addParsedContent<DaoProfile>(dao.rawProfile?.[0]),
         };
       });
 

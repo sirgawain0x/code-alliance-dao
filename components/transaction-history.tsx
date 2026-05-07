@@ -1,215 +1,213 @@
+"use client"
+
+import { useMemo, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowUpRight, ArrowDownLeft, Search, Filter } from "lucide-react"
+import { useDao } from "@/hooks/useDao"
+import { useSafeTransactions } from "@/hooks/useSafeTransactions"
+import { formatEther } from "ethers"
+import { format } from "date-fns"
+import Link from "next/link"
+import { getBlockExplorerUrl } from "@/utils/endpoints"
 
-const transactions = [
-  {
-    id: "tx-001",
-    type: "outgoing",
-    description: "SubDAO Funding - Innovation Labs DAO",
-    amount: 50000,
-    asset: "USDC",
-    recipient: "0x1234...5678",
-    timestamp: "2024-04-20 14:30",
-    status: "completed",
-    category: "SubDAO Funding",
-    txHash: "0xabcd...efgh",
-  },
-  {
-    id: "tx-002",
-    type: "incoming",
-    description: "Treasury Yield - Compound Protocol",
-    amount: 2150,
-    asset: "USDC",
-    sender: "0x9876...5432",
-    timestamp: "2024-04-20 09:15",
-    status: "completed",
-    category: "Yield",
-    txHash: "0xijkl...mnop",
-  },
-  {
-    id: "tx-003",
-    type: "outgoing",
-    description: "Community Grant - Education Initiative",
-    amount: 15000,
-    asset: "USDC",
-    recipient: "0x2468...1357",
-    timestamp: "2024-04-19 16:45",
-    status: "completed",
-    category: "Grants",
-    txHash: "0xqrst...uvwx",
-  },
-  {
-    id: "tx-004",
-    type: "incoming",
-    description: "Token Sale Proceeds",
-    amount: 125000,
-    asset: "ETH",
-    sender: "0x1357...2468",
-    timestamp: "2024-04-19 11:20",
-    status: "completed",
-    category: "Revenue",
-    txHash: "0xyzab...cdef",
-  },
-  {
-    id: "tx-005",
-    type: "outgoing",
-    description: "Operational Expenses - Q1 2024",
-    amount: 35000,
-    asset: "USDC",
-    recipient: "0x8642...9753",
-    timestamp: "2024-04-18 13:10",
-    status: "completed",
-    category: "Operations",
-    txHash: "0xghij...klmn",
-  },
-  {
-    id: "tx-006",
-    type: "pending",
-    description: "DeFi Protocol Investment",
-    amount: 75000,
-    asset: "USDC",
-    recipient: "0x5555...4444",
-    timestamp: "2024-04-21 10:00",
-    status: "pending",
-    category: "Investment",
-    txHash: "0xopqr...stuv",
-  },
-]
+const CHAIN = "8453"
 
 export function TransactionHistory() {
+  const [search, setSearch] = useState("")
+  const [typeFilter, setTypeFilter] = useState("all")
+
+  const { dao, isLoading: daoLoading } = useDao({
+    chainid: CHAIN,
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
+
+  const { data: rows, isLoading: txLoading, isError, error } = useSafeTransactions({
+    chainid: CHAIN,
+    safeAddress: dao?.safeAddress,
+    limit: 30,
+  })
+
+  const filtered = useMemo(() => {
+    if (!rows) return []
+    return rows.filter((r) => {
+      if (typeFilter !== "all" && r.direction !== typeFilter) return false
+      const q = search.trim().toLowerCase()
+      if (!q) return true
+      return (
+        (r.title || "").toLowerCase().includes(q) ||
+        (r.txHash || "").toLowerCase().includes(q) ||
+        (r.counterparty || "").toLowerCase().includes(q)
+      )
+    })
+  }, [rows, search, typeFilter])
+
+  const ethLabel = (wei: string) => {
+    try {
+      const v = BigInt(wei || "0")
+      if (v === BigInt(0)) return "—"
+      const n = Number(formatEther(v))
+      return `${n >= 1 ? n.toFixed(3) : n.toFixed(6)} ETH`
+    } catch {
+      return "—"
+    }
+  }
+
   return (
     <Card className="stat-card-gradient p-6">
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h3 className="text-lg font-semibold text-foreground">Transaction History</h3>
           <div className="hidden sm:flex space-x-2">
-            <Button variant="outline" size="sm">
-              Export
-            </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" type="button" disabled>
               <Filter className="h-4 w-4 mr-2" />
-              Filter
+              Safe API
             </Button>
           </div>
         </div>
 
-        {/* Filters */}
+        <p className="text-xs text-muted-foreground">
+          Executed transactions for the DAO treasury Safe via the{" "}
+          <a className="underline" href="https://docs.safe.global/core-api/transaction-service-overview" target="_blank" rel="noreferrer">
+            Safe Transaction Service
+          </a>
+          . Amounts show native value when present; many ERC-20 moves appear with title only.
+        </p>
+
+        {daoLoading ? (
+          <p className="text-sm text-muted-foreground">Loading treasury address…</p>
+        ) : !dao?.safeAddress ? (
+          <p className="text-sm text-muted-foreground">No Safe address on this DAO record.</p>
+        ) : null}
+
+        {isError ? (
+          <p className="text-sm text-destructive">{error instanceof Error ? error.message : "Failed to load txs"}</p>
+        ) : null}
+
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <div className="relative flex-1 max-w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search transactions..." className="pl-10 bg-muted border-border" />
+            <Input
+              placeholder="Search title, hash, counterparty…"
+              className="pl-10 bg-muted border-border"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
-          <div className="flex gap-2 sm:gap-3">
-            <Select>
-              <SelectTrigger className="flex-1 sm:w-32 bg-muted border-border">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="incoming">Incoming</SelectItem>
-                <SelectItem value="outgoing">Outgoing</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select>
-              <SelectTrigger className="flex-1 sm:w-40 bg-muted border-border">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="subdao">SubDAO Funding</SelectItem>
-                <SelectItem value="grants">Grants</SelectItem>
-                <SelectItem value="operations">Operations</SelectItem>
-                <SelectItem value="investment">Investment</SelectItem>
-                <SelectItem value="yield">Yield</SelectItem>
-                <SelectItem value="revenue">Revenue</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="flex-1 sm:w-40 bg-muted border-border">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="incoming">Incoming</SelectItem>
+              <SelectItem value="outgoing">Outgoing</SelectItem>
+              <SelectItem value="internal">Internal</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Transaction List */}
         <div className="space-y-3">
-          {transactions.map((tx) => (
-            <div key={tx.id} className="border border-border rounded-lg p-3 md:p-4 dao-card-hover cursor-pointer">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                {/* Left side: Icon and Details */}
-                <div className="flex items-start md:items-center gap-3 md:gap-4 min-w-0 flex-1">
-                  <div
-                    className={`p-2 rounded-full flex-shrink-0 ${tx.type === "incoming"
-                      ? "bg-green-500/10"
-                      : tx.type === "outgoing"
-                        ? "bg-red-500/10"
-                        : "bg-yellow-500/10"
+          {txLoading ? (
+            <p className="text-sm text-muted-foreground">Loading recent transactions…</p>
+          ) : !filtered.length ? (
+            <p className="text-sm text-muted-foreground">No transactions match your filters.</p>
+          ) : (
+            filtered.map((tx) => (
+              <div key={tx.id} className="border border-border rounded-lg p-3 md:p-4 dao-card-hover">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+                  <div className="flex items-start md:items-center gap-3 md:gap-4 min-w-0 flex-1">
+                    <div
+                      className={`p-2 rounded-full flex-shrink-0 ${
+                        tx.direction === "incoming"
+                          ? "bg-green-500/10"
+                          : tx.direction === "outgoing"
+                            ? "bg-red-500/10"
+                            : "bg-muted"
                       }`}
-                  >
-                    {tx.type === "incoming" ? (
-                      <ArrowDownLeft className="h-4 w-4 text-green-400" />
-                    ) : tx.type === "outgoing" ? (
-                      <ArrowUpRight className="h-4 w-4 text-red-400" />
-                    ) : (
-                      <ArrowUpRight className="h-4 w-4 text-yellow-400" />
-                    )}
+                    >
+                      {tx.direction === "incoming" ? (
+                        <ArrowDownLeft className="h-4 w-4 text-green-400" />
+                      ) : tx.direction === "outgoing" ? (
+                        <ArrowUpRight className="h-4 w-4 text-red-400" />
+                      ) : (
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="font-medium text-foreground text-sm md:text-base truncate">{tx.title}</h4>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">
+                          {tx.direction}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-muted-foreground">
+                        <span className="flex-shrink-0">
+                          {tx.executedAt
+                            ? format(new Date(tx.executedAt), "yyyy-MM-dd HH:mm")
+                            : "—"}
+                        </span>
+                        {tx.txHash ? (
+                          <>
+                            <span className="hidden sm:inline">•</span>
+                            <Link
+                              className="font-mono truncate max-w-[200px] text-primary hover:underline"
+                              href={getBlockExplorerUrl({ chainid: CHAIN, txHash: tx.txHash })}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {tx.txHash.slice(0, 10)}…{tx.txHash.slice(-6)}
+                            </Link>
+                          </>
+                        ) : null}
+                        {tx.counterparty ? (
+                          <>
+                            <span className="hidden md:inline">•</span>
+                            <span className="truncate hidden md:block font-mono text-[11px]">{tx.counterparty}</span>
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="font-medium text-foreground text-sm md:text-base truncate">{tx.description}</h4>
-                      <Badge variant="outline" className="text-xs flex-shrink-0">
-                        {tx.category}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-muted-foreground">
-                      <span className="flex-shrink-0">{tx.timestamp}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span className="font-mono truncate max-w-[120px] sm:max-w-[150px]">{tx.txHash}</span>
-                      <span className="hidden md:inline">•</span>
-                      <span className="truncate hidden md:block">
-                        {tx.type === "incoming" ? "From" : "To"}: {tx.type === "incoming" ? tx.sender : tx.recipient}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right side: Amount and Status */}
-                <div className="flex items-center justify-between md:flex-col md:items-end md:justify-center gap-2 md:text-right flex-shrink-0">
-                  <div
-                    className={`font-medium text-sm md:text-base ${tx.type === "incoming"
-                      ? "text-green-400"
-                      : tx.type === "outgoing"
-                        ? "text-red-400"
-                        : "text-yellow-400"
+                  <div className="flex items-center justify-between md:flex-col md:items-end md:justify-center gap-2 md:text-right flex-shrink-0">
+                    <div
+                      className={`font-medium text-sm md:text-base ${
+                        tx.direction === "incoming"
+                          ? "text-green-400"
+                          : tx.direction === "outgoing"
+                            ? "text-red-400"
+                            : "text-muted-foreground"
                       }`}
-                  >
-                    {tx.type === "incoming" ? "+" : tx.type === "outgoing" ? "-" : ""}${tx.amount.toLocaleString()}{" "}
-                    {tx.asset}
+                    >
+                      {tx.direction === "incoming" ? "+" : tx.direction === "outgoing" ? "-" : ""}
+                      {ethLabel(tx.valueWei)}
+                    </div>
+                    <Badge
+                      className={
+                        tx.status === "completed"
+                          ? "bg-green-500/10 text-green-400 border-green-500/20"
+                          : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                      }
+                    >
+                      {tx.status}
+                    </Badge>
                   </div>
-                  <Badge
-                    className={
-                      tx.status === "completed"
-                        ? "bg-green-500/10 text-green-400 border-green-500/20"
-                        : tx.status === "pending"
-                          ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                          : "bg-red-500/10 text-red-400 border-red-500/20"
-                    }
-                  >
-                    {tx.status}
-                  </Badge>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
-        {/* Load More */}
-        <div className="text-center pt-4">
-          <Button variant="outline">Load More Transactions</Button>
+        <div className="text-center pt-2">
+          <Button variant="outline" type="button" disabled>
+            End of loaded page
+          </Button>
         </div>
       </div>
     </Card>

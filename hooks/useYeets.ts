@@ -35,7 +35,14 @@ export const useYeets = ({
     enabled: Boolean(chainid && yeeterid),
     queryFn: (): Promise<{
       yeets: YeetsItem[];
-    }> => graphQLClient.request(LIST_YEETS, { shamanAddress: yeeterid }),
+    }> =>
+      graphQLClient.request(LIST_YEETS, {
+        first: 80,
+        skip: 0,
+        orderBy: "createdAt",
+        orderDirection: "desc",
+        yeeterid: yeeterid!,
+      }),
   });
 
   return {

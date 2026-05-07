@@ -9,20 +9,24 @@ export type YeeterItem = {
   id: string;
   createdAt: string;
   dao: {
-    id: string;
+    id: string
+    name?: string
+    safeAddress?: string
+    activeMemberCount?: string
   };
   endTime: string;
   startTime: string;
   isShares: boolean;
   multiplier: string;
   minTribute: string;
+  maxTribute: string;
   goal: string;
   balance: string;
-  yeetCount: string;
-  isActive: boolean;
-  isEnded: boolean;
-  isComingSoon: boolean;
-  isFull: boolean;
+  yeetCount?: string;
+  isActive?: boolean;
+  isEnded?: boolean;
+  isComingSoon?: boolean;
+  isFull?: boolean;
 };
 
 export type RecordItem = {
@@ -53,13 +57,20 @@ export type YeeterMetadata = {
 };
 
 export type YeetsItem = {
-  amount: string;
-  contributor: string;
-  createdAt: string;
-  id: string;
-  message: string;
-  shares: string;
-};
+  id: string
+  createdAt: string
+  amount: string
+  shares: string
+  loot: string
+  yeeter?: {
+    id: string
+    dao: { id: string; name: string }
+  }
+  member?: {
+    id: string
+    memberAddress: string
+  }
+}
 
 export type ShamanItem = {
   id: string;
@@ -107,10 +118,10 @@ export type DaoItem = {
   forwarder: string;
   referrer: string;
   name: string;
-  rawProfile: RecordItem[];
+  rawProfile?: RecordItem[];
   profile?: DaoProfile;
-  shamen: ShamanItem[];
-  vaults: VaultItem[];
+  shamen?: ShamanItem[];
+  vaults?: VaultItem[];
 };
 
 export type DaoProfileLink = {

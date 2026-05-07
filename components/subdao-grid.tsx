@@ -1,6 +1,7 @@
 import { Button } from "./ui/button"
 import { FEATURED_DAOS_CONFIG } from "../utils/featured-daos"
 import { DaoCard } from "./featured-daos"
+import { formatSubDaoPath } from "@/utils/subdao-route"
 
 export function SubDAOGrid() {
   return (
@@ -24,6 +25,7 @@ export function SubDAOGrid() {
             {...dao}
             showManageButton={true}
             description={dao.description}
+            detailHref={`/subdaos/${formatSubDaoPath(dao.chainId, dao.address)}`}
           />
         ))}
       </div>

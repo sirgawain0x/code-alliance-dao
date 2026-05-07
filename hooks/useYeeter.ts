@@ -1,10 +1,9 @@
 import { GraphQLClient } from "graphql-request";
 
 import { useQuery } from "@tanstack/react-query";
-import { FIND_YEETER, FIND_YEETER_PROFILE } from "../utils/queries";
-import { YeeterItem, YeeterMetadata, RecordItem } from "../utils/daotypes";
+import { FIND_YEETER } from "../utils/queries";
+import { YeeterItem, YeeterMetadata } from "../utils/daotypes";
 import {
-  addParsedContent,
   calcYeetIsActive,
   calcYeetIsComingSoon,
   calcYeetIsEnded,
@@ -34,14 +33,8 @@ export const useYeeter = ({
     graphKey: hookContext?.config.graphKey || "",
     subgraphKey: "YEETER",
   });
-  const dhUrl = getGraphUrl({
-    chainid: chainid || "",
-    graphKey: hookContext?.config.graphKey || "",
-    subgraphKey: "DAOHAUS",
-  });
 
   const graphQLClient = new GraphQLClient(yeeterUrl);
-  const hausGraphQLClient = new GraphQLClient(dhUrl);
 
   const { data, ...rest } = useQuery({
     queryKey: [`get-yeeter`, { chainid, yeeterid }],
@@ -51,18 +44,9 @@ export const useYeeter = ({
       metadata: YeeterMetadata;
     }> => {
       const yeeterRes = (await graphQLClient.request(FIND_YEETER, {
-        shamanAddress: yeeterid,
+        yeeterid,
       })) as {
         yeeter: YeeterItem;
-      };
-
-      const records = (await hausGraphQLClient.request(FIND_YEETER_PROFILE, {
-        daoid: yeeterRes.yeeter.dao.id,
-      })) as {
-        records: RecordItem[];
-        dao: {
-          name: string;
-        };
       };
 
       const yeeter = {
@@ -74,11 +58,14 @@ export const useYeeter = ({
         isFull: yeeterRes.yeeter && calcYeetIsFull(yeeterRes.yeeter),
       } as YeeterItem;
 
-      const metadata = addParsedContent<YeeterMetadata>(records?.records[0]);
+      const metadata = {
+        daoId: yeeterRes.yeeter.dao.id,
+        name: (yeeterRes.yeeter.dao as { name?: string }).name,
+      } as YeeterMetadata;
 
       return {
-        yeeter: yeeter,
-        metadata: { ...metadata, name: records?.dao.name } as YeeterMetadata,
+        yeeter,
+        metadata,
       };
     },
   });

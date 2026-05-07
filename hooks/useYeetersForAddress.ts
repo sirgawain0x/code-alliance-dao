@@ -39,7 +39,14 @@ export const useYeetersForAddress = ({
     enabled: Boolean(chainid && address),
     queryFn: (): Promise<{
       yeets: YeetsWithYeeter[];
-    }> => graphQLClient.request(LIST_YEETS_FOR_ADDRESS, { address }),
+    }> =>
+      graphQLClient.request(LIST_YEETS_FOR_ADDRESS, {
+        first: 80,
+        skip: 0,
+        orderBy: "createdAt",
+        orderDirection: "desc",
+        memberAddress: address!.toLowerCase(),
+      }),
   });
 
   const uniqYeeters = data?.yeets.reduce(

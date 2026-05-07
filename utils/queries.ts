@@ -76,6 +76,34 @@ export const FIND_DAO = `
       forwarder
       referrer
       name
+      shamen {
+        id
+        createdAt
+        shamanAddress
+        permissions
+      }
+      vaults {
+        id
+        createdAt
+        active
+        ragequittable
+        name
+        safeAddress
+      }
+      rawProfile: records(
+        first: 1
+        orderBy: createdAt
+        orderDirection: desc
+        where: { table: "daoProfile" }
+      ) {
+        id
+        createdAt
+        createdBy
+        content
+        contentType
+        table
+        tag
+      }
     }
   }
 `;
@@ -102,6 +130,20 @@ export const SEARCH_DAOS = `
       quorumPercent
       sponsorThreshold
       minRetentionPercent
+      rawProfile: records(
+        first: 1
+        orderBy: createdAt
+        orderDirection: desc
+        where: { table: "daoProfile" }
+      ) {
+        id
+        createdAt
+        createdBy
+        content
+        contentType
+        table
+        tag
+      }
     }
   }
 `;
@@ -509,18 +551,38 @@ export const LIST_RECORDS = `
     ) {
       id
       createdAt
-      updatedAt
-      title
-      description
-      contentURI
-      contentURIType
+      createdBy
+      content
+      contentType
+      table
+      tag
       dao {
         id
         name
       }
-      member {
+    }
+  }
+`;
+
+export const LIST_RECORDS_BY_TABLE = `
+  query ListRecordsByTable($first: Int!, $skip: Int!, $orderBy: String!, $orderDirection: String!, $daoid: String!, $table: String!) {
+    records(
+      first: $first
+      skip: $skip
+      orderBy: $orderBy
+      orderDirection: $orderDirection
+      where: { dao: $daoid, table: $table }
+    ) {
+      id
+      createdAt
+      createdBy
+      content
+      contentType
+      table
+      tag
+      dao {
         id
-        memberAddress
+        name
       }
     }
   }
@@ -536,18 +598,14 @@ export const LAST_RECORD = `
     ) {
       id
       createdAt
-      updatedAt
-      title
-      description
-      contentURI
-      contentURIType
+      createdBy
+      content
+      contentType
+      table
+      tag
       dao {
         id
         name
-      }
-      member {
-        id
-        memberAddress
       }
     }
   }

@@ -6,6 +6,9 @@ import { Button } from "./ui/button"
 import { Progress } from "./ui/progress"
 import { Users, Building2, TrendingUp, Shield } from "lucide-react"
 import { useDao } from "../hooks/useDao"
+import { useDaoProposals } from "../hooks/useDaoProposals"
+import { useDaoTokenBalances } from "../hooks/useDaoTokenBalances"
+import { summarizeTreasuryTokens } from "@/utils/treasury-helpers"
 import { useOnchainMembershipProfile } from "../hooks/useOnchainMembershipProfile"
 import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 import Link from "next/link"
@@ -22,21 +25,41 @@ export function ParentDAOOverview() {
     daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
   });
 
+  const { proposals } = useDaoProposals({
+    chainid: "8453",
+    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+  })
+
+  const { tokens } = useDaoTokenBalances({
+    chainid: "8453",
+    safeAddress: dao?.safeAddress,
+  })
+
   const stats = useMemo(() => {
-    if (!dao) return null;
+    if (!dao) return null
+
+    const treasurySummary = summarizeTreasuryTokens(tokens)
+    const totalP = proposals?.length || 0
+    const passed = proposals?.filter((p) => p.passed).length || 0
+    const passRate = totalP > 0 ? Math.round((passed / totalP) * 100) : 0
+    const voted = proposals?.filter((p) => Number(p.yesVotes) + Number(p.noVotes) > 0).length || 0
+    const voteParticipation = totalP > 0 ? Math.round((voted / totalP) * 100) : 0
 
     return {
       totalMembers: Number(dao.activeMemberCount) || 0,
-      activeSubdaos: dao.shamen?.length || 0, // Using shamen as a proxy for subdaos/integrations
-      treasuryValue: "$2.4M", // Placeholder as treasury calculation is complex and requires token pricing
-      governanceScore: 94, // Placeholder metric
-      voterParticipation: Number(dao.proposalCount) > 0 ? 78 : 0, // Placeholder
-      proposalSuccessRate: 85, // Placeholder
-      communityEngagement: 92, // Placeholder
-      mission: dao.profile?.description || "To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.",
-      vision: dao.profile?.longDescription || "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources."
+      activeSubdaos: dao.shamen?.length || 0,
+      treasuryValue: treasurySummary.totalStableUsdFormatted,
+      treasuryNote: treasurySummary.hasPricedTotal ? "Stablecoins only (est.)" : "Configure Sequence + balances",
+      proposalSuccessRate: passRate,
+      voterParticipation: voteParticipation,
+      mission:
+        dao.profile?.description ||
+        "To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.",
+      vision:
+        dao.profile?.longDescription ||
+        "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources.",
     }
-  }, [dao]);
+  }, [dao, proposals, tokens])
 
   const adminProposalsUrl = getDaoHausAdminProposalsUrl()
   const canCreateProposal = Boolean(primaryProfile?.capabilities.canCreateProposal)
@@ -108,7 +131,7 @@ export function ParentDAOOverview() {
             <div>
               <p className="text-sm text-muted-foreground">Total Members</p>
               <p className="text-2xl font-bold text-foreground">{stats.totalMembers.toLocaleString()}</p>
-              <p className="text-xs text-green-400">+12% this month</p>
+              <p className="text-xs text-muted-foreground">Moloch members</p>
             </div>
             <Users className="h-8 w-8 text-blue-400" />
           </div>
@@ -119,7 +142,7 @@ export function ParentDAOOverview() {
             <div>
               <p className="text-sm text-muted-foreground">Active SubDAOs/Shamen</p>
               <p className="text-2xl font-bold text-foreground">{stats.activeSubdaos}</p>
-              <p className="text-xs text-green-400">+2 this quarter</p>
+              <p className="text-xs text-muted-foreground">Registered shamans</p>
             </div>
             <Building2 className="h-8 w-8 text-purple-400" />
           </div>
@@ -130,7 +153,7 @@ export function ParentDAOOverview() {
             <div>
               <p className="text-sm text-muted-foreground">Treasury Value</p>
               <p className="text-2xl font-bold text-foreground">{stats.treasuryValue}</p>
-              <p className="text-xs text-green-400">+8.5% this month</p>
+              <p className="text-xs text-muted-foreground">{stats.treasuryNote}</p>
             </div>
             <TrendingUp className="h-8 w-8 text-green-400" />
           </div>
@@ -139,9 +162,9 @@ export function ParentDAOOverview() {
         <Card className="stat-card-gradient p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Governance Score</p>
-              <p className="text-2xl font-bold text-foreground">{stats.governanceScore}%</p>
-              <p className="text-xs text-green-400">Excellent</p>
+              <p className="text-sm text-muted-foreground">Proposal pass rate</p>
+              <p className="text-2xl font-bold text-foreground">{stats.proposalSuccessRate}%</p>
+              <p className="text-xs text-muted-foreground">Processed proposals that passed</p>
             </div>
             <Shield className="h-8 w-8 text-orange-400" />
           </div>
@@ -176,7 +199,7 @@ export function ParentDAOOverview() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Voter Participation</span>
+                <span className="text-muted-foreground">Voter signal (proposals with votes)</span>
                 <span className="text-foreground">{stats.voterParticipation}%</span>
               </div>
               <Progress value={stats.voterParticipation} className="h-2" />
@@ -190,10 +213,10 @@ export function ParentDAOOverview() {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Community Engagement</span>
-                <span className="text-foreground">{stats.communityEngagement}%</span>
+                <span className="text-muted-foreground">Quorum setting</span>
+                <span className="text-foreground">{dao?.quorumPercent ?? "—"}%</span>
               </div>
-              <Progress value={stats.communityEngagement} className="h-2" />
+              <Progress value={Math.min(100, Number(dao?.quorumPercent || 0))} className="h-2" />
             </div>
           </div>
         </div>

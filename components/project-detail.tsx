@@ -1,328 +1,215 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Calendar, DollarSign, Users, Clock, Settings } from "lucide-react"
+import { ExternalLink, Rocket, Users, Clock } from "lucide-react"
+import Link from "next/link"
+import { formatDistanceToNow } from "date-fns"
+import { formatUnits } from "ethers"
+import { useYeeter } from "@/hooks/useYeeter"
+import { useYeets } from "@/hooks/useYeets"
+import { calcProgressPerc } from "@/utils/yeeter-data-helpers"
+import { getOffchainEcosystemProduct } from "@/config/offchain-ecosystem"
+import { Skeleton } from "@/components/ui/skeleton"
+import { getBlockExplorerUrl } from "@/utils/endpoints"
 
 interface ProjectDetailProps {
   projectId: string
 }
 
-// Mock data - in real app this would come from API
-const projectData = {
-  id: "proj-001",
-  name: "Quantum Computing Framework",
-  description: "Development of quantum computing algorithms and frameworks for distributed systems",
-  fullDescription: `This project aims to develop a comprehensive quantum computing framework that can be used across various distributed systems. The framework will include quantum algorithms, simulation tools, and integration capabilities with existing infrastructure.
+const BASE = "8453"
 
-## Objectives
-- Develop quantum algorithms for distributed computing
-- Create simulation and testing tools
-- Build integration APIs for existing systems
-- Establish performance benchmarks
+function YeeterProjectView({ yeeterid }: { yeeterid: string }) {
+  const { yeeter, isLoading, isError } = useYeeter({ chainid: BASE, yeeterid })
+  const { yeets, isLoading: yeetsLoading } = useYeets({ chainid: BASE, yeeterid })
 
-## Technical Approach
-- Quantum circuit design and optimization
-- Distributed quantum computing protocols
-- Classical-quantum hybrid algorithms
-- Performance analysis and benchmarking
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-2/3" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    )
+  }
 
-## Expected Outcomes
-- Open-source quantum computing framework
-- Research publications and documentation
-- Community adoption and contributions
-- Integration with partner organizations`,
-  category: "AI/ML Research",
-  subDAO: "Innovation Labs DAO",
-  status: "active",
-  priority: "high",
-  progress: 75,
-  budget: 45000,
-  spent: 33750,
-  team: [
-    { name: "Dr. Alice Chen", role: "Project Lead", avatar: "AC", contributions: 234 },
-    { name: "Bob Martinez", role: "Senior Developer", avatar: "BM", contributions: 189 },
-    { name: "Carol Kim", role: "Research Scientist", avatar: "CK", contributions: 156 },
-    { name: "David Wilson", role: "QA Engineer", avatar: "DW", contributions: 98 },
-  ],
-  deadline: "2024-06-15",
-  startDate: "2024-01-15",
-  daysLeft: 45,
-  milestones: [
-    { name: "Research Phase", status: "completed", dueDate: "2024-02-15", progress: 100 },
-    { name: "Algorithm Development", status: "completed", dueDate: "2024-03-30", progress: 100 },
-    { name: "Framework Implementation", status: "active", dueDate: "2024-05-15", progress: 80 },
-    { name: "Testing & Optimization", status: "pending", dueDate: "2024-06-01", progress: 0 },
-    { name: "Documentation & Release", status: "pending", dueDate: "2024-06-15", progress: 0 },
-  ],
-  lastUpdate: "2 days ago",
-}
+  if (isError || !yeeter) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <p className="text-muted-foreground">
+          No yeeter campaign found for this id. Confirm the address and that the graph key is configured.
+        </p>
+      </Card>
+    )
+  }
 
-const projectUpdates = [
-  {
-    date: "2024-04-20",
-    author: "Dr. Alice Chen",
-    title: "Framework Core Implementation Complete",
-    content:
-      "Successfully completed the core quantum computing framework implementation. All major algorithms are now functional and tested.",
-    type: "milestone",
-  },
-  {
-    date: "2024-04-18",
-    author: "Bob Martinez",
-    title: "Performance Optimization Results",
-    content: "Latest optimization efforts have improved algorithm performance by 35%. Ready to move to testing phase.",
-    type: "update",
-  },
-  {
-    date: "2024-04-15",
-    author: "Carol Kim",
-    title: "Research Paper Submitted",
-    content: "Submitted our research findings to the International Quantum Computing Conference. Awaiting peer review.",
-    type: "achievement",
-  },
-]
-
-export function ProjectDetail({ projectId }: ProjectDetailProps) {
-  const budgetUsed = (projectData.spent / projectData.budget) * 100
+  const progress = Math.min(100, Math.round(calcProgressPerc(yeeter.balance, yeeter.goal)))
+  const raised = Number(formatUnits(yeeter.balance, 18))
+  const goal = Number(formatUnits(yeeter.goal, 18))
+  const minT = Number(formatUnits(yeeter.minTribute, 18))
+  const maxT = Number(formatUnits(yeeter.maxTribute, 18))
+  const explorer = getBlockExplorerUrl({ chainid: BASE, address: yeeterid })
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-2 flex-1">
-          <div className="flex items-center space-x-2">
-            <Badge className="bg-green-500/10 text-green-400 border-green-500/20">{projectData.status}</Badge>
-            <Badge variant="outline">{projectData.category}</Badge>
-            <Badge variant="secondary">{projectData.priority} priority</Badge>
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="gap-1">
+              <Rocket className="h-3 w-3" />
+              Yeeter
+            </Badge>
+            {yeeter.isActive ? (
+              <Badge className="bg-green-500/10 text-green-400 border-green-500/20">Active</Badge>
+            ) : null}
+            {yeeter.isEnded ? <Badge variant="secondary">Ended</Badge> : null}
+            {yeeter.isComingSoon ? <Badge variant="outline">Upcoming</Badge> : null}
           </div>
-          <h1 className="text-3xl font-bold text-foreground">{projectData.name}</h1>
-          <p className="text-muted-foreground">{projectData.description}</p>
-          <p className="text-sm text-muted-foreground">SubDAO: {projectData.subDAO}</p>
+          <h1 className="text-3xl font-bold text-foreground">{yeeter.dao?.name || "Fundraising campaign"}</h1>
+          <p className="text-sm text-muted-foreground">
+            Moloch DAO:{" "}
+            <Link className="text-primary underline-offset-4 hover:underline" href={explorer} target="_blank">
+              {yeeter.dao?.id}
+            </Link>
+          </p>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
-          <Button>Update Status</Button>
-        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`https://admin.daohaus.club/#/molochv3/0x2105/${yeeter.dao?.id}`} target="_blank" rel="noreferrer">
+            DAO admin
+            <ExternalLink className="h-4 w-4 ml-2" />
+          </Link>
+        </Button>
       </div>
 
-      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="stat-card-gradient p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Progress</p>
-              <p className="text-2xl font-bold text-foreground">{projectData.progress}%</p>
-            </div>
-            <Clock className="h-8 w-8 text-blue-400" />
-          </div>
+          <p className="text-sm text-muted-foreground">Progress</p>
+          <p className="text-2xl font-bold">{progress}%</p>
         </Card>
         <Card className="stat-card-gradient p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Budget Used</p>
-              <p className="text-2xl font-bold text-foreground">{budgetUsed.toFixed(0)}%</p>
-            </div>
-            <DollarSign className="h-8 w-8 text-green-400" />
-          </div>
+          <p className="text-sm text-muted-foreground">Raised</p>
+          <p className="text-2xl font-bold">{raised.toLocaleString(undefined, { maximumFractionDigits: 4 })}</p>
         </Card>
         <Card className="stat-card-gradient p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Team Size</p>
-              <p className="text-2xl font-bold text-foreground">{projectData.team.length}</p>
-            </div>
-            <Users className="h-8 w-8 text-purple-400" />
-          </div>
+          <p className="text-sm text-muted-foreground">Goal</p>
+          <p className="text-2xl font-bold">{goal.toLocaleString(undefined, { maximumFractionDigits: 4 })}</p>
         </Card>
         <Card className="stat-card-gradient p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Days Left</p>
-              <p className="text-2xl font-bold text-foreground">{projectData.daysLeft}</p>
-            </div>
-            <Calendar className="h-8 w-8 text-orange-400" />
-          </div>
+          <p className="text-sm text-muted-foreground">Members (DAO)</p>
+          <p className="text-2xl font-bold flex items-center gap-2">
+            <Users className="h-6 w-6 text-muted-foreground" />
+            {yeeter.dao.activeMemberCount ?? "—"}
+          </p>
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="milestones">Milestones</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="budget">Budget</TabsTrigger>
-          <TabsTrigger value="updates">Updates</TabsTrigger>
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm text-muted-foreground">
+          <span>Campaign fill</span>
+          <span>
+            {raised.toLocaleString()} / {goal.toLocaleString()}
+          </span>
+        </div>
+        <Progress value={progress} className="h-2" />
+        <p className="text-xs text-muted-foreground">
+          Min tribute {minT.toLocaleString()} · Max tribute {maxT.toLocaleString()}
+        </p>
+      </div>
+
+      <Tabs defaultValue="window">
+        <TabsList>
+          <TabsTrigger value="window">Timeline</TabsTrigger>
+          <TabsTrigger value="contributors">Contributors</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <Card className="stat-card-gradient p-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Project Description</h3>
-              <div className="prose prose-invert max-w-none">
-                <div className="whitespace-pre-wrap text-foreground">{projectData.fullDescription}</div>
-              </div>
+        <TabsContent value="window" className="space-y-3">
+          <Card className="stat-card-gradient p-6 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Start</span>
+              <span>{formatDistanceToNow(new Date(Number(yeeter.startTime) * 1000), { addSuffix: true })}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">End</span>
+              <span>{formatDistanceToNow(new Date(Number(yeeter.endTime) * 1000), { addSuffix: true })}</span>
             </div>
           </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card className="stat-card-gradient p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground">Project Timeline</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Start Date</span>
-                    <span className="text-foreground">{projectData.startDate}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">End Date</span>
-                    <span className="text-foreground">{projectData.deadline}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Days Remaining</span>
-                    <span className="text-foreground">{projectData.daysLeft} days</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="stat-card-gradient p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground">Budget Overview</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total Budget</span>
-                    <span className="text-foreground">${projectData.budget.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Spent</span>
-                    <span className="text-foreground">${projectData.spent.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Remaining</span>
-                    <span className="text-foreground">
-                      ${(projectData.budget - projectData.spent).toLocaleString()}
+        </TabsContent>
+        <TabsContent value="contributors">
+          <Card className="stat-card-gradient p-6">
+            {yeetsLoading ? (
+              <p className="text-sm text-muted-foreground">Loading contributions…</p>
+            ) : !yeets?.length ? (
+              <p className="text-sm text-muted-foreground">No indexed contributions yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {yeets.slice(0, 40).map((y) => (
+                  <li key={y.id} className="flex justify-between gap-4 text-sm border-b border-border/60 pb-2">
+                    <span className="font-mono text-muted-foreground">
+                      {y.member?.memberAddress
+                        ? `${y.member.memberAddress.slice(0, 6)}…${y.member.memberAddress.slice(-4)}`
+                        : "—"}
                     </span>
-                  </div>
-                  <Progress value={budgetUsed} className="h-2" />
-                </div>
-              </div>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="milestones" className="space-y-4">
-          <Card className="stat-card-gradient p-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Project Milestones</h3>
-
-              <div className="space-y-4">
-                {projectData.milestones.map((milestone, index) => (
-                  <div key={index} className="border border-border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-foreground">{milestone.name}</h4>
-                      <Badge
-                        variant={
-                          milestone.status === "completed"
-                            ? "default"
-                            : milestone.status === "active"
-                              ? "secondary"
-                              : "outline"
-                        }
-                      >
-                        {milestone.status}
-                      </Badge>
-                    </div>
-
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>Due: {milestone.dueDate}</span>
-                      <span>Progress: {milestone.progress}%</span>
-                    </div>
-
-                    <Progress value={milestone.progress} className="h-2" />
-                  </div>
+                    <span className="text-foreground">
+                      {Number(formatUnits(y.amount, 18)).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                    </span>
+                    <span className="text-muted-foreground text-xs flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDistanceToNow(new Date(Number(y.createdAt) * 1000), { addSuffix: true })}
+                    </span>
+                  </li>
                 ))}
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="team" className="space-y-4">
-          <Card className="stat-card-gradient p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-foreground">Team Members</h3>
-                <Button size="sm">Add Member</Button>
-              </div>
-
-              <div className="space-y-4">
-                {projectData.team.map((member, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback>{member.avatar}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h4 className="font-medium text-foreground">{member.name}</h4>
-                        <p className="text-sm text-muted-foreground">{member.role}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-foreground">{member.contributions}</p>
-                      <p className="text-xs text-muted-foreground">contributions</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="budget" className="space-y-4">
-          <Card className="stat-card-gradient p-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Budget Breakdown</h3>
-              <p className="text-muted-foreground">Detailed budget allocation and spending analysis.</p>
-              {/* Add budget breakdown content here */}
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="updates" className="space-y-4">
-          <Card className="stat-card-gradient p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-foreground">Project Updates</h3>
-                <Button size="sm">Add Update</Button>
-              </div>
-
-              <div className="space-y-4">
-                {projectUpdates.map((update, index) => (
-                  <div key={index} className="border border-border rounded-lg p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-foreground">{update.author}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {update.type}
-                        </Badge>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{update.date}</span>
-                    </div>
-                    <h4 className="font-medium text-foreground">{update.title}</h4>
-                    <p className="text-sm text-muted-foreground">{update.content}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+              </ul>
+            )}
           </Card>
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+function OffchainProjectView({ id }: { id: string }) {
+  const product = getOffchainEcosystemProduct(id)
+  if (!product) {
+    return (
+      <Card className="stat-card-gradient p-6">
+        <p className="text-muted-foreground">Unknown project id.</p>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">{product.category}</Badge>
+          <Badge variant="secondary">{product.status}</Badge>
+        </div>
+        <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
+        <p className="text-muted-foreground max-w-3xl">{product.description}</p>
+      </div>
+      <Button asChild>
+        <Link href={product.url} target="_blank" rel="noopener noreferrer">
+          Open product
+          <ExternalLink className="h-4 w-4 ml-2" />
+        </Link>
+      </Button>
+    </div>
+  )
+}
+
+export function ProjectDetail({ projectId }: ProjectDetailProps) {
+  const off = getOffchainEcosystemProduct(projectId)
+  if (off) return <OffchainProjectView id={projectId} />
+
+  const normalized = projectId?.toLowerCase() || ""
+  if (/^0x[a-f0-9]{40}$/.test(normalized)) return <YeeterProjectView yeeterid={normalized} />
+
+  return (
+    <Card className="stat-card-gradient p-6">
+      <p className="text-muted-foreground">
+        Use a yeeter contract address (0x…) or pick an ecosystem product from the projects grid.
+      </p>
+    </Card>
   )
 }

@@ -3,13 +3,23 @@
 import { Card } from "./ui/card"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
-import { Clock, User, MessageSquare } from "lucide-react"
+import { Clock, User } from "lucide-react"
 import { useDaoProposals } from "../hooks/useDaoProposals"
 import { useOnchainMembershipProfile } from "../hooks/useOnchainMembershipProfile"
 import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 import { ProposalItem } from "../utils/daotypes"
 import Link from "next/link"
 import { useMemo } from "react"
+
+function proposalCategory(p: ProposalItem): string {
+  try {
+    if (p.tributeToken && BigInt(p.tributeOffered || "0") > BigInt(0)) return "Treasury"
+  } catch {
+    /* non-numeric tribute */
+  }
+  if (p.proposalType && p.proposalType !== "0") return "Typed proposal"
+  return "Governance"
+}
 
 export function RecentProposals() {
   const { primaryProfile } = useOnchainMembershipProfile({
@@ -27,14 +37,13 @@ export function RecentProposals() {
   });
 
   const proposalList: {
-    id: string;
-    title: string;
-    description: string;
-    author: string;
-    status: string;
-    timeLeft: string;
-    comments: number;
-    category: string;
+    id: string
+    title: string
+    description: string
+    author: string
+    status: string
+    timeLeft: string
+    category: string
   }[] = useMemo(() => {
     if (!proposals) return [];
 
@@ -62,8 +71,7 @@ export function RecentProposals() {
         author: p.proposedBy ? `${p.proposedBy.slice(0, 6)}...${p.proposedBy.slice(-4)}` : "Unknown",
         status: status,
         timeLeft: timeLeft,
-        comments: 0, // Placeholder
-        category: "Governance" // Placeholder
+        category: proposalCategory(p),
       }
     });
   }, [proposals]);
@@ -168,12 +176,6 @@ export function RecentProposals() {
                         <Clock className="h-3 w-3" />
                         <span>{proposal.timeLeft}</span>
                       </div>
-                      {proposal.comments > 0 && (
-                        <div className="flex items-center space-x-1">
-                          <MessageSquare className="h-3 w-3" />
-                          <span>{proposal.comments} comments</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>

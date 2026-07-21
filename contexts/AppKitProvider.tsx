@@ -2,7 +2,7 @@
 
 import { createAppKit } from '@reown/appkit/react'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
-import { mainnet, optimism, polygon, base } from '@reown/appkit/networks'
+import { mainnet, optimism, base, arbitrum, gnosis } from '@reown/appkit/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CREATIVE_ORG_LOGO_SRC, CRTV_TOKEN_ADDRESSES } from '@/config/constants'
 import type { ReactNode } from 'react'
@@ -26,7 +26,7 @@ const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || process.env.NEXT_P
 // Initialize AppKit
 createAppKit({
     adapters: [new EthersAdapter()],
-    networks: [base, polygon, optimism, mainnet],
+    networks: [base, optimism, mainnet, arbitrum, gnosis],
     metadata,
     projectId,
     features: {
@@ -41,10 +41,6 @@ createAppKit({
         'eip155:8453': {
             address: CRTV_TOKEN_ADDRESSES[8453],
             image: metadata.icons[0], // Use project icon
-        },
-        'eip155:137': {
-            address: CRTV_TOKEN_ADDRESSES[137],
-            image: metadata.icons[0],
         },
         'eip155:10': {
             address: CRTV_TOKEN_ADDRESSES[10],

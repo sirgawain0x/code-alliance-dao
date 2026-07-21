@@ -13,7 +13,6 @@ export function PoolStatsCard() {
         switch (chainId) {
             case 8453: return "Base"
             case 10: return "Optimism"
-            case 137: return "Polygon"
             default: return "Unknown"
         }
     }

@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Users, UserPlus, Crown, Shield } from "lucide-react"
 import { useDaoMembers } from "@/hooks/useDaoMembers"
+import { formatUnits } from "ethers"
 
 
 export function MembersOverview() {
@@ -20,7 +21,13 @@ export function MembersOverview() {
       return new Date(Number(m.createdAt) * 1000) > oneMonthAgo
     }).length || 0,
     activeVoters: members?.filter(m => Number(m.shares) > 0).length || 0,
-    sharesTotal: members?.reduce((acc, m) => acc + Number(m.shares), 0) || 0
+    sharesTotal: members?.reduce((acc, m) => {
+      try {
+        return acc + Number(formatUnits(m.shares || "0", 18))
+      } catch {
+        return acc
+      }
+    }, 0) || 0
   }
 
   const memberStats = [

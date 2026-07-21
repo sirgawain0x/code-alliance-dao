@@ -16,12 +16,6 @@ export const FEATURED_DAOS_CONFIG: FeaturedDao[] = [
         fallbackIcon: "🎯",
     },
     {
-        chainId: "0x89",
-        address: "0x9da29b87c2471feb00b931498919dc22340c8489",
-        label: "Polygon DAO",
-        fallbackIcon: "🟣",
-    },
-    {
         chainId: "0xa4b1",
         address: "0x880f006886af9eec4e219b7c9d0467bba0f16c06",
         label: "Arbitrum DAO",
@@ -57,8 +51,8 @@ export const FEATURED_DAOS_CONFIG: FeaturedDao[] = [
 
 export const CHAIN_NAMES: Record<string, string> = {
     "0x2105": "Base",
-    "0x89": "Polygon",
     "0xa4b1": "Arbitrum",
     "0xa": "Optimism",
     "0x1": "Mainnet",
+    "0x64": "Gnosis",
 }

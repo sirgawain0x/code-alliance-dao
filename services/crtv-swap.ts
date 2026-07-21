@@ -79,9 +79,16 @@ export async function getCrtvSwapQuote({
 
 export function createSwapErrorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "Unable to quote CRTV swap"
-  const status = message === "Missing ZEROX_API_KEY" ? 503 : 400
+  const isMissingKey = message === "Missing ZEROX_API_KEY"
+  const isNoLiquidity = /liquidity/i.test(message)
+  const status = isMissingKey || isNoLiquidity ? 503 : 400
+  const code = isMissingKey
+    ? "MISSING_API_KEY"
+    : isNoLiquidity
+      ? "NO_LIQUIDITY"
+      : "QUOTE_FAILED"
 
-  return NextResponse.json({ error: message }, { status })
+  return NextResponse.json({ error: message, code }, { status })
 }
 
 function isSupportedSellToken(sellToken: string): boolean {

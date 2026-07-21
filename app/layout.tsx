@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   title: "Creative Organization DAO",
   description: "Decentralized governance for The Creative Organization DAO",
   icons: {
-    icon: "/Creative_logo-200.svg",
-    apple: "/Creative_logo-200.svg",
+    icon: "/Asset1.png",
+    apple: "/Asset1.png",
     shortcut: "/favicon.ico",
   },
 }

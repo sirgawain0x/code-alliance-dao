@@ -46,7 +46,7 @@ export const useDaoMembers = ({
         skip: queryOptions?.skip || 0,
         orderBy: queryOptions?.orderBy || "createdAt",
         orderDirection: queryOptions?.orderDirection || "desc",
-        daoid,
+        daoid: daoid?.toLowerCase(),
       })) as {
         members: MemberItem[];
       };

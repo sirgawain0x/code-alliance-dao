@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react"
-import { base, optimism, polygon } from '@reown/appkit/networks'
+import { base, optimism } from '@reown/appkit/networks'
 import { createClient } from "@chainlink/ccip-js";
 import { ethersSignerToWalletClient } from "@chainlink/ccip-js/dist/ethers-adapters";
-import { base as viemBase, optimism as viemOptimism, polygon as viemPolygon } from "viem/chains";
+import { base as viemBase, optimism as viemOptimism } from "viem/chains";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -57,7 +57,6 @@ export function BridgeForm() {
             const chainMap: Record<number, any> = {
                 8453: viemBase,
                 10: viemOptimism,
-                137: viemPolygon
             };
             const viemChain = chainMap[currentChainId];
             if (!viemChain) throw new Error("Unsupported chain for SDK");
@@ -123,7 +122,6 @@ export function BridgeForm() {
                 <div className="flex gap-2 justify-center">
                     <Button variant="outline" size="sm" onClick={() => switchNetwork(base)}>Base</Button>
                     <Button variant="outline" size="sm" onClick={() => switchNetwork(optimism)}>OP</Button>
-                    <Button variant="outline" size="sm" onClick={() => switchNetwork(polygon)}>Poly</Button>
                 </div>
             </div>
         )
@@ -143,7 +141,7 @@ export function BridgeForm() {
                         <SelectContent>
                             {availableDestinations.map(c => (
                                 <SelectItem key={c} value={c.toString()}>
-                                    {c === 8453 ? "Base" : c === 10 ? "Optimism" : "Polygon"}
+                                    {c === 8453 ? "Base" : "Optimism"}
                                 </SelectItem>
                             ))}
                         </SelectContent>

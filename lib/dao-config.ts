@@ -1,3 +1,10 @@
+import {
+  CREATIVE_ORG_BAAL_ADDRESS,
+  CREATIVE_ORG_LOOT_ADDRESS,
+  CREATIVE_ORG_SAFE_ADDRESS,
+  CREATIVE_ORG_SHARES_ADDRESS,
+} from "@/config/constants"
+
 export interface DaoContractConfig {
   chainId: string
   daoAddress: string
@@ -8,9 +15,20 @@ export interface DaoContractConfig {
   treasuryAddress?: string
   metadataAddress?: string
   ownerReadAddress?: string
+  sharesAddress?: string
+  lootAddress?: string
 }
 
 const DAO_CONFIGS: DaoContractConfig[] = [
+  {
+    chainId: "8453",
+    daoAddress: CREATIVE_ORG_BAAL_ADDRESS,
+    name: "Creative Org DAO",
+    treasuryAddress: CREATIVE_ORG_SAFE_ADDRESS,
+    sharesAddress: CREATIVE_ORG_SHARES_ADDRESS,
+    lootAddress: CREATIVE_ORG_LOOT_ADDRESS,
+    ownerReadAddress: CREATIVE_ORG_BAAL_ADDRESS,
+  },
   {
     chainId: "10",
     daoAddress: "0x85a56a9572145260d40e8d8f55c8468c18773da0",

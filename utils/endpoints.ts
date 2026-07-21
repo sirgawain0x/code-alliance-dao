@@ -159,13 +159,22 @@ export const getRpcUrl = ({
     throw new Error("Missing chainid for RPC URL");
   }
 
-  // Common RPC URLs by chain
+  // Prefer Alchemy when a key is provided; otherwise use public CORS-safe RPCs.
+  // Never fall back to Alchemy "demo" — it fails browser CORS and retries forever.
+  const alchemyUrl = (host: string) =>
+    rpcKey ? `https://${host}.g.alchemy.com/v2/${rpcKey}` : null
+
+  const baseRpcOverride =
+    process.env.NEXT_PUBLIC_BASE_RPC_URL || process.env.BASE_RPC_URL || null
+
   const rpcUrls: Record<string, string> = {
-    "1": `https://eth-mainnet.g.alchemy.com/v2/${rpcKey || "demo"}`,
-    "137": `https://polygon-mainnet.g.alchemy.com/v2/${rpcKey || "demo"}`,
-    "42161": `https://arb-mainnet.g.alchemy.com/v2/${rpcKey || "demo"}`,
-    "10": `https://opt-mainnet.g.alchemy.com/v2/${rpcKey || "demo"}`,
-    "8453": `https://base-mainnet.g.alchemy.com/v2/${rpcKey || "demo"}`,
+    "1": alchemyUrl("eth-mainnet") || "https://cloudflare-eth.com",
+    "42161": alchemyUrl("arb-mainnet") || "https://arb1.arbitrum.io/rpc",
+    "10": alchemyUrl("opt-mainnet") || "https://mainnet.optimism.io",
+    "8453":
+      baseRpcOverride ||
+      alchemyUrl("base-mainnet") ||
+      "https://mainnet.base.org",
     "56": "https://bsc-dataseed.binance.org/",
     "43114": "https://api.avax.network/ext/bc/C/rpc",
     "250": "https://rpc.ftm.tools/",
@@ -183,9 +192,8 @@ export const getRpcUrl = ({
     "106": "https://evmexplorer.velas.com/rpc",
     "40": "https://mainnet.telos.net/evm",
     "1287": "https://rpc.api.moonbase.moonbeam.network",
-    "80001": `https://polygon-mumbai.g.alchemy.com/v2/${rpcKey || "demo"}`,
-    "5": `https://eth-goerli.g.alchemy.com/v2/${rpcKey || "demo"}`,
-    "11155111": `https://eth-sepolia.g.alchemy.com/v2/${rpcKey || "demo"}`,
+    "5": alchemyUrl("eth-goerli") || "https://rpc.ankr.com/eth_goerli",
+    "11155111": alchemyUrl("eth-sepolia") || "https://rpc.sepolia.org",
     "97": "https://data-seed-prebsc-1-s1.binance.org:8545/",
     "43113": "https://api.avax-test.network/ext/bc/C/rpc",
     "4002": "https://rpc.testnet.fantom.network/",

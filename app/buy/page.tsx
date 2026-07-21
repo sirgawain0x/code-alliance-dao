@@ -13,7 +13,7 @@ export default function BuyPage() {
                         <div className="mb-8">
                             <h1 className="text-3xl font-bold tracking-tight">Buy CRTV</h1>
                             <p className="text-muted-foreground mt-2">
-                                Acquire CRTV tokens to participate in governance and access exclusive features.
+                                Purchases open once Base DEX liquidity is funded. Add the token and get USDC ready in the meantime.
                             </p>
                         </div>
                         <div className="mt-8">

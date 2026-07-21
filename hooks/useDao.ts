@@ -41,7 +41,7 @@ export const useDao = ({
       dao: DaoItem;
     }> => {
       const daores = (await graphQLClient.request(FIND_DAO, {
-        daoid,
+        daoid: daoid?.toLowerCase(),
       })) as {
         dao: DaoItem;
       };

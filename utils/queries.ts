@@ -150,11 +150,14 @@ export const LIST_ALL_DAO_MEMBERS = `
     ) {
       id
       createdAt
-      updatedAt
+      txHash
       memberAddress
       shares
       loot
-      isActive
+      sharesLootDelegateShares
+      delegatingTo
+      delegateShares
+      delegateOfCount
       dao {
         id
         name
@@ -212,6 +215,7 @@ export const LIST_ALL_DAO_PROPOSALS = `
       passed
       actionFailed
       selfSponsor
+      proposalData
       votingStarts
       votingEnds
       graceEnds
@@ -260,6 +264,7 @@ export const FIND_PROPOSAL = `
       passed
       actionFailed
       selfSponsor
+      proposalData
       votingStarts
       votingEnds
       graceEnds

@@ -50,6 +50,8 @@ Poll every 2–5 s until `status` is `completed` or `failed`.
 
 Key fields on completion: `output` (LLM text), `usage`, `completed_at`.
 
+Documents are processed in an AWS Nitro Enclave TEE. The documented completed response does **not** yet return attestation bytes for on-chain verification — do not invent attestation fields. Details → [references/api-reference.md](references/api-reference.md#attestation-and-on-chain-verification-hackathon-beta)
+
 For error symptoms → [references/troubleshooting.md](references/troubleshooting.md)
 
 ---

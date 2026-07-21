@@ -86,6 +86,19 @@ When `status` is `failed`, the `error` field is populated instead of `output`.
 
 Poll every 2–5 seconds until `completed` or `failed`.
 
+### Attestation and on-chain verification (hackathon beta)
+
+Inference runs inside an **AWS Nitro Enclave** TEE: request documents are processed in the enclave and are not returned in the response.
+
+**Important for agents:** the current completed `GET /v1/inference/{id}` payload documents **`output`**, **`usage`**, and timestamps only. It does **not** yet expose a downloadable attestation blob (for example Nitro attestation document, signed transcript, or model/input hash) for direct on-chain verification.
+
+Until attestation fields ship in the API response:
+
+1. Treat `output` as the application result (prefer JSON schemas in prompts).
+2. Do **not** invent attestation fields such as `attestation`, `attestation_document`, or `proof`.
+3. If the user needs cryptographic on-chain verification, say that TEE-backed privacy is available now, but portable attestation bytes for smart-contract verification are not part of this documented response yet — check the playground response JSON or Chainlink booth / Discord for the latest beta fields.
+4. When attestation fields appear in a live response, document and use them as returned; never assume a fixed schema without observing a real completed payload.
+
 ---
 
 ## GET /v1/models

@@ -164,11 +164,17 @@ export const getRpcUrl = ({
   const alchemyUrl = (host: string) =>
     rpcKey ? `https://${host}.g.alchemy.com/v2/${rpcKey}` : null
 
+  const baseRpcOverride =
+    process.env.NEXT_PUBLIC_BASE_RPC_URL || process.env.BASE_RPC_URL || null
+
   const rpcUrls: Record<string, string> = {
     "1": alchemyUrl("eth-mainnet") || "https://cloudflare-eth.com",
     "42161": alchemyUrl("arb-mainnet") || "https://arb1.arbitrum.io/rpc",
     "10": alchemyUrl("opt-mainnet") || "https://mainnet.optimism.io",
-    "8453": alchemyUrl("base-mainnet") || "https://mainnet.base.org",
+    "8453":
+      baseRpcOverride ||
+      alchemyUrl("base-mainnet") ||
+      "https://mainnet.base.org",
     "56": "https://bsc-dataseed.binance.org/",
     "43114": "https://api.avax.network/ext/bc/C/rpc",
     "250": "https://rpc.ftm.tools/",

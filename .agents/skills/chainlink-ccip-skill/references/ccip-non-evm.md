@@ -100,15 +100,26 @@ import { SolanaChain, networkInfo } from "@chainlink/ccip-sdk";
 
 const source = await SolanaChain.fromUrl("https://api.devnet.solana.com");
 const destSelector = networkInfo("ethereum-testnet-sepolia").chainSelector;
+const router = "<solana-router-address>";
+
+const message = {
+  receiver: "0xYourEVMReceiverAddress",
+  tokenAmounts: [{ token: "<ccip-bnm-token>", amount: 1000000n }],
+  extraArgs: { gasLimit: 0n },
+};
+
+const fee = await source.getFee({
+  router,
+  destChainSelector: destSelector,
+  message,
+});
 
 const unsignedTx = await source.generateUnsignedSendMessage({
   sender: "<user-solana-wallet-address>",
-  router: "<solana-router-address>",
+  router,
   destChainSelector: destSelector,
   message: {
-    receiver: "0xYourEVMReceiverAddress",
-    tokenAmounts: [{ token: "<ccip-bnm-token>", amount: 1000000n }],
-    extraArgs: { gasLimit: 0n },
+    ...message,
     fee,
   },
 });
@@ -123,15 +134,26 @@ import { AptosChain, networkInfo } from "@chainlink/ccip-sdk";
 
 const source = await AptosChain.fromUrl("https://api.testnet.aptoslabs.com/v1");
 const destSelector = networkInfo("ethereum-testnet-sepolia").chainSelector;
+const router = "<aptos-router-address>";
+
+const message = {
+  receiver: "0xYourEVMReceiverAddress",
+  tokenAmounts: [{ token: "<aptos-token-address>", amount: 1000000n }],
+  extraArgs: { gasLimit: 0n },
+};
+
+const fee = await source.getFee({
+  router,
+  destChainSelector: destSelector,
+  message,
+});
 
 const unsignedTx = await source.generateUnsignedSendMessage({
   sender: "<user-aptos-account-address>",
-  router: "<aptos-router-address>",
+  router,
   destChainSelector: destSelector,
   message: {
-    receiver: "0xYourEVMReceiverAddress",
-    tokenAmounts: [{ token: "<aptos-token-address>", amount: 1000000n }],
-    extraArgs: { gasLimit: 0n },
+    ...message,
     fee,
   },
 });

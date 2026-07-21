@@ -231,11 +231,18 @@ describe("CCIP Local Simulator", function () {
 
     await ccipBnM.connect(alice).approve(await router.getAddress(), amountToSend);
 
+    // Encode Client.EVMExtraArgsV1 the same way Foundry's Client._argsToBytes does.
+    // Empty "0x" extraArgs often causes getFee / ccipSend to revert in Hardhat.
+    const gasLimit = 0;
+    const functionSelector = ethers.id("CCIP EVMExtraArgsV1").slice(0, 10);
+    const encodedArgs = ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [gasLimit]);
+    const extraArgs = `${functionSelector}${encodedArgs.slice(2)}`;
+
     const message = {
       receiver: ethers.AbiCoder.defaultAbiCoder().encode(["address"], [bob.address]),
       data: "0x",
       tokenAmounts: [{ token: await ccipBnM.getAddress(), amount: amountToSend }],
-      extraArgs: "0x",
+      extraArgs,
       feeToken: ethers.ZeroAddress,
     };
 

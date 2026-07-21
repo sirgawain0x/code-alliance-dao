@@ -243,10 +243,15 @@ const unsignedTx = await source.generateUnsignedSendMessage({
   message,
 });
 
-// EVM: iterate unsignedTx.transactions
-// Solana: iterate unsignedTx.instructions
-// Aptos: iterate unsignedTx.transactions (BCS-encoded)
-for (const tx of unsignedTx.transactions) {
+// Chain-specific payloads:
+// EVM / Aptos: unsignedTx.transactions
+// Solana: unsignedTx.instructions
+const payloads =
+  "instructions" in unsignedTx && unsignedTx.instructions
+    ? unsignedTx.instructions
+    : unsignedTx.transactions;
+
+for (const tx of payloads) {
   // Sign and broadcast outside the agent runtime with a user-controlled wallet.
   await handOffToUserControlledSigner(tx);
 }

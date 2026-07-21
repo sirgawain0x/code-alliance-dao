@@ -76,19 +76,16 @@ export function Sidebar() {
           {/* Logo with Close Button - Mobile Only */}
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-2 flex-1 min-w-0">
-              {process.env.NEXT_PUBLIC_DAO_AVATAR_URL ? (
-                <img
-                  src={process.env.NEXT_PUBLIC_DAO_AVATAR_URL}
-                  alt={dao?.name || "DAO"}
-                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                />
-              ) : (
-                <img
-                  src={CREATIVE_ORG_LOGO_SRC}
-                  alt={dao?.name || "Creative Organization DAO"}
-                  className="h-8 w-auto max-w-[2.25rem] object-contain flex-shrink-0"
-                />
-              )}
+              <img
+                src={process.env.NEXT_PUBLIC_DAO_AVATAR_URL || CREATIVE_ORG_LOGO_SRC}
+                alt={dao?.name || "Creative Organization DAO"}
+                className="h-8 w-8 object-contain flex-shrink-0"
+                onError={(event) => {
+                  const image = event.currentTarget
+                  if (image.src.endsWith(CREATIVE_ORG_LOGO_SRC)) return
+                  image.src = CREATIVE_ORG_LOGO_SRC
+                }}
+              />
               <span className="text-lg font-semibold text-sidebar-foreground truncate">{dao?.name || "Creative Organization DAO"}</span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">

@@ -45,7 +45,7 @@ export const useDaoProposals = ({
         skip: queryOptions?.skip || 0,
         orderBy: queryOptions?.orderBy || "createdAt",
         orderDirection: queryOptions?.orderDirection || "desc",
-        daoid,
+        daoid: daoid?.toLowerCase(),
       })) as {
         proposals: ProposalItem[];
       };

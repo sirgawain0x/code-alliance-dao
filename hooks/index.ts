@@ -28,7 +28,11 @@ export { useDaoExits } from "./useDaoExits";
 
 // Token balance hooks
 export { useDaoTokenBalances } from "./useDaoTokenBalances";
+export { useSafeTreasuryBalances } from "./useSafeTreasuryBalances";
 export { useOnchainMembershipProfile } from "./useOnchainMembershipProfile";
+
+// Baal governance writes
+export { useBaalActions } from "./useBaalActions";
 
 // Context hooks
 export { useDaoHooks } from "./useDaoHooks";

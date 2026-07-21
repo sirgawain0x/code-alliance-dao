@@ -4,47 +4,69 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, TrendingDown, Coins } from "lucide-react"
-import { useDaoTokenBalances } from "@/hooks/useDaoTokenBalances"
+import { Coins } from "lucide-react"
 import { formatUnits } from "ethers"
 
-// Helper to determine token type based on symbol
-function getTokenType(symbol: string): string {
-  const stablecoins = ["USDC", "USDT", "DAI", "FRAX", "BUSD", "TUSD"];
-  const wrappedTokens = ["WETH", "WBTC"];
+import { CREATIVE_ORG_SAFE_ADDRESS } from "@/config/constants"
+import { useDao } from "@/hooks/useDao"
+import { useDaoTokenBalances } from "@/hooks/useDaoTokenBalances"
+import { useSafeTreasuryBalances } from "@/hooks/useSafeTreasuryBalances"
 
-  if (stablecoins.includes(symbol.toUpperCase())) {
-    return "Stablecoin";
-  }
-  if (wrappedTokens.includes(symbol.toUpperCase())) {
-    return "Wrapped";
-  }
-  if (symbol.toUpperCase() === "ETH") {
-    return "Native";
-  }
-  return "Token";
+function getTokenType(symbol: string): string {
+  const stablecoins = ["USDC", "USDT", "DAI", "FRAX", "BUSD", "TUSD"]
+  const wrappedTokens = ["WETH", "WBTC"]
+
+  if (stablecoins.includes(symbol.toUpperCase())) return "Stablecoin"
+  if (wrappedTokens.includes(symbol.toUpperCase())) return "Wrapped"
+  if (symbol.toUpperCase() === "ETH") return "Native"
+  return "Token"
 }
 
-// Helper to determine risk level based on token type
 function getTokenRisk(type: string): string {
   switch (type) {
     case "Stablecoin":
-      return "low";
+      return "low"
     case "Native":
     case "Wrapped":
-      return "medium";
+      return "medium"
     default:
-      return "medium";
+      return "medium"
   }
 }
 
 export function AssetAllocation() {
-  const daoAddress = process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS;
+  const daoAddress = process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
+  const { dao } = useDao({
+    chainid: "8453",
+    daoid: daoAddress,
+  })
+
+  const safeAddress = dao?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS
 
   const { tokens, isLoading, error } = useDaoTokenBalances({
-    chainid: "8453", // Base Mainnet
-    safeAddress: daoAddress,
-  });
+    chainid: "8453",
+    safeAddress,
+  })
+
+  const { data: rpcTreasury, isLoading: rpcLoading } = useSafeTreasuryBalances({
+    chainId: "8453",
+    daoAddress,
+    safeAddress,
+  })
+
+  const displayTokens =
+    tokens && tokens.length > 0
+      ? tokens
+      : rpcTreasury?.tokens.map((token) => ({
+          tokenAddress: token.address,
+          balance: token.balance,
+          token: {
+            decimals: token.decimals,
+            symbol: token.symbol,
+            name: token.name,
+            logoUri: null as string | null,
+          },
+        })) || []
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -73,45 +95,41 @@ export function AssetAllocation() {
     }
   }
 
-  // Calculate total value and percentages
-  const totalValue = tokens?.reduce((sum, token) => {
-    if (!token.token?.decimals) return sum;
-    const value = Number(formatUnits(token.balance, token.token.decimals));
-    return sum + value;
-  }, 0) || 0;
+  const totalValue =
+    displayTokens.reduce((sum, token) => {
+      if (!token.token?.decimals) return sum
+      return sum + Number(formatUnits(token.balance, token.token.decimals))
+    }, 0) || 0
 
-  const assets = tokens?.filter(token => token.token != null).map((token) => {
-    const decimals = token.token!.decimals ?? 18;
-    const balance = Number(formatUnits(token.balance, decimals));
-    const percentage = totalValue > 0 ? (balance / totalValue) * 100 : 0;
-    const type = getTokenType(token.token!.symbol ?? "UNKNOWN");
-    const risk = getTokenRisk(type);
+  const assets =
+    displayTokens
+      .filter((token) => token.token != null)
+      .map((token) => {
+        const decimals = token.token!.decimals ?? 18
+        const balance = Number(formatUnits(token.balance, decimals))
+        const percentage = totalValue > 0 ? (balance / totalValue) * 100 : 0
+        const type = getTokenType(token.token!.symbol ?? "UNKNOWN")
+        const risk = getTokenRisk(type)
 
-    return {
-      name: token.token!.symbol ?? "UNKNOWN",
-      fullName: token.token!.name ?? "Unknown Token",
-      type,
-      amount: balance,
-      percentage,
-      risk,
-      logoUri: token.token!.logoUri ?? null,
-      tokenAddress: token.tokenAddress,
-    };
-  }) || [];
+        return {
+          name: token.token!.symbol ?? "UNKNOWN",
+          fullName: token.token!.name ?? "Unknown Token",
+          type,
+          amount: balance,
+          percentage,
+          risk,
+          logoUri: token.token!.logoUri ?? null,
+          tokenAddress: token.tokenAddress,
+        }
+      }) || []
 
-  // Sort by percentage (highest first)
-  assets.sort((a, b) => b.percentage - a.percentage);
+  assets.sort((a, b) => b.percentage - a.percentage)
 
-  if (isLoading) {
+  if (isLoading && rpcLoading) {
     return (
       <Card className="stat-card-gradient p-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
-            <Button variant="outline" size="sm" disabled>
-              Rebalance
-            </Button>
-          </div>
+          <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
           <div className="animate-pulse space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-20 bg-muted rounded-lg" />
@@ -119,38 +137,34 @@ export function AssetAllocation() {
           </div>
         </div>
       </Card>
-    );
+    )
   }
 
-  if (error) {
+  if (error && displayTokens.length === 0) {
     return (
       <Card className="stat-card-gradient p-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
-          </div>
+          <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
           <div className="text-center py-8">
             <p className="text-red-400">Error loading assets: {error.message}</p>
           </div>
         </div>
       </Card>
-    );
+    )
   }
 
-  if (!tokens || tokens.length === 0) {
+  if (displayTokens.length === 0) {
     return (
       <Card className="stat-card-gradient p-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
-          </div>
+          <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
           <div className="text-center py-8">
             <Coins className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
             <p className="text-muted-foreground">No assets found in treasury</p>
           </div>
         </div>
       </Card>
-    );
+    )
   }
 
   return (
@@ -158,14 +172,17 @@ export function AssetAllocation() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">Asset Allocation</h3>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" disabled>
             Rebalance
           </Button>
         </div>
 
         <div className="space-y-3">
           {assets.map((asset) => (
-            <div key={asset.tokenAddress || asset.name} className="border border-border rounded-lg p-4 space-y-3">
+            <div
+              key={asset.tokenAddress || asset.name}
+              className="border border-border rounded-lg p-4 space-y-3"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   {asset.logoUri && (
@@ -174,7 +191,7 @@ export function AssetAllocation() {
                       alt={asset.name}
                       className="w-8 h-8 rounded-full"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.style.display = "none"
                       }}
                     />
                   )}
@@ -187,24 +204,24 @@ export function AssetAllocation() {
                   <p className="font-medium text-foreground">
                     {asset.amount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
-                      maximumFractionDigits: 6
+                      maximumFractionDigits: 6,
                     })}
                   </p>
-                  <p className="text-xs text-muted-foreground">{asset.percentage.toFixed(1)}%</p>
+                  <p className="text-xs text-muted-foreground">
+                    {asset.percentage.toFixed(1)}%
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center space-x-4">
-                  <Badge className={getRiskColor(asset.risk)} variant="outline">
-                    {asset.risk} risk
-                  </Badge>
-                  <span className="text-muted-foreground" title={asset.fullName ?? undefined}>
-                    {(asset.fullName ?? "Unknown").length > 20
-                      ? `${(asset.fullName ?? "Unknown").substring(0, 20)}...`
-                      : (asset.fullName ?? "Unknown")}
-                  </span>
-                </div>
+                <Badge className={getRiskColor(asset.risk)} variant="outline">
+                  {asset.risk} risk
+                </Badge>
+                <span className="text-muted-foreground" title={asset.fullName ?? undefined}>
+                  {(asset.fullName ?? "Unknown").length > 20
+                    ? `${(asset.fullName ?? "Unknown").substring(0, 20)}...`
+                    : (asset.fullName ?? "Unknown")}
+                </span>
               </div>
 
               <Progress value={asset.percentage} className="h-1" />

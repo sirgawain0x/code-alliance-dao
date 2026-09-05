@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import { parseUnits } from "ethers"
 import { Loader2, Plus } from "lucide-react"
-import { useAppKitAccount } from "@reown/appkit/react"
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -35,7 +35,8 @@ interface CreateProposalFormProps {
 }
 
 export function CreateProposalForm({ onClose }: CreateProposalFormProps) {
-  const { address } = useAppKitAccount()
+  const { open } = useAppKit()
+  const { address, isConnected } = useAppKitAccount()
   const { primaryProfile } = useOnchainMembershipProfile({
     chainId: "8453",
     daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
@@ -117,14 +118,24 @@ export function CreateProposalForm({ onClose }: CreateProposalFormProps) {
 
         <p className="text-sm text-muted-foreground">{helper}</p>
 
-        {!canCreate && (
+        {!isConnected ? (
+          <Alert>
+            <AlertTitle>Wallet not connected</AlertTitle>
+            <AlertDescription className="space-y-3">
+              <p>Connect a wallet to create proposals on-chain.</p>
+              <Button type="button" size="sm" onClick={() => open()}>
+                Connect Wallet
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : !canCreate ? (
           <Alert>
             <AlertTitle>Voting shares required</AlertTitle>
             <AlertDescription>
-              Connect a wallet that holds vCRTV shares to submit proposals.
+              Your connected wallet needs vCRTV voting shares (or admin) to submit proposals.
             </AlertDescription>
           </Alert>
-        )}
+        ) : null}
 
         <div className="space-y-2">
           <Label>Type</Label>
@@ -239,10 +250,16 @@ export function CreateProposalForm({ onClose }: CreateProposalFormProps) {
           </Alert>
         )}
 
-        <Button type="submit" disabled={!canCreate || isPending || !title.trim()} className="gap-2">
-          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          {isPending ? "Confirm in wallet…" : "Submit Proposal"}
-        </Button>
+        {!isConnected ? (
+          <Button type="button" className="gap-2" onClick={() => open()}>
+            Connect Wallet
+          </Button>
+        ) : (
+          <Button type="submit" disabled={!canCreate || isPending || !title.trim()} className="gap-2">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            {isPending ? "Confirm in wallet…" : "Submit Proposal"}
+          </Button>
+        )}
       </form>
     </Card>
   )

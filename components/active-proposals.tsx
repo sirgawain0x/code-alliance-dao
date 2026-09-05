@@ -4,13 +4,20 @@ import { useMemo, useState } from "react"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { formatUnits } from "ethers"
-import { Clock, ExternalLink, Loader2, Plus, User } from "lucide-react"
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react"
+import { Clock, ExternalLink, Loader2, MoreHorizontal, Plus, User } from "lucide-react"
 
 import { CreateProposalForm } from "@/components/create-proposal-form"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useBaalActions } from "@/hooks/useBaalActions"
 import { useDao } from "@/hooks/useDao"
@@ -87,9 +94,25 @@ function getProposalNumber(proposal: { proposalId?: string; id: string }): strin
   return String(proposal.proposalId || proposal.id.split("-").pop() || proposal.id)
 }
 
+function getCreateProposalHelper({
+  isConnected,
+  canCreateProposal,
+}: {
+  isConnected: boolean
+  canCreateProposal: boolean
+}): string | null {
+  if (!isConnected) return "Connect a wallet to create proposals."
+  if (!canCreateProposal) {
+    return "Proposals require vCRTV voting shares (or admin). Acquire shares to submit."
+  }
+  return null
+}
+
 export function ActiveProposals() {
   const daoAddress = process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
   const [showCreate, setShowCreate] = useState(false)
+  const { open } = useAppKit()
+  const { isConnected } = useAppKitAccount()
   const { primaryProfile } = useOnchainMembershipProfile({
     chainId: "8453",
     daoAddress,
@@ -113,6 +136,15 @@ export function ActiveProposals() {
   const isLoading = daoLoading || proposalsLoading
   const canCreateProposal = Boolean(primaryProfile?.capabilities.canCreateProposal)
   const canVote = Boolean(primaryProfile?.capabilities.canVote)
+  const createProposalHelper = getCreateProposalHelper({ isConnected, canCreateProposal })
+
+  function handleCreateProposalClick() {
+    if (!isConnected) {
+      open()
+      return
+    }
+    setShowCreate(true)
+  }
 
   const getVotePercentage = (votes: number, total: number) =>
     total > 0 ? (votes / total) * 100 : 0
@@ -331,31 +363,41 @@ export function ActiveProposals() {
 
       <Card className="stat-card-gradient p-6">
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h3 className="text-lg font-semibold text-foreground">Governance Proposals</h3>
-            <div className="flex flex-wrap gap-2">
-              {adminProposalsUrl && (
-                <Button size="sm" variant="outline" asChild>
-                  <Link href={adminProposalsUrl} target="_blank" rel="noopener noreferrer">
-                    Open in DAOhaus
-                    <ExternalLink className="ml-2 h-3 w-3" />
-                  </Link>
-                </Button>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-lg font-semibold text-foreground">Governance Proposals</h3>
+              {createProposalHelper && (
+                <p className="text-sm text-muted-foreground">{createProposalHelper}</p>
               )}
-              <Button
-                size="sm"
-                className="gap-2"
-                disabled={!canCreateProposal}
-                onClick={() => setShowCreate(true)}
-                title={
-                  canCreateProposal
-                    ? "Create an in-app proposal"
-                    : "Requires voting shares or admin role"
-                }
-              >
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="default" className="gap-2" onClick={handleCreateProposalClick}>
                 <Plus className="h-4 w-4" />
-                Create Proposal
+                {!isConnected ? "Connect to Create" : "Create Proposal"}
               </Button>
+              {adminProposalsUrl && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground">
+                      <MoreHorizontal className="h-4 w-4" />
+                      Advanced
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={adminProposalsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cursor-pointer"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Open in DAOhaus
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
 

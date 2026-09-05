@@ -37,7 +37,7 @@ interface CreateProposalFormProps {
 export function CreateProposalForm({ onClose }: CreateProposalFormProps) {
   const { open } = useAppKit()
   const { address, isConnected } = useAppKitAccount()
-  const { primaryProfile } = useOnchainMembershipProfile({
+  const { primaryProfile, isLoading: isProfileLoading } = useOnchainMembershipProfile({
     chainId: "8453",
     daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
   })
@@ -64,6 +64,7 @@ export function CreateProposalForm({ onClose }: CreateProposalFormProps) {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
+    if (!isConnected || isProfileLoading || !canCreate || isPending) return
     if (!title.trim()) return
 
     setFormError(null)
@@ -127,6 +128,11 @@ export function CreateProposalForm({ onClose }: CreateProposalFormProps) {
                 Connect Wallet
               </Button>
             </AlertDescription>
+          </Alert>
+        ) : isProfileLoading ? (
+          <Alert>
+            <AlertTitle>Checking membership…</AlertTitle>
+            <AlertDescription>Verifying your voting shares on-chain.</AlertDescription>
           </Alert>
         ) : !canCreate ? (
           <Alert>
@@ -255,7 +261,11 @@ export function CreateProposalForm({ onClose }: CreateProposalFormProps) {
             Connect Wallet
           </Button>
         ) : (
-          <Button type="submit" disabled={!canCreate || isPending || !title.trim()} className="gap-2">
+          <Button
+            type="submit"
+            disabled={isProfileLoading || !canCreate || isPending || !title.trim()}
+            className="gap-2"
+          >
             {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             {isPending ? "Confirm in wallet…" : "Submit Proposal"}
           </Button>

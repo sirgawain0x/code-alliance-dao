@@ -175,7 +175,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
           <div className="flex items-center space-x-2 flex-wrap">
             <span className="text-sm text-muted-foreground">#{display.id}</span>
             <Badge variant="outline">{display.category}</Badge>
-            <Badge variant="secondary">Token Voting</Badge>
+            <Badge variant="secondary">Moloch/Baal share voting</Badge>
             <Badge className="bg-green-500/10 text-green-400 border-green-500/20">
               {display.status}
             </Badge>

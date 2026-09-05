@@ -20,7 +20,6 @@ const MEMBER_COUNT_FUNCTIONS = [
   "memberCount",
   "membersCount",
   "totalMembers",
-  "totalSupply",
 ]
 
 const TREASURY_ADDRESS_FUNCTIONS = [
@@ -141,20 +140,11 @@ async function readMemberCount(contract: Contract): Promise<number> {
   for (const functionName of MEMBER_COUNT_FUNCTIONS) {
     try {
       const value = await contract[functionName]()
-      return normalizeMemberCount(functionName, value)
+      return Number(value)
     } catch {}
   }
 
   return 0
-}
-
-function normalizeMemberCount(functionName: string, value: bigint): number {
-  if (functionName !== "totalSupply") return Number(value)
-
-  const tokenUnit = BigInt("1000000000000000000")
-  if (value >= tokenUnit && value % tokenUnit === BigInt(0)) return Number(value / tokenUnit)
-
-  return Number(value)
 }
 
 async function readTreasuryAddress(contract: Contract, fallbackAddress: string): Promise<string> {

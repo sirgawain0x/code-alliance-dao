@@ -3,57 +3,78 @@
 import { Card } from "./ui/card"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
-import { Progress } from "./ui/progress"
-import { Users, Building2, TrendingUp, Shield } from "lucide-react"
+import { Users, Building2, Wallet, FileText } from "lucide-react"
 import { useDao } from "../hooks/useDao"
 import { useOnchainMembershipProfile } from "../hooks/useOnchainMembershipProfile"
+import { useSafeTreasuryBalances } from "../hooks/useSafeTreasuryBalances"
 import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 import Link from "next/link"
-import { CREATIVE_ORG_LOGO_SRC } from "@/config/constants"
+import { CREATIVE_ORG_LOGO_SRC, CREATIVE_ORG_SAFE_ADDRESS } from "@/config/constants"
 import { useMemo } from "react"
+import { formatEther } from "ethers"
 
 export function ParentDAOOverview() {
+  const daoAddress = process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
+
   const { primaryProfile } = useOnchainMembershipProfile({
     chainId: "8453",
-    daoAddress: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
+    daoAddress,
   })
   const { dao, isLoading } = useDao({
     chainid: "8453",
-    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
-  });
+    daoid: daoAddress,
+  })
+  const { data: treasury, isLoading: treasuryLoading } = useSafeTreasuryBalances({
+    chainId: "8453",
+    daoAddress,
+    safeAddress: dao?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS,
+  })
 
   const stats = useMemo(() => {
-    if (!dao) return null;
+    if (!dao) return null
+
+    const ethBalance = Number(treasury?.ethFormatted || "0")
+    const treasuryLabel =
+      ethBalance > 0
+        ? `${ethBalance.toLocaleString(undefined, { maximumFractionDigits: 4 })} ETH`
+        : "0 ETH"
 
     return {
       totalMembers: Number(dao.activeMemberCount) || 0,
-      activeSubdaos: dao.shamen?.length || 0, // Using shamen as a proxy for subdaos/integrations
-      treasuryValue: "$2.4M", // Placeholder as treasury calculation is complex and requires token pricing
-      governanceScore: 94, // Placeholder metric
-      voterParticipation: Number(dao.proposalCount) > 0 ? 78 : 0, // Placeholder
-      proposalSuccessRate: 85, // Placeholder
-      communityEngagement: 92, // Placeholder
-      mission: dao.profile?.description || "To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.",
-      vision: dao.profile?.longDescription || "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources."
+      activeSubdaos: dao.shamen?.length || 0,
+      treasuryLabel,
+      proposalCount: Number(dao.proposalCount) || 0,
+      quorumPercent: dao.quorumPercent,
+      mission:
+        dao.profile?.description ||
+        "To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.",
+      vision:
+        dao.profile?.longDescription ||
+        "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources.",
     }
-  }, [dao]);
+  }, [dao, treasury?.ethFormatted])
 
   const adminProposalsUrl = getDaoHausAdminProposalsUrl()
   const canCreateProposal = Boolean(primaryProfile?.capabilities.canCreateProposal)
   const createProposalReady = canCreateProposal && Boolean(adminProposalsUrl)
 
-  if (isLoading || !stats) {
-    return <div className="animate-pulse space-y-6">
-      <div className="h-24 bg-muted rounded-lg w-full"></div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-muted rounded-lg"></div>)}
+  if (isLoading || treasuryLoading || !stats) {
+    return (
+      <div className="animate-pulse space-y-6">
+        <div className="h-24 bg-muted rounded-lg w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-muted rounded-lg" />
+          ))}
+        </div>
       </div>
-    </div>
+    )
   }
+
+  const totalShares = Math.round(Number(formatEther(dao?.totalShares || "0")))
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
       <div className="flex items-start justify-between flex-col md:flex-row gap-4">
         <div className="space-y-2">
           <div className="flex items-center space-x-3">
@@ -70,7 +91,9 @@ export function ParentDAOOverview() {
           <div className="flex items-center space-x-2 flex-wrap gap-2">
             <Badge className="bg-green-500/10 text-green-400 border-green-500/20">Active</Badge>
             <Badge variant="secondary">Parent DAO</Badge>
-            <Badge variant="outline">Established {new Date(Number(dao?.createdAt) * 1000).getFullYear()}</Badge>
+            <Badge variant="outline">
+              Established {new Date(Number(dao?.createdAt) * 1000).getFullYear()}
+            </Badge>
           </div>
         </div>
         <div className="flex space-x-2">
@@ -101,14 +124,13 @@ export function ParentDAOOverview() {
         </div>
       </div>
 
-      {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="stat-card-gradient p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Members</p>
+              <p className="text-sm text-muted-foreground">Voting Members</p>
               <p className="text-2xl font-bold text-foreground">{stats.totalMembers.toLocaleString()}</p>
-              <p className="text-xs text-green-400">+12% this month</p>
+              <p className="text-xs text-muted-foreground">on-chain share holders</p>
             </div>
             <Users className="h-8 w-8 text-blue-400" />
           </div>
@@ -117,9 +139,9 @@ export function ParentDAOOverview() {
         <Card className="stat-card-gradient p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Active SubDAOs/Shamen</p>
+              <p className="text-sm text-muted-foreground">Shamen</p>
               <p className="text-2xl font-bold text-foreground">{stats.activeSubdaos}</p>
-              <p className="text-xs text-green-400">+2 this quarter</p>
+              <p className="text-xs text-muted-foreground">on-chain roles</p>
             </div>
             <Building2 className="h-8 w-8 text-purple-400" />
           </div>
@@ -128,72 +150,63 @@ export function ParentDAOOverview() {
         <Card className="stat-card-gradient p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Treasury Value</p>
-              <p className="text-2xl font-bold text-foreground">{stats.treasuryValue}</p>
-              <p className="text-xs text-green-400">+8.5% this month</p>
+              <p className="text-sm text-muted-foreground">Safe Treasury</p>
+              <p className="text-2xl font-bold text-foreground">{stats.treasuryLabel}</p>
+              <p className="text-xs text-muted-foreground font-mono truncate max-w-[180px]">
+                {treasury?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS}
+              </p>
             </div>
-            <TrendingUp className="h-8 w-8 text-green-400" />
+            <Wallet className="h-8 w-8 text-green-400" />
           </div>
         </Card>
 
         <Card className="stat-card-gradient p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Governance Score</p>
-              <p className="text-2xl font-bold text-foreground">{stats.governanceScore}%</p>
-              <p className="text-xs text-green-400">Excellent</p>
+              <p className="text-sm text-muted-foreground">Proposals</p>
+              <p className="text-2xl font-bold text-foreground">{stats.proposalCount}</p>
+              <p className="text-xs text-muted-foreground">
+                {stats.quorumPercent ? `${stats.quorumPercent}% quorum` : "on-chain total"}
+              </p>
             </div>
-            <Shield className="h-8 w-8 text-orange-400" />
+            <FileText className="h-8 w-8 text-orange-400" />
           </div>
         </Card>
       </div>
 
-      {/* Mission & Vision */}
       <Card className="stat-card-gradient p-6">
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-foreground">Mission & Vision</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-medium text-foreground mb-2">Our Mission</h4>
-              <p className="text-sm text-muted-foreground">
-                {stats.mission}
-              </p>
+              <p className="text-sm text-muted-foreground">{stats.mission}</p>
             </div>
             <div>
               <h4 className="font-medium text-foreground mb-2">Our Vision</h4>
-              <p className="text-sm text-muted-foreground">
-                {stats.vision}
-              </p>
+              <p className="text-sm text-muted-foreground">{stats.vision}</p>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Governance Health */}
       <Card className="stat-card-gradient p-6">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">Governance Health</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Voter Participation</span>
-                <span className="text-foreground">{stats.voterParticipation}%</span>
-              </div>
-              <Progress value={stats.voterParticipation} className="h-2" />
+          <h3 className="text-lg font-semibold text-foreground">On-Chain Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+            <div>
+              <p className="text-muted-foreground">Total Shares</p>
+              <p className="text-foreground font-medium">{totalShares.toLocaleString()}</p>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Proposal Success Rate</span>
-                <span className="text-foreground">{stats.proposalSuccessRate}%</span>
-              </div>
-              <Progress value={stats.proposalSuccessRate} className="h-2" />
+            <div>
+              <p className="text-muted-foreground">Voting Period</p>
+              <p className="text-foreground font-medium">
+                {dao?.votingPeriod ? `${Number(dao.votingPeriod) / 3600}h` : "—"}
+              </p>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Community Engagement</span>
-                <span className="text-foreground">{stats.communityEngagement}%</span>
-              </div>
-              <Progress value={stats.communityEngagement} className="h-2" />
+            <div>
+              <p className="text-muted-foreground">Moloch Contract</p>
+              <p className="text-foreground font-mono text-xs truncate">{daoAddress || "—"}</p>
             </div>
           </div>
         </div>
@@ -201,4 +214,3 @@ export function ParentDAOOverview() {
     </div>
   )
 }
-

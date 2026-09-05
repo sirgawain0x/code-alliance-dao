@@ -113,7 +113,7 @@ export function ActiveProposals() {
   const [showCreate, setShowCreate] = useState(false)
   const { open } = useAppKit()
   const { isConnected } = useAppKitAccount()
-  const { primaryProfile } = useOnchainMembershipProfile({
+  const { primaryProfile, isLoading: isProfileLoading } = useOnchainMembershipProfile({
     chainId: "8453",
     daoAddress,
   })
@@ -136,7 +136,9 @@ export function ActiveProposals() {
   const isLoading = daoLoading || proposalsLoading
   const canCreateProposal = Boolean(primaryProfile?.capabilities.canCreateProposal)
   const canVote = Boolean(primaryProfile?.capabilities.canVote)
-  const createProposalHelper = getCreateProposalHelper({ isConnected, canCreateProposal })
+  const createProposalHelper = isProfileLoading
+    ? null
+    : getCreateProposalHelper({ isConnected, canCreateProposal })
 
   function handleCreateProposalClick() {
     if (!isConnected) {
@@ -389,7 +391,7 @@ export function ActiveProposals() {
                         href={adminProposalsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="cursor-pointer"
+                        className="flex items-center gap-2 cursor-pointer"
                       >
                         <ExternalLink className="h-4 w-4" />
                         Open in DAOhaus

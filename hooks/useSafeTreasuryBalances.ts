@@ -8,7 +8,6 @@ import {
   BASE_USDC_ADDRESS,
   CREATIVE_ORG_SAFE_ADDRESS,
   BUY_TOKEN_ADDRESS,
-  CRTV_TOKEN_ADDRESSES,
 } from "@/config/constants"
 import { getDaoContractConfig } from "@/lib/dao-config"
 import { getRpcUrl } from "@/utils/endpoints"

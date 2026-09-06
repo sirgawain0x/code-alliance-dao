@@ -1,4 +1,5 @@
 import { Contract, JsonRpcProvider } from "ethers"
+import { NextResponse } from "next/server"
 
 import { METOKEN_DIAMOND_ABI } from "@/config/abis/metoken-diamond"
 import {

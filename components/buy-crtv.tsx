@@ -227,7 +227,7 @@ export function BuyCRTV() {
     }, [amount, canQuote])
 
     useEffect(() => {
-        if (!canQuoteSell || !address) {
+        if (activeTab !== "sell" || !canQuoteSell || !address) {
             setSellQuote(null)
             return
         }
@@ -262,6 +262,7 @@ export function BuyCRTV() {
 
                 if (!response.ok) {
                     if (!cancelled) {
+                        setSellQuote(null)
                         setMessage({
                             type: "error",
                             text: result?.error || "Unable to fetch sell quote. Try again.",
@@ -275,6 +276,7 @@ export function BuyCRTV() {
                 if (!cancelled) setSellQuote(result)
             } catch (error) {
                 if (!cancelled) {
+                    setSellQuote(null)
                     setMessage({ type: "error", text: getErrorMessage(error) })
                 }
             } finally {
@@ -286,7 +288,7 @@ export function BuyCRTV() {
             cancelled = true
             window.clearTimeout(timer)
         }
-    }, [address, canQuoteSell, sellAmount])
+    }, [activeTab, address, canQuoteSell, sellAmount])
 
     async function handleMint() {
         if (!quote || !address) return
@@ -345,7 +347,16 @@ export function BuyCRTV() {
     }
 
     async function handleSell() {
-        if (!sellQuote || !address) return
+        if (!address || !sellAmountValidation.isValid) return
+
+        let metokenAmount: bigint
+        try {
+            metokenAmount = parseUnits(sellAmount, CRTVAI_DECIMALS)
+        } catch {
+            return
+        }
+
+        if (metokenAmount <= 0n) return
 
         setIsSelling(true)
         setMessage(null)
@@ -356,12 +367,13 @@ export function BuyCRTV() {
             const provider = new BrowserProvider(window.ethereum as unknown as Eip1193Provider)
             const signer = await provider.getSigner()
             const metoken = new Contract(CRTVAI_METOKEN_ADDRESS, ERC20_APPROVAL_ABI, signer)
+            const usdc = new Contract(BASE_USDC_ADDRESS, ERC20_APPROVAL_ABI, signer)
 
             const quoteResponse = await fetch("/api/crtvai-mint/sell-quote", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    metokenAmount: sellQuote.metokenAmount,
+                    metokenAmount: metokenAmount.toString(),
                     sender: address,
                 }),
             })
@@ -370,7 +382,9 @@ export function BuyCRTV() {
                 throw new Error(freshQuote?.error || "Unable to refresh sell quote")
             }
 
-            const metokenAmount = BigInt(freshQuote.metokenAmount)
+            if (BigInt(freshQuote.metokenAmount) !== metokenAmount) {
+                throw new Error("Sell quote changed while preparing the transaction. Try again.")
+            }
             const balance = await metoken.balanceOf(address)
             if (balance < metokenAmount) {
                 throw new Error("Insufficient CRTVAI balance for this sell amount")
@@ -388,8 +402,12 @@ export function BuyCRTV() {
                 text: `Burn submitted: ${receipt?.hash || burnTx.hash}. Estimated ${formatTokenAmount(freshQuote.usdcAmount, USDC_DECIMALS)} USDC received.`,
             })
             setSellQuote(freshQuote)
-            const updatedBalance = await metoken.balanceOf(address)
-            setCrtvaiBalance(formatUnits(updatedBalance, CRTVAI_DECIMALS))
+            const [updatedMetokenBalance, updatedUsdcBalance] = await Promise.all([
+                metoken.balanceOf(address),
+                usdc.balanceOf(address),
+            ])
+            setCrtvaiBalance(formatUnits(updatedMetokenBalance, CRTVAI_DECIMALS))
+            setUsdcBalance(formatUnits(updatedUsdcBalance, USDC_DECIMALS))
         } catch (error) {
             setMessage({ type: "error", text: getErrorMessage(error) })
         } finally {
@@ -416,7 +434,7 @@ export function BuyCRTV() {
             <Card className="w-full max-w-4xl mx-auto">
                 <CardHeader className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
-                        <CardTitle>Buy {TOKEN_SYMBOL}</CardTitle>
+                        <CardTitle>Buy &amp; Sell {TOKEN_SYMBOL}</CardTitle>
                         <Badge variant="secondary" className="gap-1">
                             <Clock3 className="h-3 w-3" />
                             Coming soon

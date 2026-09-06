@@ -39,6 +39,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to fetch CRTVAI sell quote", error)
 
-    return createCrtvaiMintErrorResponse(error)
+    return createCrtvaiMintErrorResponse(error, "sell")
   }
 }

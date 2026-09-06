@@ -97,10 +97,18 @@ export async function getCrtvaiSellQuote(
   }
 }
 
-export function createCrtvaiMintErrorResponse(error: unknown) {
-  const message = error instanceof Error ? error.message : "Unable to quote CRTVAI mint"
+export function createCrtvaiMintErrorResponse(
+  error: unknown,
+  mode: "mint" | "sell" = "mint",
+) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : mode === "sell"
+        ? "Unable to quote CRTVAI sell"
+        : "Unable to quote CRTVAI mint"
   const isInsufficientSell =
-    /!valid/i.test(message) || /reason="!valid"/i.test(message)
+    mode === "sell" && (/!valid/i.test(message) || /reason="!valid"/i.test(message))
   const isInfraFailure =
     !isInsufficientSell &&
     /401|403|429|500|502|503|504|network|timeout|fetch failed|ECONNREFUSED|Unauthorized/i.test(
@@ -110,7 +118,7 @@ export function createCrtvaiMintErrorResponse(error: unknown) {
   const clientMessage = isInsufficientSell
     ? "Sell amount exceeds your CRTVAI balance or MeToken hub limits. Try a smaller amount."
     : isInfraFailure
-      ? "Mint quote service is temporarily unavailable. Try again shortly."
+      ? "Quote service is temporarily unavailable. Try again shortly."
       : message
 
   return NextResponse.json({ error: clientMessage, code: "QUOTE_FAILED" }, { status })

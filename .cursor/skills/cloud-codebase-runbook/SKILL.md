@@ -16,7 +16,7 @@ Use this skill first when you need a practical path from a fresh Cloud agent che
   - `NEXT_PUBLIC_TARGET_DAO_ADDRESS`: Base DAO address used by DAO overview, proposals, voting, treasury, and sidebar components.
   - `NEXT_PUBLIC_GRAPH_KEY`: optional DAO hooks Graph API key. Leave blank for UI-only work, but expect empty/error states on live DAO queries.
   - `NEXT_PUBLIC_SEQUENCE_KEY`: optional Sequence API key for token balances.
-  - `NEXT_PUBLIC_REOWN_PROJECT_ID` or `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`: optional AppKit project id. A fallback id exists for local smoke tests.
+  - `NEXT_PUBLIC_REOWN_PROJECT_ID` or `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`: required for production builds and real wallet connect. Optional for local dev (AppKit logs a warning when missing).
 - Start the app with `pnpm dev` and open `http://localhost:3000`.
 - For production parity, run `pnpm build` and then `pnpm start`.
 - There is no committed automated test runner yet. Use `pnpm lint`, `pnpm build`, and targeted manual checks as the baseline.
@@ -63,7 +63,7 @@ Areas: `contexts/AppKitProvider.tsx`, `components/appkit-wrapper.tsx`, `componen
 
 Testing workflow:
 
-1. Set `NEXT_PUBLIC_REOWN_PROJECT_ID` if testing real wallet login. The built-in fallback is acceptable for layout smoke tests only.
+1. Set `NEXT_PUBLIC_REOWN_PROJECT_ID` for real wallet login. Without it, AppKit connect is unavailable (dev shows a console warning; production builds fail).
 2. Set `ZERO_EX_API_KEY` when testing the custom `/api/crtv-swap/quote` flow on `/buy`; `ZEROEX_API_KEY` and `ZEROX_API_KEY` are also accepted.
 3. Start `pnpm dev` and open `/buy`.
 4. Click the AppKit connect button and verify login options render.
@@ -74,7 +74,7 @@ Testing workflow:
 ## Feature flags and mocks
 
 - There is no central feature-flag service in this repo today.
-- AppKit features are configured directly in `contexts/AppKitProvider.tsx` under `features` (`analytics`, `email`, `socials`, `onramp`, `swaps`).
+- AppKit features are configured directly in `contexts/AppKitProvider.tsx` under `features` (`analytics`, `email`, `socials`, `onramp`, `swaps`). On-ramp and swaps are disabled for this DAO app; `/buy` uses MeToken mint/burn instead.
 - For Cloud testing, prefer environment-driven setup and browser mocks over committed code changes.
 - If you must mock network, wallet, or database behavior to reproduce a bug, keep the mock local and remove it before committing unless the task explicitly asks for test infrastructure.
 

@@ -10,7 +10,6 @@ import {
     CheckCircle2,
     Clock3,
     Copy,
-    CreditCard,
     Loader2,
     Wallet,
 } from "lucide-react"
@@ -44,7 +43,7 @@ const ERC20_APPROVAL_ABI = [
 ]
 
 const COMING_SOON_COPY =
-    "CRTVAI minting is temporarily unavailable. You can still add the token contract and get USDC ready on Base."
+    "CRTVAI minting is temporarily unavailable. You can still add the token contract and fund USDC on Base."
 
 export function BuyCRTV() {
     const { open } = useAppKit()
@@ -397,10 +396,6 @@ export function BuyCRTV() {
         }
     }
 
-    function handleOnRamp() {
-        open({ view: "OnRampProviders" })
-    }
-
     async function handleCopyAddress() {
         try {
             await navigator.clipboard.writeText(tokenAddress)
@@ -439,7 +434,7 @@ export function BuyCRTV() {
                             <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
                                 <li>Connect your wallet on Base</li>
                                 <li>Add the {TOKEN_SYMBOL} MeToken contract so balances show up</li>
-                                <li>Buy USDC with a card so you can mint when purchases are enabled</li>
+                                <li>Fund your wallet with USDC on Base so you can mint when purchases are enabled</li>
                             </ol>
                         </div>
 
@@ -459,10 +454,6 @@ export function BuyCRTV() {
                                     Purchases opening soon
                                 </Button>
                             )}
-                            <Button className="flex-1" size="lg" variant="outline" onClick={handleOnRamp}>
-                                Buy USDC with card
-                                <CreditCard className="ml-2 h-4 w-4" />
-                            </Button>
                         </div>
                     </div>
 
@@ -587,11 +578,6 @@ export function BuyCRTV() {
                                     copied={copied}
                                     onCopy={handleCopyAddress}
                                 />
-
-                                <Button className="w-full" size="lg" variant="outline" onClick={handleOnRamp}>
-                                    Buy USDC with card
-                                    <CreditCard className="ml-2 h-4 w-4" />
-                                </Button>
                             </div>
                         </div>
                     </TabsContent>

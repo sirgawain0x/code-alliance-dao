@@ -1,3 +1,14 @@
+const reownProjectId =
+  process.env.NEXT_PUBLIC_REOWN_PROJECT_ID ||
+  process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
+
+if (process.env.NODE_ENV === 'production' && !reownProjectId) {
+  throw new Error(
+    'Missing NEXT_PUBLIC_REOWN_PROJECT_ID (or NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID). ' +
+      'Set a Reown project ID for wallet connect before building for production.'
+  )
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   productionBrowserSourceMaps: true, // Enable source maps for better debugging

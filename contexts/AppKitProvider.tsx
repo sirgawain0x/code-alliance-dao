@@ -21,7 +21,17 @@ const metadata = {
 }
 
 // Create Ethers adapter
-const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'b56e18d47c72e2906fd4321949108048'
+const projectId =
+    process.env.NEXT_PUBLIC_REOWN_PROJECT_ID ||
+    process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ||
+    ''
+
+if (!projectId) {
+    console.warn(
+        '[AppKit] Missing NEXT_PUBLIC_REOWN_PROJECT_ID (or NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID). ' +
+            'Set a Reown project ID for wallet connect; required in production.'
+    )
+}
 
 // Initialize AppKit
 createAppKit({
@@ -34,8 +44,8 @@ createAppKit({
         email: true,
         socials: ['google', 'x', 'github', 'discord', 'apple'],
         emailShowWallets: true,
-        onramp: true,
-        swaps: true
+        onramp: false,
+        swaps: false
     },
     tokens: {
         'eip155:8453': {

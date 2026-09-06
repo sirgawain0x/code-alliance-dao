@@ -60,8 +60,20 @@ export function BuyCRTV() {
 
     const tokenAddress = BUY_TOKEN_ADDRESS
     const isBase = Number(chainId) === 8453
-    const canQuote = Boolean(isConnected && address && isBase && amount && Number(amount) > 0)
+    const amountValidation = validateUsdcAmount(amount)
+    const canQuote = Boolean(
+        isConnected && address && isBase && amountValidation.isValid && Number(amount) > 0,
+    )
     const showComingSoon = !CRTV_PURCHASES_ENABLED || mintUnavailable
+    const hasInsufficientUsdc = (() => {
+        if (!quote || usdcBalance === null) return false
+
+        try {
+            return parseUnits(usdcBalance, USDC_DECIMALS) < BigInt(quote.usdcAmount)
+        } catch {
+            return false
+        }
+    })()
 
     useEffect(() => {
         if (!isConnected || !address || !isBase) {
@@ -124,8 +136,15 @@ export function BuyCRTV() {
 
                 if (!response.ok) {
                     if (!cancelled) {
-                        setMintUnavailable(true)
-                        setMessage({ type: "info", text: COMING_SOON_COPY })
+                        if (result?.code === "MINT_DISABLED") {
+                            setMintUnavailable(true)
+                            setMessage({ type: "info", text: COMING_SOON_COPY })
+                        } else {
+                            setMessage({
+                                type: "error",
+                                text: result?.error || "Unable to fetch mint quote. Try again.",
+                            })
+                        }
                     }
                     return
                 }
@@ -162,8 +181,24 @@ export function BuyCRTV() {
 
             const provider = new BrowserProvider(window.ethereum as unknown as Eip1193Provider)
             const signer = await provider.getSigner()
-            const usdcAmount = BigInt(quote.usdcAmount)
             const usdc = new Contract(BASE_USDC_ADDRESS, ERC20_APPROVAL_ABI, signer)
+
+            const quoteResponse = await fetch("/api/crtvai-mint/quote", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ usdcAmount: quote.usdcAmount }),
+            })
+            const freshQuote = await quoteResponse.json()
+            if (!quoteResponse.ok || !isCrtvaiMintQuote(freshQuote)) {
+                throw new Error(freshQuote?.error || "Unable to refresh mint quote")
+            }
+
+            const usdcAmount = BigInt(freshQuote.usdcAmount)
+            const balance = await usdc.balanceOf(address)
+            if (balance < usdcAmount) {
+                throw new Error("Insufficient USDC balance for this mint amount")
+            }
+
             const allowance = await usdc.allowance(address, CRTVAI_HUB_2_VAULT_ADDRESS)
 
             if (allowance < usdcAmount) {
@@ -181,9 +216,9 @@ export function BuyCRTV() {
             const receipt = await mintTx.wait()
             setMessage({
                 type: "success",
-                text: `Mint submitted: ${receipt?.hash || mintTx.hash}`,
+                text: `Mint submitted: ${receipt?.hash || mintTx.hash}. Estimated ${formatTokenAmount(freshQuote.metokenAmount, CRTVAI_DECIMALS)} ${TOKEN_SYMBOL} received.`,
             })
-            setQuote(null)
+            setQuote(freshQuote)
         } catch (error) {
             setMessage({ type: "error", text: getErrorMessage(error) })
         } finally {
@@ -299,6 +334,9 @@ export function BuyCRTV() {
                             />
                             <div className="rounded-md border px-3 py-2 text-sm font-medium">USDC</div>
                         </div>
+                        {!amountValidation.isValid && amount.length > 0 && (
+                            <p className="text-sm text-destructive">{amountValidation.error}</p>
+                        )}
                     </div>
 
                     <div className="rounded-lg border bg-background p-4">
@@ -342,10 +380,12 @@ export function BuyCRTV() {
                             className="w-full"
                             size="lg"
                             onClick={handleMint}
-                            disabled={!quote || isMinting || isQuoting}
+                            disabled={!quote || isMinting || isQuoting || hasInsufficientUsdc}
                         >
                             {isMinting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Mint {TOKEN_SYMBOL} with USDC
+                            {hasInsufficientUsdc
+                                ? "Insufficient USDC"
+                                : `Mint ${TOKEN_SYMBOL} with USDC`}
                         </Button>
                     )}
                 </div>
@@ -416,9 +456,28 @@ function TokenReadyCard({
 function formatTokenAmount(amount: string, decimals: number) {
     if (!isDecimalString(amount)) return "--"
 
-    return Number(formatUnits(amount, decimals)).toLocaleString(undefined, {
-        maximumFractionDigits: 6,
-    })
+    const formatted = formatUnits(amount, decimals)
+    const [whole, fraction = ""] = formatted.split(".")
+    const trimmedFraction = fraction.replace(/0+$/, "").slice(0, 6)
+
+    if (!trimmedFraction) return Number(whole).toLocaleString()
+
+    return `${Number(whole).toLocaleString()}.${trimmedFraction}`
+}
+
+function validateUsdcAmount(value: string) {
+    if (!value.trim()) return { isValid: false, error: "Enter a USDC amount" }
+
+    if (!/^\d+(\.\d+)?$/.test(value)) {
+        return { isValid: false, error: "Enter a valid USDC amount" }
+    }
+
+    const [, fraction = ""] = value.split(".")
+    if (fraction.length > USDC_DECIMALS) {
+        return { isValid: false, error: `USDC supports up to ${USDC_DECIMALS} decimal places` }
+    }
+
+    return { isValid: true, error: null }
 }
 
 function isCrtvaiMintQuote(value: unknown): value is CrtvaiMintQuote {

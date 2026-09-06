@@ -3,7 +3,14 @@ import { NextResponse } from "next/server"
 import { createCrtvaiMintErrorResponse, getCrtvaiMintQuote } from "@/services/crtvai-mint"
 
 export async function POST(request: Request) {
-  const body = await request.json()
+  let body: { usdcAmount?: string }
+
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+
   const usdcAmount = body.usdcAmount
 
   if (!usdcAmount || !/^\d+$/.test(usdcAmount)) {

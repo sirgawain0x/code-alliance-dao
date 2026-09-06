@@ -25,7 +25,7 @@ export function getCrtvaiMintProvider() {
   const rpcKey =
     process.env.ALCHEMY_API_KEY ||
     process.env.NEXT_PUBLIC_ALCHEMY_API_KEY ||
-    process.env.NEXT_PUBLIC_GRAPH_KEY
+    undefined
 
   const rpcUrl = getRpcUrl({ chainid: String(BASE_CHAIN_ID), rpcKey })
   return new JsonRpcProvider(rpcUrl, BASE_CHAIN_ID)
@@ -62,8 +62,16 @@ export async function getCrtvaiCurrentPriceUsdc(): Promise<string> {
 
 export function createCrtvaiMintErrorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "Unable to quote CRTVAI mint"
+  const isInfraFailure =
+    /401|403|429|500|502|503|504|network|timeout|fetch failed|ECONNREFUSED|Unauthorized/i.test(
+      message,
+    )
+  const status = isInfraFailure ? 503 : 400
+  const clientMessage = isInfraFailure
+    ? "Mint quote service is temporarily unavailable. Try again shortly."
+    : message
 
-  return NextResponse.json({ error: message, code: "QUOTE_FAILED" }, { status: 400 })
+  return NextResponse.json({ error: clientMessage, code: "QUOTE_FAILED" }, { status })
 }
 
 export const CRTVAI_MINT_APPROVAL_TARGET = CRTVAI_HUB_2_VAULT_ADDRESS

@@ -23,6 +23,7 @@ export interface TreasuryTokenBalance {
 
 const DEFAULT_ERC20S = [
   { address: BASE_USDC_ADDRESS, symbol: "USDC", decimals: 6 },
+  { address: CRTV_TOKEN_ADDRESSES[8453], symbol: "CRTV", decimals: 18 },
   { address: BUY_TOKEN_ADDRESS, symbol: "CRTVAI", decimals: 18 },
 ]
 

@@ -4,7 +4,7 @@ import { createAppKit } from '@reown/appkit/react'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 import { mainnet, optimism, base, arbitrum, gnosis } from '@reown/appkit/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { CREATIVE_ORG_LOGO_SRC, BUY_TOKEN_ADDRESS } from '@/config/constants'
+import { CREATIVE_ORG_LOGO_SRC, BUY_TOKEN_ADDRESS, CRTV_TOKEN_ADDRESSES } from '@/config/constants'
 import type { ReactNode } from 'react'
 
 // Set up queryClient
@@ -40,6 +40,10 @@ createAppKit({
     tokens: {
         'eip155:8453': {
             address: BUY_TOKEN_ADDRESS,
+            image: metadata.icons[0],
+        },
+        'eip155:10': {
+            address: CRTV_TOKEN_ADDRESSES[10],
             image: metadata.icons[0],
         },
     }

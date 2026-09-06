@@ -1,7 +1,15 @@
+import {
+  CRTVAI_METOKEN_ADDRESS,
+} from "@/config/metoken"
+
+/** @deprecated CCIP CRTV — bridge only; /buy uses CRTVAI MeToken on Base. */
 export const CRTV_TOKEN_ADDRESSES = {
-  8453: "0x4B62D9b3DE9FAB98659693c9ee488D2E4eE56c44", // Base
-  10: "0x06b9f097407084b9c7d82ea82e8fc693d3394eb6", // Optimism
+  8453: "0x4B62D9b3DE9FAB98659693c9ee488D2E4eE56c44", // Base CCIP CRTV
+  10: "0x06b9f097407084b9c7d82ea82e8fc693d3394eb6", // Optimism CCIP CRTV
 } as const;
+
+/** Buyable DAO token on Base (CRTVAI MeToken). */
+export const BUY_TOKEN_ADDRESS = CRTVAI_METOKEN_ADDRESS
 
 export const BASE_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 export const BASE_WETH_ADDRESS = "0x4200000000000000000000000000000000000006";
@@ -35,14 +43,15 @@ export const CCIP_ROUTER_ADDRESSES = {
 } as const;
 
 export const TOKEN_DECIMALS = 18;
-export const TOKEN_SYMBOL = "CRTV";
+/** Symbol for the buyable Base token (CRTVAI MeToken). */
+export const TOKEN_SYMBOL = "CRTVAI";
 
 /**
- * Flip on (or set NEXT_PUBLIC_CRTV_PURCHASES_ENABLED=true) after a Base
- * CRTV/USDC DEX pool is funded and 0x can quote swaps.
+ * MeToken mint on Base is live by default. Set
+ * NEXT_PUBLIC_CRTV_PURCHASES_ENABLED=false to show the coming-soon gate.
  */
 export const CRTV_PURCHASES_ENABLED =
-  process.env.NEXT_PUBLIC_CRTV_PURCHASES_ENABLED === "true";
+  process.env.NEXT_PUBLIC_CRTV_PURCHASES_ENABLED !== "false";
 
 /** Served from `public/Asset1.png` */
 export const CREATIVE_ORG_LOGO_SRC = "/Asset1.png" as const;

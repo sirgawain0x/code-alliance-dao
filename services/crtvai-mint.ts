@@ -1,0 +1,80 @@
+import { Contract, JsonRpcProvider } from "ethers"
+
+import { METOKEN_DIAMOND_ABI } from "@/config/abis/metoken-diamond"
+import {
+  BASE_CHAIN_ID,
+  BASE_USDC_ADDRESS,
+} from "@/config/constants"
+import {
+  CRTVAI_DECIMALS,
+  CRTVAI_DIAMOND_ADDRESS,
+  CRTVAI_HUB_2_VAULT_ADDRESS,
+  CRTVAI_METOKEN_ADDRESS,
+  USDC_DECIMALS,
+} from "@/config/metoken"
+import { getRpcUrl } from "@/utils/endpoints"
+
+export interface CrtvaiMintQuote {
+  usdcAmount: string
+  metokenAmount: string
+  priceUsdcPerToken?: string
+}
+
+export function getCrtvaiMintProvider() {
+  const rpcKey =
+    process.env.ALCHEMY_API_KEY ||
+    process.env.NEXT_PUBLIC_ALCHEMY_API_KEY ||
+    process.env.NEXT_PUBLIC_GRAPH_KEY
+
+  const rpcUrl = getRpcUrl({ chainid: String(BASE_CHAIN_ID), rpcKey })
+  return new JsonRpcProvider(rpcUrl, BASE_CHAIN_ID)
+}
+
+export async function getCrtvaiMintQuote(usdcAmount: bigint): Promise<CrtvaiMintQuote> {
+  if (usdcAmount <= 0n) throw new Error("USDC amount must be greater than zero")
+
+  const provider = getCrtvaiMintProvider()
+  const diamond = new Contract(CRTVAI_DIAMOND_ADDRESS, METOKEN_DIAMOND_ABI, provider)
+  const metokenAmount = await diamond.calculateMeTokensMinted(
+    CRTVAI_METOKEN_ADDRESS,
+    usdcAmount,
+  )
+
+  let priceUsdcPerToken: string | undefined
+  if (metokenAmount > 0n) {
+    const price = (usdcAmount * 10n ** BigInt(CRTVAI_DECIMALS)) / metokenAmount
+    priceUsdcPerToken = formatUnitsSafe(price, USDC_DECIMALS)
+  }
+
+  return {
+    usdcAmount: usdcAmount.toString(),
+    metokenAmount: metokenAmount.toString(),
+    priceUsdcPerToken,
+  }
+}
+
+export async function getCrtvaiCurrentPriceUsdc(): Promise<string> {
+  const oneUsdc = 10n ** BigInt(USDC_DECIMALS)
+  const quote = await getCrtvaiMintQuote(oneUsdc)
+  return quote.priceUsdcPerToken || "0"
+}
+
+export function createCrtvaiMintErrorResponse(error: unknown) {
+  const message = error instanceof Error ? error.message : "Unable to quote CRTVAI mint"
+
+  return NextResponse.json({ error: message, code: "QUOTE_FAILED" }, { status: 400 })
+}
+
+export const CRTVAI_MINT_APPROVAL_TARGET = CRTVAI_HUB_2_VAULT_ADDRESS
+export const CRTVAI_MINT_USDC_ADDRESS = BASE_USDC_ADDRESS
+export const CRTVAI_MINT_DIAMOND_ADDRESS = CRTVAI_DIAMOND_ADDRESS
+export const CRTVAI_MINT_METOKEN_ADDRESS = CRTVAI_METOKEN_ADDRESS
+
+function formatUnitsSafe(value: bigint, decimals: number) {
+  const divisor = 10n ** BigInt(decimals)
+  const whole = value / divisor
+  const fraction = value % divisor
+  const fractionStr = fraction.toString().padStart(decimals, "0").replace(/0+$/, "")
+  if (!fractionStr) return whole.toString()
+  return `${whole}.${fractionStr}`
+}

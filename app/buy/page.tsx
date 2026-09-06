@@ -11,9 +11,9 @@ export default function BuyPage() {
                     <DashboardHeader />
                     <div className="p-6">
                         <div className="mb-8">
-                            <h1 className="text-3xl font-bold tracking-tight">Buy CRTV</h1>
+                            <h1 className="text-3xl font-bold tracking-tight">Buy CRTVAI</h1>
                             <p className="text-muted-foreground mt-2">
-                                Purchases open once Base DEX liquidity is funded. Add the token and get USDC ready in the meantime.
+                                Mint CRTVAI with USDC on Base via the MeToken hub. Connect a wallet on Base to get a live quote and mint.
                             </p>
                         </div>
                         <div className="mt-8">

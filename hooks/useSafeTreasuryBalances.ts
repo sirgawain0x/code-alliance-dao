@@ -22,6 +22,24 @@ export interface TreasuryTokenBalance {
   formatted: string
 }
 
+export interface SafeTreasuryBalances {
+  safeAddress: string
+  ethBalance: string
+  ethFormatted: string
+  tokens: TreasuryTokenBalance[]
+  ethFetchFailed: boolean
+  skippedTokens: string[]
+}
+
+export function hasTreasuryRpcDegradation(
+  treasury: SafeTreasuryBalances | undefined,
+  isError = false
+): boolean {
+  if (isError) return true
+  if (!treasury) return false
+  return treasury.ethFetchFailed || treasury.skippedTokens.length > 0
+}
+
 const DEFAULT_ERC20S = [
   { address: BASE_USDC_ADDRESS, symbol: "USDC", decimals: 6 },
   { address: CRTV_TOKEN_ADDRESSES[8453], symbol: "CRTV", decimals: 18 },
@@ -46,20 +64,19 @@ export function useSafeTreasuryBalances({
   return useQuery({
     queryKey: ["safe-treasury-balances", chainId, treasury],
     enabled: Boolean(treasury && chainId),
-    queryFn: async (): Promise<{
-      safeAddress: string
-      ethBalance: string
-      ethFormatted: string
-      tokens: TreasuryTokenBalance[]
-    }> => {
+    queryFn: async (): Promise<SafeTreasuryBalances> => {
       const provider = new JsonRpcProvider(getRpcUrl({ chainid: chainId }))
 
       let ethBalance = BigInt(0)
+      let ethFetchFailed = false
       try {
         ethBalance = await provider.getBalance(treasury)
       } catch (error) {
+        ethFetchFailed = true
         console.error("Failed to fetch Safe ETH balance:", error)
       }
+
+      const skippedTokens: string[] = []
 
       const tokens: TreasuryTokenBalance[] = [
         {
@@ -90,6 +107,7 @@ export function useSafeTreasuryBalances({
             }),
           })
         } catch (error) {
+          skippedTokens.push(token.symbol)
           console.warn(`Skipping treasury token ${token.symbol}:`, error)
         }
       }
@@ -99,6 +117,8 @@ export function useSafeTreasuryBalances({
         ethBalance: ethBalance.toString(),
         ethFormatted: formatEther(ethBalance),
         tokens,
+        ethFetchFailed,
+        skippedTokens,
       }
     },
     retry: 1,

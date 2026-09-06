@@ -7,7 +7,10 @@ import { formatEther } from "ethers"
 
 import { Button } from "@/components/ui/button"
 import { useDao } from "@/hooks/useDao"
-import { useSafeTreasuryBalances } from "@/hooks/useSafeTreasuryBalances"
+import {
+  hasTreasuryRpcDegradation,
+  useSafeTreasuryBalances,
+} from "@/hooks/useSafeTreasuryBalances"
 import { CREATIVE_ORG_SAFE_ADDRESS } from "@/config/constants"
 import { getBlockExplorerUrl } from "@/utils/endpoints"
 
@@ -28,6 +31,7 @@ export function TreasuryOverviewDashboard() {
   })
 
   const safeAddress = treasury?.safeAddress || dao?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS
+  const rpcDegraded = hasTreasuryRpcDegradation(treasury, treasuryError)
 
   if (daoLoading || treasuryLoading) {
     return <div className="animate-pulse h-96 bg-muted rounded-lg" />
@@ -43,7 +47,7 @@ export function TreasuryOverviewDashboard() {
       value: Number(treasury?.ethFormatted || "0").toLocaleString(undefined, {
         maximumFractionDigits: 4,
       }),
-      subValue: treasuryError ? "RPC unavailable" : "ETH",
+      subValue: rpcDegraded ? "RPC unavailable" : "ETH",
     },
     {
       label: "Total Shares",
@@ -94,9 +98,13 @@ export function TreasuryOverviewDashboard() {
         </div>
 
         <div className="space-y-3">
-          {treasuryError ? (
+          {rpcDegraded ? (
             <p className="text-sm text-amber-400">
-              Unable to load live balances from RPC. Safe address is shown above — verify on BaseScan.
+              Unable to load live balances from RPC
+              {treasury?.skippedTokens.length
+                ? ` (${treasury.skippedTokens.join(", ")} skipped)`
+                : ""}
+              . Safe address is shown above — verify on BaseScan.
             </p>
           ) : (treasury?.tokens || []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No balances found for this Safe.</p>

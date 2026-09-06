@@ -46,12 +46,8 @@ export const TOKEN_DECIMALS = 18;
 /** Symbol for the buyable Base token (CRTVAI MeToken). */
 export const TOKEN_SYMBOL = "CRTVAI";
 
-/**
- * MeToken mint on Base is live by default. Set
- * NEXT_PUBLIC_CRTV_PURCHASES_ENABLED=false to show the coming-soon gate.
- */
-export const CRTV_PURCHASES_ENABLED =
-  process.env.NEXT_PUBLIC_CRTV_PURCHASES_ENABLED !== "false";
+/** CRTVAI MeToken mint on /buy is live (G2 unlock). Always enabled in code. */
+export const CRTV_PURCHASES_ENABLED = true;
 
 /** Served from `public/Asset1.png` */
 export const CREATIVE_ORG_LOGO_SRC = "/Asset1.png" as const;

@@ -8,6 +8,7 @@ import {
   BASE_USDC_ADDRESS,
   CREATIVE_ORG_SAFE_ADDRESS,
   BUY_TOKEN_ADDRESS,
+  CRTV_TOKEN_ADDRESSES,
 } from "@/config/constants"
 import { getDaoContractConfig } from "@/lib/dao-config"
 import { getRpcUrl } from "@/utils/endpoints"
@@ -52,7 +53,14 @@ export function useSafeTreasuryBalances({
       tokens: TreasuryTokenBalance[]
     }> => {
       const provider = new JsonRpcProvider(getRpcUrl({ chainid: chainId }))
-      const ethBalance = await provider.getBalance(treasury)
+
+      let ethBalance = BigInt(0)
+      try {
+        ethBalance = await provider.getBalance(treasury)
+      } catch (error) {
+        console.error("Failed to fetch Safe ETH balance:", error)
+      }
+
       const tokens: TreasuryTokenBalance[] = [
         {
           address: null,
@@ -81,8 +89,8 @@ export function useSafeTreasuryBalances({
               maximumFractionDigits: 6,
             }),
           })
-        } catch {
-          // Skip tokens that fail to read
+        } catch (error) {
+          console.warn(`Skipping treasury token ${token.symbol}:`, error)
         }
       }
 
@@ -93,5 +101,6 @@ export function useSafeTreasuryBalances({
         tokens,
       }
     },
+    retry: 1,
   })
 }

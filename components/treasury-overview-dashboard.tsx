@@ -17,17 +17,21 @@ export function TreasuryOverviewDashboard() {
     chainid: "8453",
     daoid: daoAddress,
   })
-  const { data: treasury, isLoading: treasuryLoading } = useSafeTreasuryBalances({
+  const {
+    data: treasury,
+    isLoading: treasuryLoading,
+    isError: treasuryError,
+  } = useSafeTreasuryBalances({
     chainId: "8453",
     daoAddress,
     safeAddress: dao?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS,
   })
 
-  if (daoLoading || treasuryLoading || !dao) {
+  const safeAddress = treasury?.safeAddress || dao?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS
+
+  if (daoLoading || treasuryLoading) {
     return <div className="animate-pulse h-96 bg-muted rounded-lg" />
   }
-
-  const safeAddress = treasury?.safeAddress || dao.safeAddress || CREATIVE_ORG_SAFE_ADDRESS
   const explorerUrl = getBlockExplorerUrl({
     chainid: "8453",
     address: safeAddress,
@@ -39,22 +43,26 @@ export function TreasuryOverviewDashboard() {
       value: Number(treasury?.ethFormatted || "0").toLocaleString(undefined, {
         maximumFractionDigits: 4,
       }),
-      subValue: "ETH",
+      subValue: treasuryError ? "RPC unavailable" : "ETH",
     },
     {
       label: "Total Shares",
-      value: Math.round(Number(formatEther(dao.totalShares || "0"))).toLocaleString(),
-      subValue: dao.shareTokenSymbol || "vCRTV",
+      value: dao
+        ? Math.round(Number(formatEther(dao.totalShares || "0"))).toLocaleString()
+        : "—",
+      subValue: dao?.shareTokenSymbol || "vCRTV",
     },
     {
       label: "Total Loot",
-      value: Math.round(Number(formatEther(dao.totalLoot || "0"))).toLocaleString(),
-      subValue: dao.lootTokenSymbol || "nvCRTV",
+      value: dao
+        ? Math.round(Number(formatEther(dao.totalLoot || "0"))).toLocaleString()
+        : "—",
+      subValue: dao?.lootTokenSymbol || "nvCRTV",
     },
     {
       label: "Active Members",
-      value: String(dao.activeMemberCount || "0"),
-      subValue: "on-chain",
+      value: dao ? String(dao.activeMemberCount || "0") : "—",
+      subValue: dao ? "on-chain" : "subgraph unavailable",
     },
   ]
 
@@ -86,7 +94,11 @@ export function TreasuryOverviewDashboard() {
         </div>
 
         <div className="space-y-3">
-          {(treasury?.tokens || []).length === 0 ? (
+          {treasuryError ? (
+            <p className="text-sm text-amber-400">
+              Unable to load live balances from RPC. Safe address is shown above — verify on BaseScan.
+            </p>
+          ) : (treasury?.tokens || []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No balances found for this Safe.</p>
           ) : (
             treasury?.tokens.map((token) => (

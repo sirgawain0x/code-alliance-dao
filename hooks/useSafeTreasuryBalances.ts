@@ -7,7 +7,7 @@ import { ERC20_ABI } from "@/config/abis/baal"
 import {
   BASE_USDC_ADDRESS,
   CREATIVE_ORG_SAFE_ADDRESS,
-  CRTV_TOKEN_ADDRESSES,
+  BUY_TOKEN_ADDRESS,
 } from "@/config/constants"
 import { getDaoContractConfig } from "@/lib/dao-config"
 import { getRpcUrl } from "@/utils/endpoints"
@@ -24,6 +24,7 @@ export interface TreasuryTokenBalance {
 const DEFAULT_ERC20S = [
   { address: BASE_USDC_ADDRESS, symbol: "USDC", decimals: 6 },
   { address: CRTV_TOKEN_ADDRESSES[8453], symbol: "CRTV", decimals: 18 },
+  { address: BUY_TOKEN_ADDRESS, symbol: "CRTVAI", decimals: 18 },
 ]
 
 export function useSafeTreasuryBalances({

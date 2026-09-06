@@ -13,6 +13,7 @@ export const BAAL_ABI = [
   "function sharesToken() view returns (address)",
   "function lootToken() view returns (address)",
   "function avatar() view returns (address)",
+  "function getGuildTokens() view returns (address[])",
   "function proposalOffering() view returns (uint256)",
   "function state(uint32 id) view returns (uint8)",
   "function getProposalStatus(uint32 id) view returns (bool[4])",

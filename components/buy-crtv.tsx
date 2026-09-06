@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { METOKEN_DIAMOND_ABI } from "@/config/abis/metoken-diamond"
 import {
     BASE_USDC_ADDRESS,
@@ -49,11 +50,17 @@ export function BuyCRTV() {
     const { open } = useAppKit()
     const { address, isConnected } = useAppKitAccount()
     const { chainId, switchNetwork } = useAppKitNetwork()
+    const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy")
     const [amount, setAmount] = useState("25")
+    const [sellAmount, setSellAmount] = useState("100")
     const [quote, setQuote] = useState<CrtvaiMintQuote | null>(null)
+    const [sellQuote, setSellQuote] = useState<CrtvaiSellQuote | null>(null)
     const [usdcBalance, setUsdcBalance] = useState<string | null>(null)
+    const [crtvaiBalance, setCrtvaiBalance] = useState<string | null>(null)
     const [isQuoting, setIsQuoting] = useState(false)
+    const [isQuotingSell, setIsQuotingSell] = useState(false)
     const [isMinting, setIsMinting] = useState(false)
+    const [isSelling, setIsSelling] = useState(false)
     const [message, setMessage] = useState<SwapMessage | null>(null)
     const [mintUnavailable, setMintUnavailable] = useState(false)
     const [copied, setCopied] = useState(false)
@@ -61,8 +68,16 @@ export function BuyCRTV() {
     const tokenAddress = BUY_TOKEN_ADDRESS
     const isBase = Number(chainId) === 8453
     const amountValidation = validateUsdcAmount(amount)
+    const sellAmountValidation = validateMetokenAmount(sellAmount)
     const canQuote = Boolean(
         isConnected && address && isBase && amountValidation.isValid && Number(amount) > 0,
+    )
+    const canQuoteSell = Boolean(
+        isConnected &&
+            address &&
+            isBase &&
+            sellAmountValidation.isValid &&
+            Number(sellAmount) > 0,
     )
     const showComingSoon = !CRTV_PURCHASES_ENABLED || mintUnavailable
     const hasInsufficientUsdc = (() => {
@@ -70,6 +85,15 @@ export function BuyCRTV() {
 
         try {
             return parseUnits(usdcBalance, USDC_DECIMALS) < BigInt(quote.usdcAmount)
+        } catch {
+            return false
+        }
+    })()
+    const hasInsufficientCrtvai = (() => {
+        if (!sellQuote || crtvaiBalance === null) return false
+
+        try {
+            return parseUnits(crtvaiBalance, CRTVAI_DECIMALS) < BigInt(sellQuote.metokenAmount)
         } catch {
             return false
         }
@@ -102,6 +126,38 @@ export function BuyCRTV() {
             cancelled = true
         }
     }, [address, isBase, isConnected])
+
+    useEffect(() => {
+        if (!isConnected || !address || !isBase) {
+            setCrtvaiBalance(null)
+            return
+        }
+
+        let cancelled = false
+
+        async function loadCrtvaiBalance() {
+            try {
+                if (!window.ethereum) return
+
+                const provider = new BrowserProvider(window.ethereum as unknown as Eip1193Provider)
+                const metoken = new Contract(CRTVAI_METOKEN_ADDRESS, ERC20_APPROVAL_ABI, provider)
+                const balance = await metoken.balanceOf(address)
+                if (!cancelled) setCrtvaiBalance(formatUnits(balance, CRTVAI_DECIMALS))
+            } catch {
+                if (!cancelled) setCrtvaiBalance(null)
+            }
+        }
+
+        void loadCrtvaiBalance()
+
+        return () => {
+            cancelled = true
+        }
+    }, [address, isBase, isConnected])
+
+    useEffect(() => {
+        setMessage(null)
+    }, [activeTab])
 
     useEffect(() => {
         if (!canQuote) {
@@ -170,6 +226,68 @@ export function BuyCRTV() {
         }
     }, [amount, canQuote])
 
+    useEffect(() => {
+        if (!canQuoteSell || !address) {
+            setSellQuote(null)
+            return
+        }
+
+        let cancelled = false
+        let metokenAmount: bigint
+
+        try {
+            metokenAmount = parseUnits(sellAmount, CRTVAI_DECIMALS)
+        } catch {
+            setSellQuote(null)
+            return
+        }
+
+        if (metokenAmount <= 0n) {
+            setSellQuote(null)
+            return
+        }
+
+        setIsQuotingSell(true)
+        const timer = window.setTimeout(async () => {
+            try {
+                const response = await fetch("/api/crtvai-mint/sell-quote", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        metokenAmount: metokenAmount.toString(),
+                        sender: address,
+                    }),
+                })
+                const result = await response.json()
+
+                if (!response.ok) {
+                    if (!cancelled) {
+                        setMessage({
+                            type: "error",
+                            text: result?.error || "Unable to fetch sell quote. Try again.",
+                        })
+                    }
+                    return
+                }
+
+                if (!isCrtvaiSellQuote(result)) throw new Error("Sell quote was incomplete")
+
+                if (!cancelled) setSellQuote(result)
+            } catch (error) {
+                if (!cancelled) {
+                    setMessage({ type: "error", text: getErrorMessage(error) })
+                }
+            } finally {
+                if (!cancelled) setIsQuotingSell(false)
+            }
+        }, 400)
+
+        return () => {
+            cancelled = true
+            window.clearTimeout(timer)
+        }
+    }, [address, canQuoteSell, sellAmount])
+
     async function handleMint() {
         if (!quote || !address) return
 
@@ -223,6 +341,59 @@ export function BuyCRTV() {
             setMessage({ type: "error", text: getErrorMessage(error) })
         } finally {
             setIsMinting(false)
+        }
+    }
+
+    async function handleSell() {
+        if (!sellQuote || !address) return
+
+        setIsSelling(true)
+        setMessage(null)
+
+        try {
+            if (!window.ethereum) throw new Error("No browser wallet provider found")
+
+            const provider = new BrowserProvider(window.ethereum as unknown as Eip1193Provider)
+            const signer = await provider.getSigner()
+            const metoken = new Contract(CRTVAI_METOKEN_ADDRESS, ERC20_APPROVAL_ABI, signer)
+
+            const quoteResponse = await fetch("/api/crtvai-mint/sell-quote", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    metokenAmount: sellQuote.metokenAmount,
+                    sender: address,
+                }),
+            })
+            const freshQuote = await quoteResponse.json()
+            if (!quoteResponse.ok || !isCrtvaiSellQuote(freshQuote)) {
+                throw new Error(freshQuote?.error || "Unable to refresh sell quote")
+            }
+
+            const metokenAmount = BigInt(freshQuote.metokenAmount)
+            const balance = await metoken.balanceOf(address)
+            if (balance < metokenAmount) {
+                throw new Error("Insufficient CRTVAI balance for this sell amount")
+            }
+
+            setMessage({
+                type: "info",
+                text: `Confirm the ${TOKEN_SYMBOL} burn in your connected wallet. USDC will be sent to your wallet.`,
+            })
+            const diamond = new Contract(CRTVAI_DIAMOND_ADDRESS, METOKEN_DIAMOND_ABI, signer)
+            const burnTx = await diamond.burn(CRTVAI_METOKEN_ADDRESS, metokenAmount, address)
+            const receipt = await burnTx.wait()
+            setMessage({
+                type: "success",
+                text: `Burn submitted: ${receipt?.hash || burnTx.hash}. Estimated ${formatTokenAmount(freshQuote.usdcAmount, USDC_DECIMALS)} USDC received.`,
+            })
+            setSellQuote(freshQuote)
+            const updatedBalance = await metoken.balanceOf(address)
+            setCrtvaiBalance(formatUnits(updatedBalance, CRTVAI_DECIMALS))
+        } catch (error) {
+            setMessage({ type: "error", text: getErrorMessage(error) })
+        } finally {
+            setIsSelling(false)
         }
     }
 
@@ -308,108 +479,219 @@ export function BuyCRTV() {
     return (
         <Card className="w-full max-w-4xl mx-auto">
             <CardHeader>
-                <CardTitle>Buy {TOKEN_SYMBOL}</CardTitle>
+                <CardTitle>Buy &amp; Sell {TOKEN_SYMBOL}</CardTitle>
                 <CardDescription>
-                    Mint {TOKEN_SYMBOL} with USDC on Base through the MeToken bonding curve. Your wallet signs approval and mint transactions directly.
+                    Mint or burn {TOKEN_SYMBOL} with USDC on Base through the MeToken bonding curve. Your wallet signs transactions directly — this is not a DEX swap or CCIP bridge.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-                <div className="space-y-5 rounded-xl border p-5 bg-muted/20">
-                    {usdcBalance && (
-                        <p className="text-sm text-muted-foreground">
-                            Wallet USDC balance: <span className="font-medium text-foreground">{usdcBalance}</span>
-                        </p>
-                    )}
+            <CardContent>
+                <Tabs
+                    value={activeTab}
+                    onValueChange={(value) => setActiveTab(value as "buy" | "sell")}
+                    className="gap-6"
+                >
+                    <TabsList className="grid w-full max-w-md grid-cols-2">
+                        <TabsTrigger value="buy">Buy (Mint)</TabsTrigger>
+                        <TabsTrigger value="sell">Sell (Burn)</TabsTrigger>
+                    </TabsList>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="usdc-amount">You pay</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="usdc-amount"
-                                inputMode="decimal"
-                                min="0"
-                                value={amount}
-                                onChange={(event) => setAmount(event.target.value)}
-                                placeholder="25"
-                            />
-                            <div className="rounded-md border px-3 py-2 text-sm font-medium">USDC</div>
+                    <TabsContent value="buy" className="mt-0">
+                        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                            <div className="space-y-5 rounded-xl border p-5 bg-muted/20">
+                                {usdcBalance && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Wallet USDC balance: <span className="font-medium text-foreground">{usdcBalance}</span>
+                                    </p>
+                                )}
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="usdc-amount">You pay</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="usdc-amount"
+                                            inputMode="decimal"
+                                            min="0"
+                                            value={amount}
+                                            onChange={(event) => setAmount(event.target.value)}
+                                            placeholder="25"
+                                        />
+                                        <div className="rounded-md border px-3 py-2 text-sm font-medium">USDC</div>
+                                    </div>
+                                    {!amountValidation.isValid && amount.length > 0 && (
+                                        <p className="text-sm text-destructive">{amountValidation.error}</p>
+                                    )}
+                                </div>
+
+                                <div className="rounded-lg border bg-background p-4">
+                                    <p className="text-sm text-muted-foreground">You receive (estimated)</p>
+                                    <p className="mt-1 text-3xl font-bold">
+                                        {quote ? formatTokenAmount(quote.metokenAmount, CRTVAI_DECIMALS) : isQuoting ? "…" : "--"} {TOKEN_SYMBOL}
+                                    </p>
+                                    {quote?.priceUsdcPerToken && (
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            Indicative price: {quote.priceUsdcPerToken} USDC per {TOKEN_SYMBOL}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {message && activeTab === "buy" && (
+                                    <Alert variant={message.type === "error" ? "destructive" : "default"}>
+                                        {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                                        <AlertTitle>
+                                            {message.type === "error"
+                                                ? "Mint unavailable"
+                                                : message.type === "info"
+                                                  ? "Heads up"
+                                                  : "Mint status"}
+                                        </AlertTitle>
+                                        <AlertDescription className="break-words">{message.text}</AlertDescription>
+                                    </Alert>
+                                )}
+
+                                {!isConnected ? (
+                                    <Button className="w-full" size="lg" onClick={() => open()}>
+                                        Connect wallet
+                                        <Wallet className="ml-2 h-4 w-4" />
+                                    </Button>
+                                ) : !isBase ? (
+                                    <Button className="w-full" size="lg" onClick={() => switchNetwork(base)}>
+                                        Switch to Base
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        className="w-full"
+                                        size="lg"
+                                        onClick={handleMint}
+                                        disabled={!quote || isMinting || isQuoting || hasInsufficientUsdc}
+                                    >
+                                        {isMinting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        {hasInsufficientUsdc
+                                            ? "Insufficient USDC"
+                                            : `Mint ${TOKEN_SYMBOL} with USDC`}
+                                    </Button>
+                                )}
+                            </div>
+
+                            <div className="space-y-4">
+                                <Alert>
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>MeToken mint path</AlertTitle>
+                                    <AlertDescription>
+                                        USDC is approved to the hub vault, then the Diamond FoundryFacet mints CRTVAI to your wallet.
+                                    </AlertDescription>
+                                </Alert>
+
+                                <TokenReadyCard
+                                    tokenAddress={tokenAddress}
+                                    copied={copied}
+                                    onCopy={handleCopyAddress}
+                                />
+
+                                <Button className="w-full" size="lg" variant="outline" onClick={handleOnRamp}>
+                                    Buy USDC with card
+                                    <CreditCard className="ml-2 h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
-                        {!amountValidation.isValid && amount.length > 0 && (
-                            <p className="text-sm text-destructive">{amountValidation.error}</p>
-                        )}
-                    </div>
+                    </TabsContent>
 
-                    <div className="rounded-lg border bg-background p-4">
-                        <p className="text-sm text-muted-foreground">You receive (estimated)</p>
-                        <p className="mt-1 text-3xl font-bold">
-                            {quote ? formatTokenAmount(quote.metokenAmount, CRTVAI_DECIMALS) : isQuoting ? "…" : "--"} {TOKEN_SYMBOL}
-                        </p>
-                        {quote?.priceUsdcPerToken && (
-                            <p className="mt-1 text-xs text-muted-foreground">
-                                Indicative price: {quote.priceUsdcPerToken} USDC per {TOKEN_SYMBOL}
-                            </p>
-                        )}
-                    </div>
+                    <TabsContent value="sell" className="mt-0">
+                        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                            <div className="space-y-5 rounded-xl border p-5 bg-muted/20">
+                                {crtvaiBalance && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Wallet {TOKEN_SYMBOL} balance: <span className="font-medium text-foreground">{crtvaiBalance}</span>
+                                    </p>
+                                )}
 
-                    {message && (
-                        <Alert variant={message.type === "error" ? "destructive" : "default"}>
-                            {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                            <AlertTitle>
-                                {message.type === "error"
-                                    ? "Mint unavailable"
-                                    : message.type === "info"
-                                      ? "Heads up"
-                                      : "Mint status"}
-                            </AlertTitle>
-                            <AlertDescription className="break-words">{message.text}</AlertDescription>
-                        </Alert>
-                    )}
+                                <div className="grid gap-2">
+                                    <Label htmlFor="crtvai-amount">You sell</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="crtvai-amount"
+                                            inputMode="decimal"
+                                            min="0"
+                                            value={sellAmount}
+                                            onChange={(event) => setSellAmount(event.target.value)}
+                                            placeholder="100"
+                                        />
+                                        <div className="rounded-md border px-3 py-2 text-sm font-medium">{TOKEN_SYMBOL}</div>
+                                    </div>
+                                    {!sellAmountValidation.isValid && sellAmount.length > 0 && (
+                                        <p className="text-sm text-destructive">{sellAmountValidation.error}</p>
+                                    )}
+                                </div>
 
-                    {!isConnected ? (
-                        <Button className="w-full" size="lg" onClick={() => open()}>
-                            Connect wallet
-                            <Wallet className="ml-2 h-4 w-4" />
-                        </Button>
-                    ) : !isBase ? (
-                        <Button className="w-full" size="lg" onClick={() => switchNetwork(base)}>
-                            Switch to Base
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                    ) : (
-                        <Button
-                            className="w-full"
-                            size="lg"
-                            onClick={handleMint}
-                            disabled={!quote || isMinting || isQuoting || hasInsufficientUsdc}
-                        >
-                            {isMinting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {hasInsufficientUsdc
-                                ? "Insufficient USDC"
-                                : `Mint ${TOKEN_SYMBOL} with USDC`}
-                        </Button>
-                    )}
-                </div>
+                                <div className="rounded-lg border bg-background p-4">
+                                    <p className="text-sm text-muted-foreground">You receive (estimated)</p>
+                                    <p className="mt-1 text-3xl font-bold">
+                                        {sellQuote ? formatTokenAmount(sellQuote.usdcAmount, USDC_DECIMALS) : isQuotingSell ? "…" : "--"} USDC
+                                    </p>
+                                    {sellQuote?.priceUsdcPerToken && (
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            Indicative price: {sellQuote.priceUsdcPerToken} USDC per {TOKEN_SYMBOL}
+                                        </p>
+                                    )}
+                                </div>
 
-                <div className="space-y-4">
-                    <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>MeToken mint path</AlertTitle>
-                        <AlertDescription>
-                            USDC is approved to the hub vault, then the Diamond FoundryFacet mints CRTVAI to your wallet. This is not a DEX swap or CCIP bridge.
-                        </AlertDescription>
-                    </Alert>
+                                {message && activeTab === "sell" && (
+                                    <Alert variant={message.type === "error" ? "destructive" : "default"}>
+                                        {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                                        <AlertTitle>
+                                            {message.type === "error"
+                                                ? "Sell unavailable"
+                                                : message.type === "info"
+                                                  ? "Heads up"
+                                                  : "Sell status"}
+                                        </AlertTitle>
+                                        <AlertDescription className="break-words">{message.text}</AlertDescription>
+                                    </Alert>
+                                )}
 
-                    <TokenReadyCard
-                        tokenAddress={tokenAddress}
-                        copied={copied}
-                        onCopy={handleCopyAddress}
-                    />
+                                {!isConnected ? (
+                                    <Button className="w-full" size="lg" onClick={() => open()}>
+                                        Connect wallet
+                                        <Wallet className="ml-2 h-4 w-4" />
+                                    </Button>
+                                ) : !isBase ? (
+                                    <Button className="w-full" size="lg" onClick={() => switchNetwork(base)}>
+                                        Switch to Base
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        className="w-full"
+                                        size="lg"
+                                        onClick={handleSell}
+                                        disabled={!sellQuote || isSelling || isQuotingSell || hasInsufficientCrtvai}
+                                    >
+                                        {isSelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        {hasInsufficientCrtvai
+                                            ? `Insufficient ${TOKEN_SYMBOL}`
+                                            : `Sell ${TOKEN_SYMBOL} for USDC`}
+                                    </Button>
+                                )}
+                            </div>
 
-                    <Button className="w-full" size="lg" variant="outline" onClick={handleOnRamp}>
-                        Buy USDC with card
-                        <CreditCard className="ml-2 h-4 w-4" />
-                    </Button>
-                </div>
+                            <div className="space-y-4">
+                                <Alert>
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>MeToken burn path</AlertTitle>
+                                    <AlertDescription>
+                                        Burning CRTVAI through the Diamond FoundryFacet returns USDC to your wallet via the bonding curve refund ratio. No USDC approval is needed.
+                                    </AlertDescription>
+                                </Alert>
+
+                                <TokenReadyCard
+                                    tokenAddress={tokenAddress}
+                                    copied={copied}
+                                    onCopy={handleCopyAddress}
+                                />
+                            </div>
+                        </div>
+                    </TabsContent>
+                </Tabs>
             </CardContent>
         </Card>
     )
@@ -480,6 +762,27 @@ function validateUsdcAmount(value: string) {
     return { isValid: true, error: null }
 }
 
+function validateMetokenAmount(value: string) {
+    if (!value.trim()) return { isValid: false, error: `Enter a ${TOKEN_SYMBOL} amount` }
+
+    if (!/^\d+(\.\d+)?$/.test(value)) {
+        return { isValid: false, error: `Enter a valid ${TOKEN_SYMBOL} amount` }
+    }
+
+    const [, fraction = ""] = value.split(".")
+    if (fraction.length > CRTVAI_DECIMALS) {
+        return { isValid: false, error: `${TOKEN_SYMBOL} supports up to ${CRTVAI_DECIMALS} decimal places` }
+    }
+
+    return { isValid: true, error: null }
+}
+
+function isCrtvaiSellQuote(value: unknown): value is CrtvaiSellQuote {
+    if (!isRecord(value)) return false
+
+    return isDecimalString(value.metokenAmount) && isDecimalString(value.usdcAmount)
+}
+
 function isCrtvaiMintQuote(value: unknown): value is CrtvaiMintQuote {
     if (!isRecord(value)) return false
 
@@ -497,12 +800,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function getErrorMessage(error: unknown) {
     if (error instanceof Error) return error.message
 
-    return "Unable to complete the mint"
+    return "Unable to complete the transaction"
 }
 
 interface CrtvaiMintQuote {
     usdcAmount: string
     metokenAmount: string
+    priceUsdcPerToken?: string
+}
+
+interface CrtvaiSellQuote {
+    metokenAmount: string
+    usdcAmount: string
     priceUsdcPerToken?: string
 }
 

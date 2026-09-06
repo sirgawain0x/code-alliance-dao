@@ -21,6 +21,12 @@ export interface CrtvaiMintQuote {
   priceUsdcPerToken?: string
 }
 
+export interface CrtvaiSellQuote {
+  metokenAmount: string
+  usdcAmount: string
+  priceUsdcPerToken?: string
+}
+
 export function getCrtvaiMintProvider() {
   const rpcKey =
     process.env.ALCHEMY_API_KEY ||
@@ -60,16 +66,52 @@ export async function getCrtvaiCurrentPriceUsdc(): Promise<string> {
   return quote.priceUsdcPerToken || "0"
 }
 
+export async function getCrtvaiSellQuote(
+  metokenAmount: bigint,
+  sender: string,
+): Promise<CrtvaiSellQuote> {
+  if (metokenAmount <= 0n) throw new Error("CRTVAI amount must be greater than zero")
+
+  if (!sender || !/^0x[a-fA-F0-9]{40}$/.test(sender)) {
+    throw new Error("Valid sender address is required for sell quote")
+  }
+
+  const provider = getCrtvaiMintProvider()
+  const diamond = new Contract(CRTVAI_DIAMOND_ADDRESS, METOKEN_DIAMOND_ABI, provider)
+  const usdcAmount = await diamond.calculateAssetsReturned(
+    CRTVAI_METOKEN_ADDRESS,
+    metokenAmount,
+    sender,
+  )
+
+  let priceUsdcPerToken: string | undefined
+  if (metokenAmount > 0n) {
+    const price = (usdcAmount * 10n ** BigInt(CRTVAI_DECIMALS)) / metokenAmount
+    priceUsdcPerToken = formatUnitsSafe(price, USDC_DECIMALS)
+  }
+
+  return {
+    metokenAmount: metokenAmount.toString(),
+    usdcAmount: usdcAmount.toString(),
+    priceUsdcPerToken,
+  }
+}
+
 export function createCrtvaiMintErrorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "Unable to quote CRTVAI mint"
+  const isInsufficientSell =
+    /!valid/i.test(message) || /reason="!valid"/i.test(message)
   const isInfraFailure =
+    !isInsufficientSell &&
     /401|403|429|500|502|503|504|network|timeout|fetch failed|ECONNREFUSED|Unauthorized/i.test(
       message,
     )
   const status = isInfraFailure ? 503 : 400
-  const clientMessage = isInfraFailure
-    ? "Mint quote service is temporarily unavailable. Try again shortly."
-    : message
+  const clientMessage = isInsufficientSell
+    ? "Sell amount exceeds your CRTVAI balance or MeToken hub limits. Try a smaller amount."
+    : isInfraFailure
+      ? "Mint quote service is temporarily unavailable. Try again shortly."
+      : message
 
   return NextResponse.json({ error: clientMessage, code: "QUOTE_FAILED" }, { status })
 }

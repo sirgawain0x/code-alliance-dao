@@ -11,9 +11,9 @@ export default function BuyPage() {
                     <DashboardHeader />
                     <div className="p-6">
                         <div className="mb-8">
-                            <h1 className="text-3xl font-bold tracking-tight">Buy CRTVAI</h1>
+                            <h1 className="text-3xl font-bold tracking-tight">Buy &amp; Sell CRTVAI</h1>
                             <p className="text-muted-foreground mt-2">
-                                Mint CRTVAI with USDC on Base via the MeToken hub. Connect a wallet on Base to get a live quote and mint.
+                                Mint or burn CRTVAI with USDC on Base via the MeToken hub. Connect a wallet on Base to get live quotes.
                             </p>
                         </div>
                         <div className="mt-8">

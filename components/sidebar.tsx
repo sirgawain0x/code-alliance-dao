@@ -15,7 +15,7 @@ const navigation = [
   { name: "Projects", icon: FolderOpen, current: false, href: "/projects" },
   { name: "Treasury", icon: Wallet, current: false, href: "/treasury" },
   { name: "Members", icon: Users, current: false, href: "/members" },
-  { name: "Buy CRTVAI", icon: CreditCard, current: false, href: "/buy" },
+  { name: "Buy & Sell CRTVAI", icon: CreditCard, current: false, href: "/buy" },
 ]
 
 const external = [

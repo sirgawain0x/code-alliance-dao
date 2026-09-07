@@ -6,6 +6,7 @@ import { FIND_MEMBER } from "../utils/queries";
 import { MemberItem } from "../utils/daotypes";
 import { getGraphUrl } from "../utils/endpoints";
 import { DaoHooksContext } from "../contexts/DaoHooksContext";
+import { buildMemberSubgraphId } from "@/lib/dao-ids";
 
 export const useMember = ({
   chainid,
@@ -38,8 +39,18 @@ export const useMember = ({
     queryFn: async (): Promise<{
       member: MemberItem;
     }> => {
+      const memberid = buildMemberSubgraphId({
+        daoId: daoid,
+        memberAddress: memberaddress,
+        fallbackChainId: chainid,
+      })
+
+      if (!memberid) {
+        throw new Error("Missing DAO or member address for subgraph lookup")
+      }
+
       const res = (await graphQLClient.request(FIND_MEMBER, {
-        memberid: `${daoid?.toLowerCase()}-member-${memberaddress?.toLowerCase()}`,
+        memberid,
       })) as {
         member: MemberItem;
       };

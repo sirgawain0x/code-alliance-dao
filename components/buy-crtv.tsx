@@ -534,12 +534,12 @@ export function BuyCRTV() {
                                     )}
                                 </div>
 
-                                {message && activeTab === "buy" && (
+                                {message && activeTab === "buy" && !hasInsufficientUsdc && (
                                     <Alert variant={message.type === "error" ? "destructive" : "default"}>
                                         {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                                         <AlertTitle>
                                             {message.type === "error"
-                                                ? "Mint unavailable"
+                                                ? "Unable to mint"
                                                 : message.type === "info"
                                                   ? "Heads up"
                                                   : "Mint status"}
@@ -635,12 +635,12 @@ export function BuyCRTV() {
                                     )}
                                 </div>
 
-                                {message && activeTab === "sell" && (
+                                {message && activeTab === "sell" && !hasInsufficientCrtvai && (
                                     <Alert variant={message.type === "error" ? "destructive" : "default"}>
                                         {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                                         <AlertTitle>
                                             {message.type === "error"
-                                                ? "Sell unavailable"
+                                                ? "Unable to sell"
                                                 : message.type === "info"
                                                   ? "Heads up"
                                                   : "Sell status"}

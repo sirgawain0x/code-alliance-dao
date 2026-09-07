@@ -79,11 +79,15 @@ export function RoleManagement() {
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="rounded border border-border p-2">
                     <p className="text-muted-foreground">Shares</p>
-                    <p className="text-foreground font-semibold">{profile.holdings.shares}</p>
+                    <p className="text-foreground font-semibold">
+                      {profile.holdings.shares.toLocaleString()}
+                    </p>
                   </div>
                   <div className="rounded border border-border p-2">
                     <p className="text-muted-foreground">Loot</p>
-                    <p className="text-foreground font-semibold">{profile.holdings.loot}</p>
+                    <p className="text-foreground font-semibold">
+                      {profile.holdings.loot.toLocaleString()}
+                    </p>
                   </div>
                   <div className="rounded border border-border p-2">
                     <p className="text-muted-foreground">NFTs</p>

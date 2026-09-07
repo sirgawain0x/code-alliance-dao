@@ -49,5 +49,5 @@ export const TOKEN_SYMBOL = "CRTVAI";
 /** CRTVAI MeToken mint on /buy is live (G2 unlock). Always enabled in code. */
 export const CRTV_PURCHASES_ENABLED = true;
 
-/** Served from `public/Asset1.png` */
-export const CREATIVE_ORG_LOGO_SRC = "/Asset1.png" as const;
+/** Served from `public/Creative_logo-200.svg` */
+export const CREATIVE_ORG_LOGO_SRC = "/Creative_logo-200.svg" as const;

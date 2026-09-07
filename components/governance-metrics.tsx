@@ -7,6 +7,7 @@ import { Vote, Clock, CheckCircle, XCircle } from "lucide-react"
 import { useDaoProposals } from "@/hooks/useDaoProposals"
 import { useMemo } from "react"
 import { ProposalItem } from "@/utils/daotypes"
+import { formatShareVotes } from "@/utils/format-share-votes"
 
 export function GovernanceMetrics() {
   const { proposals, isLoading } = useDaoProposals({
@@ -51,8 +52,8 @@ export function GovernanceMetrics() {
         title: p.title || "Untitled Proposal",
         status,
         votes: {
-          for: Number(p.yesVotes) || 0,
-          against: Number(p.noVotes) || 0,
+          for: formatShareVotes(p.yesBalance || p.yesVotes),
+          against: formatShareVotes(p.noBalance || p.noVotes),
           abstain: 0 // Subgraph might not explicitly track abstain in simple view
         },
         endTime: timeString,
@@ -105,11 +106,11 @@ export function GovernanceMetrics() {
                 <div className="flex items-center space-x-4 text-xs">
                   <div className="flex items-center space-x-1">
                     <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-muted-foreground">For: {vote.votes.for}</span>
+                    <span className="text-muted-foreground">For: {vote.votes.for.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                    <span className="text-muted-foreground">Against: {vote.votes.against}</span>
+                    <span className="text-muted-foreground">Against: {vote.votes.against.toLocaleString()}</span>
                   </div>
                   {/* abstain hidden if 0 or irrelevant */}
                 </div>

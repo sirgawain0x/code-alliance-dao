@@ -9,9 +9,16 @@ import { useOnchainMembershipProfile } from "../hooks/useOnchainMembershipProfil
 import { useSafeTreasuryBalances } from "../hooks/useSafeTreasuryBalances"
 import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
 import Link from "next/link"
-import { CREATIVE_ORG_LOGO_SRC, CREATIVE_ORG_SAFE_ADDRESS } from "@/config/constants"
 import { useMemo } from "react"
 import { formatEther } from "ethers"
+import { DaoLogoImage } from "@/components/dao-logo-image"
+import { CREATIVE_ORG_LOGO_SRC, CREATIVE_ORG_SAFE_ADDRESS } from "@/config/constants"
+
+const CREATIVE_PLATFORM_MISSION =
+  "To provide the professional infrastructure and B2B rails that empower artists and creators to transition from \"platform employees\" to sustainable enterprises."
+
+const CREATIVE_PLATFORM_VISION =
+  "We are building the MTV of the Creative Economy for culture and media — Creative TV for discovery and taste — and the YouTube of the Creative Economy for product and rails, where intellectual property is a durable asset and every creator is a business owner. Infrastructure over personality."
 
 export function ParentDAOOverview() {
   const daoAddress = process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS
@@ -45,12 +52,8 @@ export function ParentDAOOverview() {
       treasuryLabel,
       proposalCount: Number(dao.proposalCount) || 0,
       quorumPercent: dao.quorumPercent,
-      mission:
-        dao.profile?.description ||
-        "To democratically govern and support innovative projects through a decentralized incubator ecosystem that bridges traditional and blockchain technologies.",
-      vision:
-        dao.profile?.longDescription ||
-        "To become the leading DAO-governed incubator that empowers diverse teams to build the future of technology through collaborative governance and shared resources.",
+      mission: CREATIVE_PLATFORM_MISSION,
+      vision: CREATIVE_PLATFORM_VISION,
     }
   }, [dao, treasury?.ethFormatted])
 
@@ -78,10 +81,11 @@ export function ParentDAOOverview() {
       <div className="flex items-start justify-between flex-col md:flex-row gap-4">
         <div className="space-y-2">
           <div className="flex items-center space-x-3">
-            <img
+            <DaoLogoImage
               src={CREATIVE_ORG_LOGO_SRC}
               alt={dao?.name || "Creative Organization DAO"}
-              className="h-16 w-auto max-w-[5rem] object-contain flex-shrink-0"
+              className="h-16 w-16 object-contain"
+              skeletonClassName="rounded-lg"
             />
             <div>
               <h1 className="text-3xl font-bold text-foreground">{dao?.name || "Creative Organization DAO"}</h1>
@@ -97,7 +101,6 @@ export function ParentDAOOverview() {
           </div>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">View Constitution</Button>
           {createProposalReady ? (
             <Button asChild>
               <Link

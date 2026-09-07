@@ -44,7 +44,9 @@ export function GovernanceOverview() {
   const governanceStats = [
     {
       label: "Your Voting Power",
-      value: String(primaryProfile?.holdings.shares || 0),
+      value: primaryProfile?.holdings.shares
+        ? primaryProfile.holdings.shares.toLocaleString()
+        : "0",
       subtitle: "vCRTV voting shares",
       icon: Vote,
       color: "text-blue-400",

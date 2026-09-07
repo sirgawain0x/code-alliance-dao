@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { createCrtvaiMintErrorResponse, getCrtvaiSellQuote } from "@/services/crtvai-mint"
+import { createCrtvaiQuoteErrorResponse, getCrtvaiSellQuote } from "@/services/crtvai-mint"
 
 export async function POST(request: Request) {
   let body: { metokenAmount?: string; sender?: string }
@@ -39,6 +39,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to fetch CRTVAI sell quote", error)
 
-    return createCrtvaiMintErrorResponse(error)
+    return createCrtvaiQuoteErrorResponse(error, "sell")
   }
 }

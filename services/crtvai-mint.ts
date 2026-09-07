@@ -97,23 +97,32 @@ export async function getCrtvaiSellQuote(
   }
 }
 
-export function createCrtvaiMintErrorResponse(error: unknown) {
-  const message = error instanceof Error ? error.message : "Unable to quote CRTVAI mint"
-  const isInsufficientSell =
-    /!valid/i.test(message) || /reason="!valid"/i.test(message)
+export type CrtvaiQuoteType = "mint" | "sell"
+
+export function createCrtvaiQuoteErrorResponse(error: unknown, quoteType: CrtvaiQuoteType) {
+  const message =
+    error instanceof Error ? error.message : `Unable to quote CRTVAI ${quoteType}`
+  const isInvalidAmount = /!valid/i.test(message) || /reason="!valid"/i.test(message)
   const isInfraFailure =
-    !isInsufficientSell &&
+    !isInvalidAmount &&
     /401|403|429|500|502|503|504|network|timeout|fetch failed|ECONNREFUSED|Unauthorized/i.test(
       message,
     )
   const status = isInfraFailure ? 503 : 400
-  const clientMessage = isInsufficientSell
-    ? "Sell amount exceeds your CRTVAI balance or MeToken hub limits. Try a smaller amount."
+  const clientMessage = isInvalidAmount
+    ? quoteType === "sell"
+      ? "Sell amount exceeds your CRTVAI balance or MeToken hub limits. Try a smaller amount."
+      : "Mint amount exceeds MeToken hub limits. Try a smaller USDC amount."
     : isInfraFailure
-      ? "Mint quote service is temporarily unavailable. Try again shortly."
+      ? `${quoteType === "sell" ? "Sell" : "Mint"} quote service is temporarily unavailable. Try again shortly.`
       : message
 
   return NextResponse.json({ error: clientMessage, code: "QUOTE_FAILED" }, { status })
+}
+
+/** @deprecated Use createCrtvaiQuoteErrorResponse with quoteType instead */
+export function createCrtvaiMintErrorResponse(error: unknown) {
+  return createCrtvaiQuoteErrorResponse(error, "mint")
 }
 
 export const CRTVAI_MINT_APPROVAL_TARGET = CRTVAI_HUB_2_VAULT_ADDRESS

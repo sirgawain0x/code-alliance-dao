@@ -9,6 +9,7 @@ import { useDaoProposals } from "@/hooks/useDaoProposals"
 import { useDao } from "@/hooks/useDao"
 import Link from "next/link"
 import { useMemo } from "react"
+import { formatShareVotes } from "@/utils/format-share-votes"
 
 function formatTimeRemaining(votingEnds: string): string {
   const now = Math.floor(Date.now() / 1000)
@@ -120,11 +121,11 @@ export function ChainGovernance() {
         {recentProposals.map((proposal) => {
           const status = getStatus(proposal)
           const timeRemaining = formatTimeRemaining(proposal.votingEnds)
-          const yesVotes = Number(proposal.yesVotes || 0)
-          const noVotes = Number(proposal.noVotes || 0)
+          const yesVotes = formatShareVotes(proposal.yesBalance || proposal.yesVotes)
+          const noVotes = formatShareVotes(proposal.noBalance || proposal.noVotes)
           const totalVotes = yesVotes + noVotes
-          const quorum = Number(proposal.dao?.totalShares || 0)
-          const quorumPercent = Number(proposal.dao?.quorumPercent || 0)
+          const quorum = formatShareVotes(dao?.totalShares || proposal.dao?.totalShares)
+          const quorumPercent = Number(dao?.quorumPercent || proposal.dao?.quorumPercent || 0)
           const requiredQuorum = Math.ceil((quorum * quorumPercent) / 100)
           const quorumProgress = requiredQuorum > 0 ? (totalVotes / requiredQuorum) * 100 : 0
 
@@ -173,7 +174,7 @@ export function ChainGovernance() {
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Voting Progress</span>
                         <span className="text-foreground">
-                          {totalVotes} / {requiredQuorum} votes
+                          {totalVotes.toLocaleString()} / {requiredQuorum.toLocaleString()} votes
                         </span>
                       </div>
 
@@ -183,7 +184,7 @@ export function ChainGovernance() {
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-green-400">For</span>
-                            <span className="text-foreground">{yesVotes}</span>
+                            <span className="text-foreground">{yesVotes.toLocaleString()}</span>
                           </div>
                           <Progress
                             value={totalVotes > 0 ? (yesVotes / totalVotes) * 100 : 0}
@@ -194,7 +195,7 @@ export function ChainGovernance() {
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-red-400">Against</span>
-                            <span className="text-foreground">{noVotes}</span>
+                            <span className="text-foreground">{noVotes.toLocaleString()}</span>
                           </div>
                           <Progress
                             value={totalVotes > 0 ? (noVotes / totalVotes) * 100 : 0}

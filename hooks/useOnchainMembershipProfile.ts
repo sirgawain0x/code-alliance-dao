@@ -7,10 +7,17 @@ import { ethers } from "ethers"
 import { useDaosForAddress } from "@/hooks/useDaosForAddress"
 import { getDaoContractConfig } from "@/lib/dao-config"
 import {
+  buildMemberSubgraphId,
+  parseDaoSubgraphId,
+  profileMatchesTargetDao,
+  resolveTargetDaoAddress,
+} from "@/lib/dao-ids"
+import {
   getCapabilities,
   onchainOwnerSummonerResolver,
   type MembershipProfile,
 } from "@/lib/permissions"
+import { formatShareVotes } from "@/utils/format-share-votes"
 import { getRpcUrl } from "@/utils/endpoints"
 
 const OWNER_ABI = [
@@ -33,28 +40,6 @@ const NFT_ABI = [
   },
 ] as const
 
-function normalizeChainIdToDecimal(chainIdFragment?: string): string {
-  if (!chainIdFragment) return ""
-  const trimmed = chainIdFragment.trim()
-  if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
-    const parsed = parseInt(trimmed, 16)
-    return Number.isNaN(parsed) ? "" : String(parsed)
-  }
-  return trimmed
-}
-
-function parseDaoChainAndAddress(daoId?: string): {
-  chainId: string
-  daoAddress: string
-} {
-  if (!daoId) return { chainId: "", daoAddress: "" }
-  const [chainIdRaw, daoAddress] = daoId.split("-")
-  return {
-    chainId: normalizeChainIdToDecimal(chainIdRaw) || chainIdRaw || "",
-    daoAddress: daoAddress || "",
-  }
-}
-
 export function useOnchainMembershipProfile({
   chainId,
   daoAddress,
@@ -64,6 +49,7 @@ export function useOnchainMembershipProfile({
 }) {
   const { address } = useAppKitAccount()
   const walletAddress = address?.toLowerCase()
+  const resolvedTargetDaoAddress = daoAddress?.toLowerCase() || resolveTargetDaoAddress()
   const { memberships, isLoading: isMembershipLoading, isUnsupportedChain } =
     useDaosForAddress({
       chainid: chainId,
@@ -79,7 +65,7 @@ export function useOnchainMembershipProfile({
     queryKey: [
       "onchain-membership-profile",
       chainId,
-      daoAddress,
+      resolvedTargetDaoAddress,
       walletAddress,
       memberships,
     ],
@@ -89,15 +75,16 @@ export function useOnchainMembershipProfile({
 
       return Promise.all(
         memberships.map(async (membership) => {
-          const { chainId: daoChainId, daoAddress: idDaoAddress } =
-            parseDaoChainAndAddress(membership.dao?.id)
+          const { chainId: daoChainId, daoAddress: parsedDaoAddress } =
+            parseDaoSubgraphId(membership.dao?.id, chainId)
           const rpcChainId = daoChainId || chainId
           const provider = new ethers.JsonRpcProvider(
             getRpcUrl({ chainid: rpcChainId })
           )
 
           const normalizedDaoAddress =
-            idDaoAddress?.toLowerCase() ||
+            parsedDaoAddress ||
+            membership.dao?.id?.toLowerCase() ||
             membership.dao?.safeAddress?.toLowerCase() ||
             ""
           const daoConfig = getDaoContractConfig({
@@ -105,8 +92,8 @@ export function useOnchainMembershipProfile({
             daoAddress: normalizedDaoAddress,
           })
 
-          const shares = Number(membership.shares || 0)
-          const loot = Number(membership.loot || 0)
+          const shares = formatShareVotes(membership.shares)
+          const loot = formatShareVotes(membership.loot)
 
           let nftBalance = 0
           if (daoConfig?.nftAddress) {
@@ -175,14 +162,21 @@ export function useOnchainMembershipProfile({
 
   const primaryProfile = useMemo(() => {
     if (!profilesQuery.data?.length) return undefined
-    const target = daoAddress?.toLowerCase()
+    const target = resolvedTargetDaoAddress
     if (target) {
-      return profilesQuery.data.find(
-        (profile) => profile.daoAddress.toLowerCase() === target
+      const matched = profilesQuery.data.find((profile) =>
+        profileMatchesTargetDao({
+          profileDaoAddress: profile.daoAddress,
+          profileDaoId: profile.daoId,
+          targetDaoAddress: target,
+          safeAddress: memberships?.find((m) => m.dao?.id === profile.daoId)?.dao
+            ?.safeAddress,
+        })
       )
+      if (matched) return matched
     }
     return profilesQuery.data[0]
-  }, [profilesQuery.data, daoAddress])
+  }, [profilesQuery.data, resolvedTargetDaoAddress, memberships])
 
   return {
     walletAddress,
@@ -191,5 +185,10 @@ export function useOnchainMembershipProfile({
     isLoading: isMembershipLoading || profilesQuery.isLoading,
     isUnsupportedChain,
     isConnected: Boolean(walletAddress),
+    memberSubgraphId: buildMemberSubgraphId({
+      daoId: resolvedTargetDaoAddress,
+      memberAddress: walletAddress,
+      fallbackChainId: chainId,
+    }),
   }
 }

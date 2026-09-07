@@ -1,22 +1,32 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
+import { DaoSwitcher } from "@/components/dao-switcher"
+import { useActiveDao } from "@/contexts/ActiveDaoContext"
 import { useDao } from "@/hooks/useDao"
 
 export function DashboardHeader() {
+  const { activeDao } = useActiveDao()
   const { dao } = useDao({
-    chainid: "8453",
-    daoid: process.env.NEXT_PUBLIC_TARGET_DAO_ADDRESS,
-  });
+    chainid: activeDao.kind === "baal" ? String(activeDao.chainId) : undefined,
+    daoid: activeDao.kind === "baal" ? activeDao.daoAddress : undefined,
+  })
+
+  const displayName =
+    activeDao.kind === "nouns" ? activeDao.publicName : dao?.name || activeDao.publicName
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
       <div className="flex items-center justify-between px-6 py-4 md:px-6 pl-20 md:pl-6">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">DAO</span>
+          <DaoSwitcher />
+          <div className="hidden sm:flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">Active</span>
             <Badge variant="secondary" className="text-xs">
-              {dao?.name || "Loading..."}
+              {displayName}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              {activeDao.chainLabel}
             </Badge>
           </div>
           <div className="flex space-x-2">

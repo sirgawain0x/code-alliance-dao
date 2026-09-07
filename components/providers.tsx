@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { DaoHooksProvider } from "@/contexts/DaoHooksContext";
+import { ActiveDaoProvider } from "@/contexts/ActiveDaoContext";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <DaoHooksProvider keyConfig={daoHooksConfig}>
-        {children}
+        <ActiveDaoProvider>{children}</ActiveDaoProvider>
       </DaoHooksProvider>
     </QueryClientProvider>
   );

@@ -113,14 +113,16 @@ export function useNounsBuilderActions() {
       values,
       calldatas,
       descriptionHash,
+      proposer,
     }: {
       targets: string[]
       values: bigint[]
       calldatas: string[]
       descriptionHash: string
+      proposer: string
     }) =>
       runAction("execute", () =>
-        executeNounsProposal({ targets, values, calldatas, descriptionHash })
+        executeNounsProposal({ targets, values, calldatas, descriptionHash, proposer })
       ),
     [runAction]
   )

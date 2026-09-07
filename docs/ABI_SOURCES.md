@@ -31,8 +31,8 @@ From `governorAbi` (Nouns Builder Governor proxy):
 - `propose(address[],uint256[],bytes[],string)`
 - `castVote(bytes32,uint256)` / `castVoteWithReason(bytes32,uint256,string)`
 - `queue(bytes32)`
-- `execute(address[],uint256[],bytes[],bytes32)`
-- `getVotes(address)`, `proposalThresholdBps`, `settings`
+- `execute(address[],uint256[],bytes[],bytes32,address)`
+- `getVotes(address,uint256)`, `proposalThresholdBps`, `settings`
 
 From `auctionAbi`:
 

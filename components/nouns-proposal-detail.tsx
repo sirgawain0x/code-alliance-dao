@@ -163,6 +163,7 @@ export function NounsProposalDetail({ proposalId }: NounsProposalDetailProps) {
                 values: proposal.values.map((value) => BigInt(value)),
                 calldatas: proposal.calldatas,
                 descriptionHash: proposal.descriptionHash,
+                proposer: proposal.proposer,
               })
             }
           >

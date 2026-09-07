@@ -253,6 +253,7 @@ export function AnnouncedBillGovernancePanel() {
                             values: proposal.values.map((value) => BigInt(value)),
                             calldatas: proposal.calldatas,
                             descriptionHash: proposal.descriptionHash,
+                            proposer: proposal.proposer,
                           })
                         }
                       >

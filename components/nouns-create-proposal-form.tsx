@@ -20,7 +20,7 @@ export function NounsCreateProposalForm({ onClose }: NounsCreateProposalFormProp
   const [title, setTitle] = useState("")
   const [body, setBody] = useState("")
   const { isConnected } = useAppKitAccount()
-  const { membership } = useNounsBuilderMembership()
+  const { membership, isLoading: membershipLoading } = useNounsBuilderMembership()
   const { propose, isPending, state } = useNounsBuilderActions()
 
   const canPropose = Boolean(membership?.canPropose)
@@ -43,6 +43,11 @@ export function NounsCreateProposalForm({ onClose }: NounsCreateProposalFormProp
 
       {!isConnected ? (
         <p className="text-sm text-muted-foreground">Connect a wallet on Optimism to propose.</p>
+      ) : membershipLoading ? (
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Checking voting power…
+        </p>
       ) : !canPropose ? (
         <p className="text-sm text-muted-foreground">
           You need enough Creative Kidz voting power to meet the proposal threshold.

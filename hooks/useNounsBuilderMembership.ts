@@ -34,14 +34,8 @@ export function useNounsBuilderMembership() {
         transport: http(rpcUrl),
       })
 
-      const [membership, votes, thresholdBps, totalSupply] = await Promise.all([
+      const [membership, thresholdBps, totalSupply] = await Promise.all([
         daoMembershipRequest(CHAIN_ID.OPTIMISM, contracts.nft, address),
-        client.readContract({
-          address: contracts.governor as `0x${string}`,
-          abi: governorAbi,
-          functionName: "getVotes",
-          args: [address as `0x${string}`],
-        }),
         client.readContract({
           address: contracts.governor as `0x${string}`,
           abi: governorAbi,
@@ -55,7 +49,7 @@ export function useNounsBuilderMembership() {
       ])
 
       const nounCount = membership?.tokenCount ?? 0
-      const voteCount = Number(votes)
+      const voteCount = membership?.voteCount ?? 0
       const required = Math.ceil((Number(totalSupply) * Number(thresholdBps)) / 10_000)
 
       return {

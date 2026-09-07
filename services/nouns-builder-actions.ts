@@ -104,16 +104,24 @@ export async function executeNounsProposal({
   values,
   calldatas,
   descriptionHash,
+  proposer,
 }: {
   targets: string[]
   values: bigint[]
   calldatas: string[]
   descriptionHash: string
+  proposer: string
 }): Promise<NounsBuilderTxResult> {
   try {
     const signer = await getSigner()
     const governor = getGovernor(signer)
-    const response = await governor.execute(targets, values, calldatas, descriptionHash)
+    const response = await governor.execute(
+      targets,
+      values,
+      calldatas,
+      descriptionHash,
+      proposer
+    )
     return { hash: response.hash, response }
   } catch (error) {
     throw new Error(getErrorMessage(error))

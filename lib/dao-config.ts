@@ -32,7 +32,7 @@ const DAO_CONFIGS: DaoContractConfig[] = [
   {
     chainId: "10",
     daoAddress: "0x85a56a9572145260d40e8d8f55c8468c18773da0",
-    name: "Creative Kidz DAO",
+    name: "Announced Bill",
     nftAddress: "0x4281f0f00bbe9bfa54cf414a193711e17e7f1f02",
     auctionHouseAddress: "0x122455e85e1484b299966795c748d0c5e4d1b7f1",
     governorAddress: "0xaa42c1e7e767cefcd41536aa73e03bdf16cf1c34",

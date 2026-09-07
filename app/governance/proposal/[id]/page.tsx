@@ -1,6 +1,6 @@
 import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { GovernanceProposalSurface } from "@/components/governance-proposal-surface"
+import { ProposalDetail } from "@/components/proposal-detail"
 import { getProposalMetadata } from "@/app/actions"
 
 export default async function ProposalDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,7 +13,7 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
       <main className="flex-1 min-w-0 relative z-0">
         <DashboardHeader />
         <div className="p-6">
-          <GovernanceProposalSurface proposalId={id} initialMetadata={metadata} />
+          <ProposalDetail proposalId={id} initialMetadata={metadata} />
         </div>
       </main>
     </div>

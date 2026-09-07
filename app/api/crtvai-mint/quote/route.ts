@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { createCrtvaiMintErrorResponse, getCrtvaiMintQuote } from "@/services/crtvai-mint"
+import { createCrtvaiQuoteErrorResponse, getCrtvaiMintQuote } from "@/services/crtvai-mint"
 
 export async function POST(request: Request) {
   let body: { usdcAmount?: string }
@@ -31,6 +31,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to fetch CRTVAI mint quote", error)
 
-    return createCrtvaiMintErrorResponse(error)
+    return createCrtvaiQuoteErrorResponse(error, "mint")
   }
 }

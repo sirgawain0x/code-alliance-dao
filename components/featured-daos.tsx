@@ -7,6 +7,7 @@ import { Search, Users } from "lucide-react"
 import { useDao, useNounsDao } from "../hooks"
 import { Skeleton } from "./ui/skeleton"
 import Link from "next/link"
+import { DaoLogoImage } from "@/components/dao-logo-image"
 
 import { FEATURED_DAOS_CONFIG, CHAIN_NAMES, type FeaturedDao } from "../utils/featured-daos"
 
@@ -113,10 +114,11 @@ export function DaoCard({
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3">
               {avatarUrl ? (
-                <img
+                <DaoLogoImage
                   src={avatarUrl}
                   alt={dao?.name || label}
                   className="w-12 h-12 rounded-full object-cover"
+                  skeletonClassName="rounded-full"
                 />
               ) : (
                 <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-2xl">

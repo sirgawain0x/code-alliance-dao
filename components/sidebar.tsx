@@ -27,6 +27,7 @@ const external = [
 
 import { useDao } from "@/hooks/useDao"
 import { CREATIVE_ORG_LOGO_SRC } from "@/config/constants"
+import { DaoLogoImage } from "@/components/dao-logo-image"
 
 export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
@@ -76,15 +77,11 @@ export function Sidebar() {
           {/* Logo with Close Button - Mobile Only */}
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-2 flex-1 min-w-0">
-              <img
+              <DaoLogoImage
                 src={process.env.NEXT_PUBLIC_DAO_AVATAR_URL || CREATIVE_ORG_LOGO_SRC}
                 alt={dao?.name || "Creative Organization DAO"}
-                className="h-8 w-8 object-contain flex-shrink-0"
-                onError={(event) => {
-                  const image = event.currentTarget
-                  if (image.src.endsWith(CREATIVE_ORG_LOGO_SRC)) return
-                  image.src = CREATIVE_ORG_LOGO_SRC
-                }}
+                className="h-8 w-8 object-contain"
+                skeletonClassName="rounded-md"
               />
               <span className="text-lg font-semibold text-sidebar-foreground truncate">{dao?.name || "Creative Organization DAO"}</span>
             </div>

@@ -1,6 +1,8 @@
 import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { GovernanceSurface } from "@/components/governance-surface"
+import { GovernanceOverview } from "@/components/governance-overview"
+import { ActiveProposals } from "@/components/active-proposals"
+import { VotingHistory } from "@/components/voting-history"
 
 export default function GovernancePage() {
   return (
@@ -16,7 +18,9 @@ export default function GovernancePage() {
                 <p className="text-muted-foreground">Participate in DAO decision-making and proposal voting</p>
               </div>
             </div>
-            <GovernanceSurface />
+            <GovernanceOverview />
+            <ActiveProposals />
+            <VotingHistory />
           </div>
         </div>
       </main>

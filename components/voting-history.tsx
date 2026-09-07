@@ -8,6 +8,7 @@ import { CheckCircle, XCircle, Clock, User } from "lucide-react"
 import { useDaoProposals } from "@/hooks/useDaoProposals"
 import { useDao } from "@/hooks/useDao"
 import Link from "next/link"
+import { formatShareVotesDisplay } from "@/utils/format-share-votes"
 
 // Helper function to format votes (reuse from active-proposals if possible, or duplicate for now)
 function getStatus(proposal: { processed: boolean; cancelled: boolean; votingEnds: string }): string {
@@ -55,8 +56,8 @@ export function VotingHistory() {
             // Let's filter for non-active ones if we want true "history", but typically recent history includes active ones too.
             // For now, let's show all fetched (which is recent 5).
 
-            const yesVotes = Number(proposal.yesVotes || 0)
-            const noVotes = Number(proposal.noVotes || 0)
+            const yesVotes = formatShareVotesDisplay(proposal.yesBalance || proposal.yesVotes)
+            const noVotes = formatShareVotesDisplay(proposal.noBalance || proposal.noVotes)
             const abstainVotes = 0
 
             return (

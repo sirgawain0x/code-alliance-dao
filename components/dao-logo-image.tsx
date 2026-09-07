@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { CREATIVE_ORG_LOGO_SRC } from "@/config/constants"
@@ -23,13 +23,24 @@ export function DaoLogoImage({
 }: DaoLogoImageProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
 
   const resolvedSrc = src || fallbackSrc
   const displaySrc = hasError ? fallbackSrc : resolvedSrc
   const showSkeleton = !isLoaded
 
+  useEffect(() => {
+    setIsLoaded(false)
+    setHasError(false)
+  }, [resolvedSrc, fallbackSrc])
+
+  useEffect(() => {
+    const img = imgRef.current
+    if (img?.complete && img.naturalWidth > 0) setIsLoaded(true)
+  }, [displaySrc])
+
   return (
-    <div className={cn("relative flex-shrink-0", className)}>
+    <div className="relative inline-flex flex-shrink-0">
       {showSkeleton && (
         <Skeleton
           className={cn("absolute inset-0 animate-pulse", skeletonClassName || "rounded-md")}
@@ -37,6 +48,7 @@ export function DaoLogoImage({
         />
       )}
       <img
+        ref={imgRef}
         src={displaySrc}
         alt={alt}
         className={cn(

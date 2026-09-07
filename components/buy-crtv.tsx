@@ -534,7 +534,7 @@ export function BuyCRTV() {
                                     )}
                                 </div>
 
-                                {message && activeTab === "buy" && !hasInsufficientUsdc && (
+                                {message && activeTab === "buy" && !(hasInsufficientUsdc && message.type === "error") && (
                                     <Alert variant={message.type === "error" ? "destructive" : "default"}>
                                         {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                                         <AlertTitle>
@@ -635,7 +635,7 @@ export function BuyCRTV() {
                                     )}
                                 </div>
 
-                                {message && activeTab === "sell" && !hasInsufficientCrtvai && (
+                                {message && activeTab === "sell" && !(hasInsufficientCrtvai && message.type === "error") && (
                                     <Alert variant={message.type === "error" ? "destructive" : "default"}>
                                         {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                                         <AlertTitle>

@@ -11,7 +11,7 @@ export default function GovernancePage() {
       <main className="flex-1 min-w-0 relative z-0">
         <div className="pt-16 md:pt-0">
           <DashboardHeader />
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Governance</h1>

@@ -15,7 +15,11 @@ export function DashboardHeader() {
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <span className="shrink-0 text-sm text-muted-foreground">DAO</span>
-            <Badge variant="secondary" className="max-w-[min(180px,50vw)] truncate text-xs">
+            <Badge
+              variant="secondary"
+              className="max-w-[min(180px,50vw)] truncate text-xs"
+              title={dao?.name}
+            >
               {dao?.name || "Loading..."}
             </Badge>
           </div>

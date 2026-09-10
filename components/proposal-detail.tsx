@@ -188,7 +188,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <div className="flex min-w-0 max-w-full items-center gap-1">
               <User className="h-4 w-4 shrink-0" />
-              <span className="truncate font-mono text-xs sm:text-sm">
+              <span className="truncate font-mono text-xs sm:text-sm" title={display.author}>
                 {display.author}
               </span>
             </div>
@@ -208,7 +208,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
         )}
       </div>
 
-      <Card className="stat-card-gradient overflow-hidden p-4 sm:p-6">
+      <Card className="stat-card-gradient p-4 sm:p-6">
         <div className="min-w-0 space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-lg font-semibold text-foreground">Cast Your Vote</h3>
@@ -239,7 +239,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
                 <div className="min-w-0 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="shrink-0 text-green-400">For</span>
-                    <span className="truncate text-foreground">
+                    <span className="text-right text-foreground break-all sm:break-normal">
                       {display.votingPower.for.toLocaleString()}
                     </span>
                   </div>
@@ -255,7 +255,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
                 <div className="min-w-0 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="shrink-0 text-red-400">Against</span>
-                    <span className="truncate text-foreground">
+                    <span className="text-right text-foreground break-all sm:break-normal">
                       {display.votingPower.against.toLocaleString()}
                     </span>
                   </div>
@@ -386,7 +386,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
         </TabsList>
 
         <TabsContent value="details" className="space-y-4">
-          <Card className="stat-card-gradient overflow-hidden p-4 sm:p-6">
+          <Card className="stat-card-gradient p-4 sm:p-6">
             <div className="break-words whitespace-pre-wrap text-foreground">
               {display.fullDescription}
             </div>
@@ -394,7 +394,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
         </TabsContent>
 
         <TabsContent value="votes" className="space-y-4">
-          <Card className="stat-card-gradient overflow-hidden p-4 sm:p-6">
+          <Card className="stat-card-gradient p-4 sm:p-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground">Votes</h3>
               {proposal.votes?.length ? (
@@ -402,7 +402,7 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
                   {proposal.votes.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between text-sm border-b border-border/40 pb-2"
+                      className="flex min-w-0 flex-col gap-1 text-sm border-b border-border/40 pb-2 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <span className="font-mono text-muted-foreground">
                         {item.member.memberAddress.slice(0, 6)}…

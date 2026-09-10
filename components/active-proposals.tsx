@@ -176,7 +176,7 @@ export function ActiveProposals() {
           return (
             <div
               key={proposal.id}
-              className="border border-border/50 rounded-lg p-6 space-y-4 dao-card-hover bg-card/50 hover:bg-card hover:border-border transition-all duration-200"
+              className="border border-border/50 rounded-lg p-4 sm:p-6 space-y-4 dao-card-hover bg-card/50 hover:bg-card hover:border-border transition-all duration-200"
             >
               <Link href={`/governance/proposal/${proposalNumber}`}>
                 <div className="space-y-4 cursor-pointer">
@@ -363,7 +363,7 @@ export function ActiveProposals() {
 
       <Card className="stat-card-gradient p-4 sm:p-6">
         <div className="space-y-6">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">Governance Proposals</h3>
               {createProposalHelper && (

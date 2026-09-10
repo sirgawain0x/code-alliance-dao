@@ -169,10 +169,10 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-2 flex-1">
-          <div className="flex items-center space-x-2 flex-wrap">
+    <div className="min-w-0 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground">#{display.id}</span>
             <Badge variant="outline">{display.category}</Badge>
             <Badge variant="secondary">Moloch/Baal share voting</Badge>
@@ -180,22 +180,26 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
               {display.status}
             </Badge>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">{display.title}</h1>
-          <p className="text-muted-foreground">{display.description}</p>
+          <h1 className="break-words text-2xl font-bold text-foreground sm:text-3xl">
+            {display.title}
+          </h1>
+          <p className="break-words text-muted-foreground">{display.description}</p>
 
-          <div className="flex items-center space-x-4 text-sm text-muted-foreground flex-wrap">
-            <div className="flex items-center space-x-1">
-              <User className="h-4 w-4" />
-              <span className="font-mono">{display.author}</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            <div className="flex min-w-0 max-w-full items-center gap-1">
+              <User className="h-4 w-4 shrink-0" />
+              <span className="truncate font-mono text-xs sm:text-sm">
+                {display.author}
+              </span>
             </div>
-            <div className="flex items-center space-x-1">
-              <Clock className="h-4 w-4" />
+            <div className="flex shrink-0 items-center gap-1">
+              <Clock className="h-4 w-4 shrink-0" />
               <span>Created {display.created}</span>
             </div>
           </div>
         </div>
         {adminProposalUrl && (
-          <Button variant="outline" asChild>
+          <Button variant="outline" className="w-full shrink-0 sm:w-auto" asChild>
             <Link href={adminProposalUrl} target="_blank" rel="noopener noreferrer">
               View on DAOhaus
               <ExternalLink className="ml-2 h-4 w-4" />
@@ -204,20 +208,20 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
         )}
       </div>
 
-      <Card className="stat-card-gradient p-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+      <Card className="stat-card-gradient overflow-hidden p-4 sm:p-6">
+        <div className="min-w-0 space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-lg font-semibold text-foreground">Cast Your Vote</h3>
             <div className="text-sm text-muted-foreground">
               Your voting power: {display.yourVotingPower} vCRTV
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Voting Progress</span>
-                <span className="text-foreground">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="min-w-0 space-y-4">
+              <div className="flex flex-col gap-1 text-sm sm:flex-row sm:justify-between sm:gap-2">
+                <span className="shrink-0 text-muted-foreground">Voting Progress</span>
+                <span className="text-foreground text-xs sm:text-sm">
                   {display.votingPower.total.toLocaleString()} /{" "}
                   {display.votingPower.quorum.toLocaleString()} votes
                 </span>
@@ -232,10 +236,10 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
               />
 
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-green-400">For</span>
-                    <span className="text-foreground">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="shrink-0 text-green-400">For</span>
+                    <span className="truncate text-foreground">
                       {display.votingPower.for.toLocaleString()}
                     </span>
                   </div>
@@ -248,10 +252,10 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-red-400">Against</span>
-                    <span className="text-foreground">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="shrink-0 text-red-400">Against</span>
+                    <span className="truncate text-foreground">
                       {display.votingPower.against.toLocaleString()}
                     </span>
                   </div>
@@ -273,8 +277,8 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
+            <div className="min-w-0 space-y-4">
+              <div className="break-words text-sm text-muted-foreground">
                 {display.yourVote ? (
                   <span className="text-foreground font-semibold">
                     You voted: {display.yourVote}
@@ -382,13 +386,15 @@ export function ProposalDetail({ proposalId, initialMetadata }: ProposalDetailPr
         </TabsList>
 
         <TabsContent value="details" className="space-y-4">
-          <Card className="stat-card-gradient p-6">
-            <div className="whitespace-pre-wrap text-foreground">{display.fullDescription}</div>
+          <Card className="stat-card-gradient overflow-hidden p-4 sm:p-6">
+            <div className="break-words whitespace-pre-wrap text-foreground">
+              {display.fullDescription}
+            </div>
           </Card>
         </TabsContent>
 
         <TabsContent value="votes" className="space-y-4">
-          <Card className="stat-card-gradient p-6">
+          <Card className="stat-card-gradient overflow-hidden p-4 sm:p-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground">Votes</h3>
               {proposal.votes?.length ? (

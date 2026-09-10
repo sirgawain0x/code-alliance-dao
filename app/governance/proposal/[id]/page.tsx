@@ -11,9 +11,11 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 min-w-0 relative z-0">
-        <DashboardHeader />
-        <div className="p-6">
-          <ProposalDetail proposalId={id} initialMetadata={metadata} />
+        <div className="pt-16 md:pt-0">
+          <DashboardHeader />
+          <div className="p-4 sm:p-6">
+            <ProposalDetail proposalId={id} initialMetadata={metadata} />
+          </div>
         </div>
       </main>
     </div>

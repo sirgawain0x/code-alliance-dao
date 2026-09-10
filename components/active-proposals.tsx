@@ -176,7 +176,7 @@ export function ActiveProposals() {
           return (
             <div
               key={proposal.id}
-              className="border border-border/50 rounded-lg p-6 space-y-4 dao-card-hover bg-card/50 hover:bg-card hover:border-border transition-all duration-200"
+              className="border border-border/50 rounded-lg p-4 sm:p-6 space-y-4 dao-card-hover bg-card/50 hover:bg-card hover:border-border transition-all duration-200"
             >
               <Link href={`/governance/proposal/${proposalNumber}`}>
                 <div className="space-y-4 cursor-pointer">
@@ -361,9 +361,9 @@ export function ActiveProposals() {
         <CreateProposalForm onClose={() => setShowCreate(false)} />
       )}
 
-      <Card className="stat-card-gradient p-6">
+      <Card className="stat-card-gradient p-4 sm:p-6">
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">Governance Proposals</h3>
               {createProposalHelper && (
@@ -371,7 +371,11 @@ export function ActiveProposals() {
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="default" className="gap-2" onClick={handleCreateProposalClick}>
+              <Button
+                size="default"
+                className="w-full gap-2 sm:w-auto"
+                onClick={handleCreateProposalClick}
+              >
                 <Plus className="h-4 w-4" />
                 {!isConnected ? "Connect to Create" : "Create Proposal"}
               </Button>
@@ -401,29 +405,29 @@ export function ActiveProposals() {
             </div>
           </div>
 
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:flex gap-2 bg-transparent p-0 mb-6">
+          <Tabs defaultValue="all" className="w-full min-w-0">
+            <TabsList className="mb-6 grid w-full grid-cols-2 gap-2 bg-transparent p-0 sm:flex sm:w-auto">
               <TabsTrigger
                 value="all"
-                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20"
+                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 text-xs sm:text-sm"
               >
                 All
               </TabsTrigger>
               <TabsTrigger
                 value="active"
-                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20"
+                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 text-xs sm:text-sm"
               >
                 Active
               </TabsTrigger>
               <TabsTrigger
                 value="passed"
-                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20"
+                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 text-xs sm:text-sm"
               >
                 Passed
               </TabsTrigger>
               <TabsTrigger
                 value="failed"
-                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20"
+                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 text-xs sm:text-sm"
               >
                 Failed
               </TabsTrigger>

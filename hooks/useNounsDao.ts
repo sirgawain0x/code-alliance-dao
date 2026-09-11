@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ethers, formatEther } from "ethers";
 import { getRpcUrl } from "../utils/endpoints";
+import { normalizeTotalSupplyMemberCount } from "../utils/member-count";
 
 const TOKEN_ABI = [
     {
@@ -63,7 +64,7 @@ export function useNounsDao({
             const treasuryBalanceWei = await provider.getBalance(ownerAddress);
 
             return {
-                memberCount: totalSupply.toString(),
+                memberCount: String(normalizeTotalSupplyMemberCount(totalSupply)),
                 treasuryBalance: `${parseFloat(formatEther(treasuryBalanceWei)).toFixed(4)} ETH`, // Assuming native token for now
             };
         }

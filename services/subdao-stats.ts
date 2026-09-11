@@ -1,7 +1,8 @@
-import { Contract, JsonRpcProvider, formatEther, formatUnits, isAddress } from "ethers"
+import { Contract, JsonRpcProvider, formatEther, isAddress } from "ethers"
 
 import { FEATURED_DAOS_CONFIG, CHAIN_NAMES } from "@/utils/featured-daos"
 import { getRpcUrl } from "@/utils/endpoints"
+import { normalizeTotalSupplyMemberCount } from "@/utils/member-count"
 
 const SUBDAO_STATS_ABI = [
   "function activeMemberCount() view returns (uint256)",
@@ -14,12 +15,6 @@ const SUBDAO_STATS_ABI = [
   "function safeAddress() view returns (address)",
   "function safe() view returns (address)",
   "function treasury() view returns (address)",
-]
-
-const ERC20_ABI = [
-  "function balanceOf(address) view returns (uint256)",
-  "function symbol() view returns (string)",
-  "function decimals() view returns (uint8)",
 ]
 
 const MEMBER_COUNT_FUNCTIONS = [
@@ -37,6 +32,8 @@ const TREASURY_ADDRESS_FUNCTIONS = [
   "safe",
   "treasury",
 ]
+
+const TREASURY_FUNCTIONS_ALLOWING_FALLBACK_MATCH = new Set(["owner", "avatar"])
 
 const NATIVE_SYMBOLS: Record<string, string> = {
   "0x2105": "ETH",
@@ -147,27 +144,18 @@ async function fetchSubDaoContractStat({
       },
     ]
 
-    const erc20Balances = await fetchTreasuryErc20Balances({
-      provider,
-      treasuryAddress,
-      chainId,
-    })
-    tokenBalances.push(...erc20Balances)
-
-    const treasuryBalance = tokenBalances
-      .filter((token) => token.isNative)
-      .reduce((sum, token) => sum + BigInt(token.balance), BigInt(0))
+    const treasuryBalance = nativeBalance.toString()
 
     const hasLiveMembers = members > 0
-    const hasTreasuryBalance = tokenBalances.some((token) => BigInt(token.balance) > BigInt(0))
+    const hasTreasuryBalance = nativeBalance > BigInt(0)
     const status = hasLiveMembers || hasTreasuryBalance ? "live" : "partial"
 
     return {
       ...fallbackStat,
       members,
       treasuryAddress,
-      treasuryBalance: treasuryBalance.toString(),
-      treasuryBalanceEth: Number(formatEther(treasuryBalance)),
+      treasuryBalance,
+      treasuryBalanceEth: Number(formatEther(nativeBalance)),
       tokenBalances,
       status,
     }
@@ -194,115 +182,22 @@ async function readMemberCount(contract: Contract): Promise<number> {
   return 0
 }
 
-function normalizeTotalSupplyMemberCount(totalSupply: bigint): number {
-  const raw = Number(totalSupply)
-  if (raw === 0) return 0
-
-  // Nouns-style governance tokens store supply with 18 decimals.
-  if (raw >= 1e15) return Math.round(raw / 1e18)
-
-  return raw
-}
-
 async function readTreasuryAddress(contract: Contract, fallbackAddress: string): Promise<string> {
   for (const functionName of TREASURY_ADDRESS_FUNCTIONS) {
     try {
       const value = await withRetry(() => contract[functionName]())
       if (!isAddress(value)) continue
-      if (value.toLowerCase() === fallbackAddress.toLowerCase()) continue
+
+      const isSameAsFallback = value.toLowerCase() === fallbackAddress.toLowerCase()
+      if (isSameAsFallback && !TREASURY_FUNCTIONS_ALLOWING_FALLBACK_MATCH.has(functionName)) {
+        continue
+      }
 
       return value
     } catch {}
   }
 
-  for (const functionName of ["owner", "avatar"] as const) {
-    try {
-      const value = await withRetry(() => contract[functionName]())
-      if (isAddress(value)) return value
-    } catch {}
-  }
-
   return fallbackAddress
-}
-
-async function fetchTreasuryErc20Balances({
-  provider,
-  treasuryAddress,
-  chainId,
-}: {
-  provider: JsonRpcProvider
-  treasuryAddress: string
-  chainId: string
-}): Promise<SubDaoTokenBalance[]> {
-  const sequenceBalances = await fetchSequenceTokenBalances({
-    chainId,
-    treasuryAddress,
-  })
-  if (sequenceBalances.length > 0) return sequenceBalances
-
-  return []
-}
-
-async function fetchSequenceTokenBalances({
-  chainId,
-  treasuryAddress,
-}: {
-  chainId: string
-  treasuryAddress: string
-}): Promise<SubDaoTokenBalance[]> {
-  const sequenceKey = process.env.NEXT_PUBLIC_SEQUENCE_KEY
-  if (!sequenceKey) return []
-
-  const chainIdDecimal = parseInt(chainId, 16)
-  if (Number.isNaN(chainIdDecimal)) return []
-
-  try {
-    const response = await fetch(
-      "https://indexer.sequence.app/rpc/IndexerGateway/GetTokenBalances",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Access-Key": sequenceKey,
-        },
-        body: JSON.stringify({
-          chainIds: [chainIdDecimal],
-          accountAddress: treasuryAddress,
-          includeMetadata: true,
-          metadataOptions: { verifiedOnly: false },
-        }),
-      }
-    )
-
-    if (!response.ok) return []
-
-    const result = await response.json()
-    const balances =
-      result.page?.balances?.flatMap((entry: { results?: unknown[] }) => entry.results || []) ||
-      result.balances?.flatMap((entry: { results?: unknown[] }) => entry.results || []) ||
-      []
-
-    return balances
-      .filter((token: { balance?: string }) => token.balance && token.balance !== "0")
-      .map((token: {
-        balance: string
-        contractInfo?: { symbol?: string; decimals?: number }
-      }) => {
-        const decimals = token.contractInfo?.decimals ?? 18
-        const symbol = token.contractInfo?.symbol || "UNKNOWN"
-        const balanceFormatted = Number(formatUnits(token.balance, decimals))
-
-        return {
-          symbol,
-          balance: token.balance,
-          balanceFormatted,
-          isNative: false,
-        }
-      })
-  } catch (error) {
-    console.warn(`Sequence indexer unavailable for ${treasuryAddress}`, error)
-    return []
-  }
 }
 
 function getRpcUrlForChain(chainId: string): string {
@@ -315,6 +210,26 @@ function getRpcUrlForChain(chainId: string): string {
   return getRpcUrl({ chainid: chainIdDecimal, rpcKey })
 }
 
+function isTransientRpcError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false
+
+  const err = error as { code?: string | number; message?: string }
+  const message = err.message?.toLowerCase() ?? ""
+
+  if (err.code === "CALL_EXCEPTION" || err.code === "BAD_DATA") return false
+
+  return (
+    err.code === "NETWORK_ERROR" ||
+    err.code === "TIMEOUT" ||
+    err.code === "SERVER_ERROR" ||
+    err.code === 429 ||
+    message.includes("timeout") ||
+    message.includes("rate limit") ||
+    message.includes("econnreset") ||
+    message.includes("429")
+  )
+}
+
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastError: unknown
 
@@ -323,9 +238,8 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
       return await fn()
     } catch (error) {
       lastError = error
-      if (attempt < attempts - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)))
-      }
+      if (!isTransientRpcError(error) || attempt >= attempts - 1) throw error
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)))
     }
   }
 

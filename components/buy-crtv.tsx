@@ -52,7 +52,7 @@ export function BuyCRTV() {
     const { chainId, switchNetwork } = useAppKitNetwork()
     const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy")
     const [amount, setAmount] = useState("25")
-    const [sellAmount, setSellAmount] = useState("100")
+    const [sellAmount, setSellAmount] = useState("")
     const [quote, setQuote] = useState<CrtvaiMintQuote | null>(null)
     const [sellQuote, setSellQuote] = useState<CrtvaiSellQuote | null>(null)
     const [usdcBalance, setUsdcBalance] = useState<string | null>(null)
@@ -70,10 +70,16 @@ export function BuyCRTV() {
     const amountValidation = validateUsdcAmount(amount)
     const sellAmountValidation = validateMetokenAmount(sellAmount)
     const canQuote = Boolean(
-        isConnected && address && isBase && amountValidation.isValid && Number(amount) > 0,
+        activeTab === "buy" &&
+            isConnected &&
+            address &&
+            isBase &&
+            amountValidation.isValid &&
+            Number(amount) > 0,
     )
     const canQuoteSell = Boolean(
-        isConnected &&
+        activeTab === "sell" &&
+            isConnected &&
             address &&
             isBase &&
             sellAmountValidation.isValid &&
@@ -160,8 +166,9 @@ export function BuyCRTV() {
     }, [activeTab])
 
     useEffect(() => {
-        if (!canQuote) {
+        if (activeTab !== "buy" || !canQuote) {
             setQuote(null)
+            setIsQuoting(false)
             return
         }
 
@@ -224,11 +231,12 @@ export function BuyCRTV() {
             cancelled = true
             window.clearTimeout(timer)
         }
-    }, [amount, canQuote])
+    }, [activeTab, amount, canQuote])
 
     useEffect(() => {
-        if (!canQuoteSell || !address) {
+        if (activeTab !== "sell" || !canQuoteSell || !address) {
             setSellQuote(null)
+            setIsQuotingSell(false)
             return
         }
 
@@ -286,7 +294,7 @@ export function BuyCRTV() {
             cancelled = true
             window.clearTimeout(timer)
         }
-    }, [address, canQuoteSell, sellAmount])
+    }, [activeTab, address, canQuoteSell, sellAmount])
 
     async function handleMint() {
         if (!quote || !address) return
@@ -614,7 +622,7 @@ export function BuyCRTV() {
                                             min="0"
                                             value={sellAmount}
                                             onChange={(event) => setSellAmount(event.target.value)}
-                                            placeholder="100"
+                                            placeholder="0"
                                         />
                                         <div className="rounded-md border px-3 py-2 text-sm font-medium">{TOKEN_SYMBOL}</div>
                                     </div>

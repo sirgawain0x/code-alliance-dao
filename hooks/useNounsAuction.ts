@@ -5,6 +5,7 @@ import {
   NOUNS_AUCTION_ABI,
   type NounsAuctionSnapshot,
 } from "@/lib/nouns-auction"
+import { normalizeChainId } from "@/lib/dao-config"
 import { getRpcUrl } from "@/utils/endpoints"
 
 export function useNounsAuction({
@@ -28,7 +29,8 @@ export function useNounsAuction({
         throw new Error("Missing chainId or auctionHouseAddress")
       }
 
-      const chainIdDecimal = parseInt(chainId, 16).toString()
+      const chainIdDecimal = normalizeChainId(chainId)
+      if (!chainIdDecimal) throw new Error("Invalid chainId")
       const rpcKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || undefined
       const rpcUrl = getRpcUrl({ chainid: chainIdDecimal, rpcKey })
       const provider = new ethers.JsonRpcProvider(rpcUrl)

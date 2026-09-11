@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ethers, formatEther } from "ethers";
+import { normalizeChainId } from "@/lib/dao-config";
 import { getRpcUrl } from "../utils/endpoints";
 
 const TOKEN_ABI = [
@@ -44,7 +45,8 @@ export function useNounsDao({
             // but we should pass it what it usually expects. 
             // Looking at endpoints.ts, it expects decimal string "10" or "1". 
             // So we convert hex to decimal string.
-            const chainIdDecimal = parseInt(chainId, 16).toString();
+            const chainIdDecimal = normalizeChainId(chainId);
+            if (!chainIdDecimal) throw new Error("Invalid chainId");
             const rpcKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || undefined;
             const rpcUrl = getRpcUrl({ chainid: chainIdDecimal, rpcKey });
 

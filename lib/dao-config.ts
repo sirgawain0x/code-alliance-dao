@@ -53,7 +53,7 @@ function normalizeAddress(address?: string): string {
   return address?.toLowerCase() || ""
 }
 
-function normalizeChainId(chainId?: string): string {
+export function normalizeChainId(chainId?: string): string {
   if (!chainId) return ""
 
   const normalizedChainId = chainId.toLowerCase()

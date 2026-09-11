@@ -8,6 +8,8 @@ import { formatEther } from "ethers"
 import { Button } from "@/components/ui/button"
 import { useDao } from "@/hooks/useDao"
 import {
+  getTreasuryEthWarning,
+  getTreasurySkippedTokenWarning,
   hasTreasuryRpcDegradation,
   useSafeTreasuryBalances,
 } from "@/hooks/useSafeTreasuryBalances"
@@ -31,7 +33,13 @@ export function TreasuryOverviewDashboard() {
   })
 
   const safeAddress = treasury?.safeAddress || dao?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS
-  const rpcDegraded = hasTreasuryRpcDegradation(treasury, treasuryError)
+  const hardRpcFailure = hasTreasuryRpcDegradation(treasury, treasuryError)
+  const skippedWarning = getTreasurySkippedTokenWarning(treasury)
+  const ethWarning = getTreasuryEthWarning(treasury)
+  const displayTokens = (treasury?.tokens ?? []).filter(
+    (token) =>
+      !(token.symbol === "ETH" && token.address === null && treasury?.ethFetchFailed)
+  )
 
   if (daoLoading || treasuryLoading) {
     return <div className="animate-pulse h-96 bg-muted rounded-lg" />
@@ -44,10 +52,12 @@ export function TreasuryOverviewDashboard() {
   const treasuryStats = [
     {
       label: "Safe ETH",
-      value: Number(treasury?.ethFormatted || "0").toLocaleString(undefined, {
-        maximumFractionDigits: 4,
-      }),
-      subValue: rpcDegraded ? "RPC unavailable" : "ETH",
+      value: treasury?.ethFetchFailed
+        ? "—"
+        : Number(treasury?.ethFormatted || "0").toLocaleString(undefined, {
+            maximumFractionDigits: 4,
+          }),
+      subValue: treasury?.ethFetchFailed ? "RPC unavailable" : "ETH",
     },
     {
       label: "Total Shares",
@@ -98,18 +108,15 @@ export function TreasuryOverviewDashboard() {
         </div>
 
         <div className="space-y-3">
-          {rpcDegraded ? (
+          {hardRpcFailure ? (
             <p className="text-sm text-amber-400">
-              Unable to load live balances from RPC
-              {treasury?.skippedTokens.length
-                ? ` (${treasury.skippedTokens.join(", ")} skipped)`
-                : ""}
-              . Safe address is shown above — verify on BaseScan.
+              Unable to load live balances from RPC. Safe address is shown above — verify on
+              BaseScan.
             </p>
-          ) : (treasury?.tokens || []).length === 0 ? (
+          ) : displayTokens.length === 0 ? (
             <p className="text-sm text-muted-foreground">No balances found for this Safe.</p>
           ) : (
-            treasury?.tokens.map((token) => (
+            displayTokens.map((token) => (
               <div
                 key={`${token.symbol}-${token.address || "eth"}`}
                 className="flex items-center justify-between border-b border-border/40 pb-2"
@@ -122,6 +129,9 @@ export function TreasuryOverviewDashboard() {
               </div>
             ))
           )}
+
+          {ethWarning ? <p className="text-sm text-amber-400">{ethWarning}</p> : null}
+          {skippedWarning ? <p className="text-sm text-amber-400">{skippedWarning}</p> : null}
         </div>
       </Card>
     </div>

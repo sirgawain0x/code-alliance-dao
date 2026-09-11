@@ -147,6 +147,40 @@ export const getTokenIndexerUrl = ({
   return indexerUrl;
 };
 
+export function getAlchemyRpcKey(): string | undefined {
+  return (
+    process.env.NEXT_PUBLIC_ALCHEMY_API_KEY ||
+    process.env.ALCHEMY_API_KEY ||
+    undefined
+  )
+}
+
+/** Ordered RPC URLs for a chain — primary first, then fallbacks for transient failures. */
+export function getRpcUrls({
+  chainid,
+  rpcKey,
+}: {
+  chainid: string
+  rpcKey?: string
+}): string[] {
+  const key = rpcKey ?? getAlchemyRpcKey()
+  const urls: string[] = []
+
+  const add = (url: string | null | undefined) => {
+    if (url && !urls.includes(url)) urls.push(url)
+  }
+
+  add(getRpcUrl({ chainid, rpcKey: key }))
+
+  if (chainid === "8453") {
+    add(process.env.NEXT_PUBLIC_BASE_RPC_URL || process.env.BASE_RPC_URL)
+    add("https://mainnet.base.org")
+    add("https://base.publicnode.com")
+  }
+
+  return urls
+}
+
 // RPC URL builder for different chains
 export const getRpcUrl = ({
   chainid,

@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { Contract, formatEther, JsonRpcProvider, ZeroAddress } from "ethers"
+import { Contract, formatEther, ZeroAddress } from "ethers"
 
 import { ERC20_ABI } from "@/config/abis/baal"
 import { CREATIVE_ORG_SAFE_ADDRESS } from "@/config/constants"
@@ -10,9 +10,14 @@ import {
   fetchGuildTokenAddresses,
   resolveBaalAddress,
   resolveBaalSafeAddress,
+  type TreasuryErc20Target,
 } from "@/lib/baal-treasury"
+import {
+  createTreasuryProvider,
+  fetchEthBalanceWithFallback,
+  withRetry,
+} from "@/lib/treasury-rpc"
 import { getDaoContractConfig } from "@/lib/dao-config"
-import { getRpcUrl } from "@/utils/endpoints"
 
 export interface TreasuryTokenBalance {
   address: string | null
@@ -33,13 +38,68 @@ export interface SafeTreasuryBalances {
   tokenSource: "guild" | "default"
 }
 
+function hasMeaningfulTreasuryBalances(treasury: SafeTreasuryBalances): boolean {
+  const erc20Tokens = treasury.tokens.filter((token) => token.address !== null)
+  if (erc20Tokens.length > 0) return true
+  return !treasury.ethFetchFailed && BigInt(treasury.ethBalance) > BigInt(0)
+}
+
+/** Hard RPC failure: whole query failed, or ETH failed with no other usable balances. */
 export function hasTreasuryRpcDegradation(
   treasury: SafeTreasuryBalances | undefined,
   isError = false
 ): boolean {
-  if (isError) return true
+  if (isError && !treasury) return true
   if (!treasury) return false
-  return treasury.ethFetchFailed || treasury.skippedTokens.length > 0
+  if (!treasury.ethFetchFailed) return false
+  return !hasMeaningfulTreasuryBalances(treasury)
+}
+
+export function getTreasurySkippedTokenWarning(
+  treasury: SafeTreasuryBalances | undefined
+): string | null {
+  if (!treasury?.skippedTokens.length) return null
+  const names = treasury.skippedTokens.join(", ")
+  return `${names} temporarily unavailable — open View Safe on BaseScan for full balances.`
+}
+
+export function getTreasuryEthWarning(
+  treasury: SafeTreasuryBalances | undefined
+): string | null {
+  if (!treasury?.ethFetchFailed) return null
+  if (hasMeaningfulTreasuryBalances(treasury)) {
+    return "ETH balance temporarily unavailable — open View Safe on BaseScan."
+  }
+  return null
+}
+
+async function fetchErc20TokenBalance({
+  provider,
+  treasury,
+  target,
+}: {
+  provider: Awaited<ReturnType<typeof createTreasuryProvider>>
+  treasury: string
+  target: TreasuryErc20Target
+}): Promise<TreasuryTokenBalance | null> {
+  const token = await enrichTokenMetadata({ provider, token: target })
+  const contract = new Contract(token.address, ERC20_ABI, provider)
+  const balance: bigint = await contract.balanceOf(treasury)
+  if (balance <= BigInt(0)) return null
+
+  const decimals = token.decimals ?? 18
+  const symbol = token.symbol ?? "UNKNOWN"
+
+  return {
+    address: token.address === ZeroAddress ? null : token.address,
+    symbol,
+    name: symbol,
+    decimals,
+    balance: balance.toString(),
+    formatted: (Number(balance) / 10 ** decimals).toLocaleString(undefined, {
+      maximumFractionDigits: 6,
+    }),
+  }
 }
 
 export function useSafeTreasuryBalances({
@@ -62,34 +122,30 @@ export function useSafeTreasuryBalances({
     queryKey: ["safe-treasury-balances", chainId, configuredSafe, baalAddress],
     enabled: Boolean(configuredSafe && chainId),
     queryFn: async (): Promise<SafeTreasuryBalances> => {
-      const provider = new JsonRpcProvider(getRpcUrl({ chainid: chainId }))
+      const provider = await createTreasuryProvider(chainId)
       const treasury = await resolveBaalSafeAddress({
         provider,
         baalAddress,
         fallbackSafeAddress: configuredSafe,
       })
 
-      let ethBalance = BigInt(0)
-      let ethFetchFailed = false
-      try {
-        ethBalance = await provider.getBalance(treasury)
-      } catch (error) {
-        ethFetchFailed = true
-        console.error("Failed to fetch Safe ETH balance:", error)
-      }
+      const { balance: ethBalance, failed: ethFetchFailed } =
+        await fetchEthBalanceWithFallback(treasury, chainId)
 
       const skippedTokens: string[] = []
 
-      const tokens: TreasuryTokenBalance[] = [
-        {
+      const tokens: TreasuryTokenBalance[] = []
+
+      if (!ethFetchFailed) {
+        tokens.push({
           address: null,
           symbol: "ETH",
           name: "Ether",
           decimals: 18,
           balance: ethBalance.toString(),
           formatted: formatEther(ethBalance),
-        },
-      ]
+        })
+      }
 
       const { tokens: erc20Targets, source: tokenSource } = await fetchGuildTokenAddresses({
         provider,
@@ -98,28 +154,16 @@ export function useSafeTreasuryBalances({
       })
 
       for (const target of erc20Targets) {
+        const label = target.symbol || target.address
         try {
-          const token = await enrichTokenMetadata({ provider, token: target })
-          const contract = new Contract(token.address, ERC20_ABI, provider)
-          const balance: bigint = await contract.balanceOf(treasury)
-          if (balance <= BigInt(0)) continue
-
-          const decimals = token.decimals ?? 18
-          const symbol = token.symbol ?? "UNKNOWN"
-          tokens.push({
-            address: token.address === ZeroAddress ? null : token.address,
-            symbol,
-            name: symbol,
-            decimals,
-            balance: balance.toString(),
-            formatted: (Number(balance) / 10 ** decimals).toLocaleString(undefined, {
-              maximumFractionDigits: 6,
-            }),
-          })
+          const tokenBalance = await withRetry(
+            () => fetchErc20TokenBalance({ provider, treasury, target }),
+            { attempts: 3, baseDelayMs: 250 }
+          )
+          if (tokenBalance) tokens.push(tokenBalance)
         } catch (error) {
-          const label = target.symbol || target.address
           skippedTokens.push(label)
-          console.warn(`Skipping treasury token ${label}:`, error)
+          console.warn(`Skipping treasury token ${label} after retries:`, error)
         }
       }
 
@@ -133,6 +177,6 @@ export function useSafeTreasuryBalances({
         tokenSource,
       }
     },
-    retry: 1,
+    retry: 2,
   })
 }

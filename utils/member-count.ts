@@ -11,3 +11,8 @@ export function normalizeTotalSupplyMemberCount(totalSupply: bigint): number {
 
   return Number(totalSupply)
 }
+
+/** Normalize on-chain Baal/Moloch totalShares (18-decimal share units). */
+export function normalizeBaalTotalShares(totalShares: bigint): number {
+  return normalizeTotalSupplyMemberCount(totalShares)
+}

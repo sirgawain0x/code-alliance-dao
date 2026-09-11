@@ -34,7 +34,7 @@ const RPC_URLS: Record<string, string> = {
   "0x2105": process.env.BASE_RPC_URL || "https://mainnet.base.org",
   "0xa4b1": process.env.ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc",
   "0xa": process.env.OPTIMISM_RPC_URL || "https://mainnet.optimism.io",
-  "0x1": process.env.MAINNET_RPC_URL || "https://cloudflare-eth.com",
+  "0x1": process.env.MAINNET_RPC_URL || "https://ethereum.publicnode.com",
   "0x64": process.env.GNOSIS_RPC_URL || "https://rpc.gnosischain.com",
 }
 

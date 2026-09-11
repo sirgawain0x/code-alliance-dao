@@ -38,14 +38,16 @@ export function SubDAOStats() {
     {
       label: "Featured DAO Members",
       value: dynamicStats?.totalMembers?.toLocaleString() || "0",
-      change: isError ? "Live sync unavailable" : "Sum of featured DAOs on-chain",
+      change: isError ? "Live sync unavailable" : "On-chain across featured DAOs",
       icon: Users,
       color: "text-green-400",
     },
     {
       label: "Combined Treasury",
       value: `Ξ ${dynamicStats?.combinedTreasury?.toFixed(4) || "0.0000"}`,
-      change: isError ? "Live sync unavailable" : "Featured DAO native balances",
+      change: isError
+        ? "Live sync unavailable"
+        : "Cumulative native ETH across featured DAO treasuries",
       icon: DollarSign,
       color: "text-purple-400",
     },

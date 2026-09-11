@@ -95,19 +95,13 @@ export function AssetAllocation() {
     }
   }
 
-  const totalValue =
-    displayTokens.reduce((sum, token) => {
-      if (!token.token?.decimals) return sum
-      return sum + Number(formatUnits(token.balance, token.token.decimals))
-    }, 0) || 0
-
   const assets =
     displayTokens
       .filter((token) => token.token != null)
       .map((token) => {
         const decimals = token.token!.decimals ?? 18
         const balance = Number(formatUnits(token.balance, decimals))
-        const percentage = totalValue > 0 ? (balance / totalValue) * 100 : 0
+        const percentage = 0
         const type = getTokenType(token.token!.symbol ?? "UNKNOWN")
         const risk = getTokenRisk(type)
 
@@ -123,7 +117,18 @@ export function AssetAllocation() {
         }
       }) || []
 
-  assets.sort((a, b) => b.percentage - a.percentage)
+  const totalBalanceUnits = assets.reduce((sum, asset) => sum + asset.amount, 0)
+  const hasSingleUnit = assets.length === 1
+
+  assets.forEach((asset) => {
+    asset.percentage = hasSingleUnit
+      ? 100
+      : totalBalanceUnits > 0
+        ? (asset.amount / totalBalanceUnits) * 100
+        : 0
+  })
+
+  assets.sort((a, b) => b.amount - a.amount)
 
   if (isLoading && rpcLoading) {
     return (
@@ -229,11 +234,18 @@ export function AssetAllocation() {
           ))}
         </div>
 
-        <div className="pt-2 border-t border-border">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total Assets</span>
-            <span className="font-medium text-foreground">{assets.length} tokens</span>
+        <div className="pt-2 border-t border-border space-y-1">
+          <div className="flex justify-between text-sm gap-3">
+            <span className="text-muted-foreground">Holdings</span>
+            <span className="font-medium text-foreground text-right">
+              {assets.length} token{assets.length === 1 ? "" : "s"}
+            </span>
           </div>
+          {assets.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Listed balances are on-chain amounts for this Safe on Base — not a USD total.
+            </p>
+          )}
         </div>
       </div>
     </Card>

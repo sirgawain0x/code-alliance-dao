@@ -168,7 +168,7 @@ export const getRpcUrl = ({
     process.env.NEXT_PUBLIC_BASE_RPC_URL || process.env.BASE_RPC_URL || null
 
   const rpcUrls: Record<string, string> = {
-    "1": alchemyUrl("eth-mainnet") || "https://cloudflare-eth.com",
+    "1": alchemyUrl("eth-mainnet") || "https://ethereum.publicnode.com",
     "42161": alchemyUrl("arb-mainnet") || "https://arb1.arbitrum.io/rpc",
     "10": alchemyUrl("opt-mainnet") || "https://mainnet.optimism.io",
     "8453":

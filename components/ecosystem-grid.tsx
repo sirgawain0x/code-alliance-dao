@@ -1,14 +1,14 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Tv, Newspaper, Landmark, ExternalLink, ArrowRight, Gift, Palette, Music } from "lucide-react"
+import { Tv, Newspaper, Landmark, ExternalLink, Gift, Palette, Music, Disc3 } from "lucide-react"
 import Link from "next/link"
 
 const ecosystemProjects = [
     {
         id: "creative-tv",
         name: "Creative TV",
-        description: "The premier video streaming platform for the creative economy. Watch, create, and earn rewards while engaging with decentralized content.",
+        description: "Video streaming and discovery for the creative economy. Watch, share, and earn as you explore culture-forward creators and shows.",
         url: "https://tv.creativeplatform.xyz",
         category: "Entertainment",
         status: "Live",
@@ -20,7 +20,7 @@ const ecosystemProjects = [
     {
         id: "dear-creative",
         name: "Dear Creative",
-        description: "Your source for the latest news, stories, and insights from the creative world. Stay updated with the pulse of the creator economy.",
+        description: "The Creative newsletter for news, stories, and insights from the creator economy. Stay close to what's moving culture.",
         url: "https://news.creativeplatform.xyz",
         category: "Media & News",
         status: "Live",
@@ -32,7 +32,7 @@ const ecosystemProjects = [
     {
         id: "creative-bank",
         name: "Creative Bank",
-        description: "Comprehensive financial tools and banking services tailored for creators. Manage your assets, payments, and investments in one place.",
+        description: "Creator finance tools for income, vaults, and treasury. Track earnings, plan payouts, and manage your creative business in one place.",
         url: "https://bank.creativeplatform.xyz",
         category: "DeFi & Finance",
         status: "Live",
@@ -44,22 +44,22 @@ const ecosystemProjects = [
     {
         id: "bitrewards",
         name: "BitRewards",
-        description: "A decentralized loyalty program rewarding engagement and creativity. Earn tokens for your contributions and redeem them for exclusive perks.",
+        description: "Earn Bitcoin rewards on everyday purchases. Shop through partner brands and stack sats as you spend.",
         url: "https://rewards.creativeplatform.xyz",
         category: "Loyalty & Rewards",
-        status: "Beta",
+        status: "Live",
         icon: Gift,
         color: "text-orange-400",
         bgColor: "bg-orange-500/10",
         borderColor: "border-orange-500/20",
     },
     {
-        id: "create",
-        name: "Create",
-        description: "Powerful tools for digital creation. Access a suite of resources to bring your artistic visions to life on the blockchain.",
+        id: "pixels",
+        name: "Creative Pixels",
+        description: "Live creative editor with Infinite Canvas. Design, compose, and publish visual work in one workspace.",
         url: "https://create.creativeplatform.xyz",
         category: "Creator Tools",
-        status: "Beta",
+        status: "Live",
         icon: Palette,
         color: "text-pink-400",
         bgColor: "bg-pink-500/10",
@@ -68,7 +68,7 @@ const ecosystemProjects = [
     {
         id: "beat-me",
         name: "Beat Me",
-        description: "Test your music knowledge and compete to win weekly USDC prize pots in this addictive music trivia miniapp.",
+        description: "Test your music knowledge and compete for weekly USDC prize pots in this music trivia miniapp.",
         url: "https://beatme.creativeplatform.xyz",
         category: "Gaming",
         status: "Live",
@@ -76,6 +76,18 @@ const ecosystemProjects = [
         color: "text-cyan-400",
         bgColor: "bg-cyan-500/10",
         borderColor: "border-cyan-500/20",
+    },
+    {
+        id: "mixtape",
+        name: "Mixtape",
+        description: "Build and share mixtape playlists from Creative TV and beyond. Curate stations, shape event arcs, and publish share-friendly mixes.",
+        url: "https://air.creativeplatform.xyz/app",
+        category: "Music & Media",
+        status: "Live",
+        icon: Disc3,
+        color: "text-violet-400",
+        bgColor: "bg-violet-500/10",
+        borderColor: "border-violet-500/20",
     },
 ]
 

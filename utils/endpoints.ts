@@ -148,11 +148,7 @@ export const getTokenIndexerUrl = ({
 };
 
 export function getAlchemyRpcKey(): string | undefined {
-  return (
-    process.env.NEXT_PUBLIC_ALCHEMY_API_KEY ||
-    process.env.ALCHEMY_API_KEY ||
-    undefined
-  )
+  return process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || undefined
 }
 
 /** Ordered RPC URLs for a chain — primary first, then fallbacks for transient failures. */

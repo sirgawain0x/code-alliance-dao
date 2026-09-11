@@ -13,8 +13,8 @@ import {
   type TreasuryErc20Target,
 } from "@/lib/baal-treasury"
 import {
-  createTreasuryProvider,
-  fetchEthBalanceWithFallback,
+  fetchEthBalance,
+  resolveTreasuryProvider,
   withRetry,
 } from "@/lib/treasury-rpc"
 import { getDaoContractConfig } from "@/lib/dao-config"
@@ -49,7 +49,7 @@ export function hasTreasuryRpcDegradation(
   treasury: SafeTreasuryBalances | undefined,
   isError = false
 ): boolean {
-  if (isError && !treasury) return true
+  if (isError) return !treasury || !hasMeaningfulTreasuryBalances(treasury)
   if (!treasury) return false
   if (!treasury.ethFetchFailed) return false
   return !hasMeaningfulTreasuryBalances(treasury)
@@ -78,7 +78,7 @@ async function fetchErc20TokenBalance({
   treasury,
   target,
 }: {
-  provider: Awaited<ReturnType<typeof createTreasuryProvider>>
+  provider: Awaited<ReturnType<typeof resolveTreasuryProvider>>
   treasury: string
   target: TreasuryErc20Target
 }): Promise<TreasuryTokenBalance | null> {
@@ -122,15 +122,17 @@ export function useSafeTreasuryBalances({
     queryKey: ["safe-treasury-balances", chainId, configuredSafe, baalAddress],
     enabled: Boolean(configuredSafe && chainId),
     queryFn: async (): Promise<SafeTreasuryBalances> => {
-      const provider = await createTreasuryProvider(chainId)
+      const provider = await resolveTreasuryProvider(chainId)
       const treasury = await resolveBaalSafeAddress({
         provider,
         baalAddress,
         fallbackSafeAddress: configuredSafe,
       })
 
-      const { balance: ethBalance, failed: ethFetchFailed } =
-        await fetchEthBalanceWithFallback(treasury, chainId)
+      const { balance: ethBalance, failed: ethFetchFailed } = await fetchEthBalance(
+        provider,
+        treasury
+      )
 
       const skippedTokens: string[] = []
 

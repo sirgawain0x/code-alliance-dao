@@ -1,14 +1,16 @@
 import { Contract, JsonRpcProvider, formatEther, isAddress } from "ethers"
 
 import { FEATURED_DAOS_CONFIG, CHAIN_NAMES } from "@/utils/featured-daos"
+import { fetchDaohausActiveMemberCount, isBaalContract } from "@/utils/baal-contract"
 import { getRpcUrl } from "@/utils/endpoints"
-import { normalizeTotalSupplyMemberCount } from "@/utils/member-count"
+import { normalizeBaalTotalShares, normalizeTotalSupplyMemberCount } from "@/utils/member-count"
 
 const SUBDAO_STATS_ABI = [
   "function activeMemberCount() view returns (uint256)",
   "function memberCount() view returns (uint256)",
   "function membersCount() view returns (uint256)",
   "function totalMembers() view returns (uint256)",
+  "function totalShares() view returns (uint256)",
   "function totalSupply() view returns (uint256)",
   "function owner() view returns (address)",
   "function avatar() view returns (address)",
@@ -56,6 +58,8 @@ export interface SubDaoContractStat {
   chainName: string
   label: string
   members: number
+  /** Moloch/Baal share supply (÷1e18). Null for Nouns NFT featured DAOs. */
+  shares: number | null
   treasuryAddress: string
   treasuryBalance: string
   treasuryBalanceEth: number
@@ -66,6 +70,8 @@ export interface SubDaoContractStat {
 export interface SubDaoAggregateStats {
   activeSubDAOs: number
   totalMembers: number
+  /** Sum of Baal totalShares across featured Moloch DAOs (excludes Nouns NFTs). */
+  totalFeaturedShares: number
   combinedTreasury: number
   combinedTreasuryEth: string
   networkCount: number
@@ -86,6 +92,10 @@ export async function getSubDaoAggregateStats(): Promise<SubDaoAggregateStats> {
   }
 
   const totalMembers = contracts.reduce((sum, contract) => sum + contract.members, 0)
+  const totalFeaturedShares = contracts.reduce(
+    (sum, contract) => sum + (contract.shares ?? 0),
+    0
+  )
   const combinedTreasuryWei = contracts.reduce(
     (sum, contract) => sum + BigInt(contract.treasuryBalance),
     BigInt(0)
@@ -94,6 +104,7 @@ export async function getSubDaoAggregateStats(): Promise<SubDaoAggregateStats> {
   return {
     activeSubDAOs: contracts.length,
     totalMembers,
+    totalFeaturedShares,
     combinedTreasury: Number(formatEther(combinedTreasuryWei)),
     combinedTreasuryEth: formatEther(combinedTreasuryWei),
     networkCount: new Set(contracts.map((contract) => contract.chainId)).size,
@@ -118,6 +129,7 @@ async function fetchSubDaoContractStat({
     chainName,
     label,
     members: 0,
+    shares: null,
     treasuryAddress: address,
     treasuryBalance: "0",
     treasuryBalanceEth: 0,
@@ -131,7 +143,9 @@ async function fetchSubDaoContractStat({
     const provider = new JsonRpcProvider(getRpcUrlForChain(chainId))
     const contract = new Contract(address, SUBDAO_STATS_ABI, provider)
 
-    const members = await readMemberCount(contract)
+    const isBaal = await isBaalContract(contract)
+    const members = await readMemberCount({ contract, chainId, address, isBaal })
+    const shares = isBaal ? await readBaalTotalShares(contract) : null
     const treasuryAddress = await readTreasuryAddress(contract, address)
     const nativeBalance = await withRetry(() => provider.getBalance(treasuryAddress))
 
@@ -153,6 +167,7 @@ async function fetchSubDaoContractStat({
     return {
       ...fallbackStat,
       members,
+      shares,
       treasuryAddress,
       treasuryBalance,
       treasuryBalanceEth: Number(formatEther(nativeBalance)),
@@ -165,7 +180,22 @@ async function fetchSubDaoContractStat({
   }
 }
 
-async function readMemberCount(contract: Contract): Promise<number> {
+async function readMemberCount({
+  contract,
+  chainId,
+  address,
+  isBaal,
+}: {
+  contract: Contract
+  chainId: string
+  address: string
+  isBaal: boolean
+}): Promise<number> {
+  if (isBaal) {
+    const activeMemberCount = await fetchDaohausActiveMemberCount({ chainId, address })
+    return activeMemberCount ?? 0
+  }
+
   for (const functionName of MEMBER_COUNT_FUNCTIONS) {
     try {
       const value = await withRetry(() => contract[functionName]())
@@ -180,6 +210,15 @@ async function readMemberCount(contract: Contract): Promise<number> {
   } catch {}
 
   return 0
+}
+
+async function readBaalTotalShares(contract: Contract): Promise<number> {
+  try {
+    const totalShares = await withRetry(() => contract.totalShares())
+    return normalizeBaalTotalShares(totalShares)
+  } catch {
+    return 0
+  }
 }
 
 async function readTreasuryAddress(contract: Contract, fallbackAddress: string): Promise<string> {

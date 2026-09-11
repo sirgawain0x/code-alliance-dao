@@ -1,7 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { TrendingUp, Building2, DollarSign, Users } from "lucide-react"
+import { Vote, Building2, DollarSign, Users } from "lucide-react"
 import { useSubDAOStats } from "@/hooks/useSubDAOStats"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -38,7 +38,9 @@ export function SubDAOStats() {
     {
       label: "Featured DAO Members",
       value: dynamicStats?.totalMembers?.toLocaleString() || "0",
-      change: isError ? "Live sync unavailable" : "On-chain across featured DAOs",
+      change: isError
+        ? "Live sync unavailable"
+        : "DAOhaus active members + Nouns NFT supply",
       icon: Users,
       color: "text-green-400",
     },
@@ -52,10 +54,12 @@ export function SubDAOStats() {
       color: "text-purple-400",
     },
     {
-      label: "Networks",
-      value: String(dynamicStats?.networkCount || 0),
-      change: isError ? "Live sync unavailable" : "Chains with featured DAOs",
-      icon: TrendingUp,
+      label: "Featured Total Shares",
+      value: dynamicStats?.totalFeaturedShares?.toLocaleString() || "0",
+      change: isError
+        ? "Live sync unavailable"
+        : "Moloch shares across featured DAOs (excludes Nouns NFTs)",
+      icon: Vote,
       color: "text-orange-400",
     },
   ]

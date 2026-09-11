@@ -30,11 +30,14 @@ export function StatsOverview() {
     return <div className="animate-pulse h-40 bg-muted rounded-lg"></div>
   }
 
+  const parentShares = Math.round(Number(safeFormatEther(dao.totalShares))).toLocaleString()
+  const parentLoot = Math.round(Number(safeFormatEther(dao.totalLoot))).toLocaleString()
+
   const stats = [
     {
-      label: "Active Members",
+      label: "Parent Active Members",
       value: dao.activeMemberCount,
-      subValue: undefined,
+      subValue: "Creative Org DAO · Base",
       icon: Users,
       color: "text-green-400",
     },
@@ -46,16 +49,16 @@ export function StatsOverview() {
       color: "text-blue-400",
     },
     {
-      label: "Total Shares",
-      value: Math.round(Number(safeFormatEther(dao.totalShares))).toLocaleString(),
-      subValue: undefined,
+      label: "Parent Total Shares",
+      value: parentShares,
+      subValue: "Single parent DAO (see featured row above)",
       icon: Vote,
       color: "text-purple-400",
     },
     {
-      label: "Total Loot",
-      value: Math.round(Number(safeFormatEther(dao.totalLoot))).toLocaleString(),
-      subValue: undefined,
+      label: "Parent Total Loot",
+      value: parentLoot,
+      subValue: "Creative Org DAO · Base",
       icon: TrendingUp,
       color: "text-orange-400",
     },

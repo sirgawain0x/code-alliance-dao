@@ -23,17 +23,6 @@ export function DashboardHeader() {
               {dao?.name || "Loading..."}
             </Badge>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              All
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              30d
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              7d
-            </Badge>
-          </div>
         </div>
         <div className="hidden shrink-0 md:block">
           <appkit-button />

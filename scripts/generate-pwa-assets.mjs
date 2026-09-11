@@ -101,7 +101,6 @@ async function main() {
     writeFile(path.join(root, "public/og-image.png"), ogImage),
   ])
 
-  const logoSvg = await readFile(logoPath)
   console.log("Generated PWA icons and OG image from Creative_logo-200.svg")
 }
 

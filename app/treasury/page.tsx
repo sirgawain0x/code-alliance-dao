@@ -4,6 +4,16 @@ import { TreasuryOverviewDashboard } from "@/components/treasury-overview-dashbo
 import { AssetAllocation } from "@/components/asset-allocation"
 import { TransactionHistory } from "@/components/transaction-history"
 import { TreasuryProposals } from "@/components/treasury-proposals"
+import { createSiteMetadata, SITE_NAME } from "@/lib/site-metadata"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = createSiteMetadata({
+  title: `Treasury | ${SITE_NAME}`,
+  description:
+    "Monitor Creative Organization DAO treasury balances, allocations, proposals, and transaction history on Base.",
+  path: "/treasury",
+  openGraphTitle: `Treasury | ${SITE_NAME}`,
+})
 
 export default function TreasuryPage() {
   return (

@@ -45,10 +45,7 @@ export function useNounsDao({
             // Looking at endpoints.ts, it expects decimal string "10" or "1". 
             // So we convert hex to decimal string.
             const chainIdDecimal = parseInt(chainId, 16).toString();
-            const rpcKey =
-                process.env.NEXT_PUBLIC_ALCHEMY_API_KEY ||
-                process.env.ALCHEMY_API_KEY ||
-                undefined;
+            const rpcKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || undefined;
             const rpcUrl = getRpcUrl({ chainid: chainIdDecimal, rpcKey });
 
             const provider = new ethers.JsonRpcProvider(rpcUrl);

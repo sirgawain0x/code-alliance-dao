@@ -3,13 +3,40 @@
 import { Card } from "./ui/card"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
-import { Search, Users } from "lucide-react"
-import { useDao, useNounsDao } from "../hooks"
+import { Gavel, Search, Users } from "lucide-react"
+import { useDao, useNounsAuction, useNounsDao } from "../hooks"
+import { getDaoContractConfigByNft } from "@/lib/dao-config"
+import type { NounsAuctionStatusKind } from "@/lib/nouns-auction"
 import { Skeleton } from "./ui/skeleton"
 import Link from "next/link"
 import { DaoLogoImage } from "@/components/dao-logo-image"
 
 import { FEATURED_DAOS_CONFIG, CHAIN_NAMES, type FeaturedDao } from "../utils/featured-daos"
+
+const AUCTION_STATUS_STYLES: Record<NounsAuctionStatusKind, string> = {
+  live: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  "ending-soon": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  "ended-unsettled": "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  settled: "bg-muted text-muted-foreground border-border",
+  idle: "bg-muted text-muted-foreground border-border",
+}
+
+function NounsAuctionStatusRow({
+  label,
+  status,
+}: {
+  label: string
+  status: NounsAuctionStatusKind
+}) {
+  return (
+    <div
+      className={`flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] leading-tight ${AUCTION_STATUS_STYLES[status]}`}
+    >
+      <Gavel className="h-3 w-3 shrink-0" />
+      <span className="truncate">{label}</span>
+    </div>
+  )
+}
 
 export function DaoCardSkeleton() {
   return (
@@ -56,6 +83,17 @@ export function DaoCard({
     // Only fetch if we have a valid chainId and address
     chainId: chainId,
     daoAddress: address,
+  })
+
+  const daoContractConfig = getDaoContractConfigByNft({
+    chainId,
+    nftAddress: address,
+  })
+  const auctionHouseAddress = daoContractConfig?.auctionHouseAddress
+  const { auction: nounsAuction } = useNounsAuction({
+    chainId,
+    auctionHouseAddress,
+    enabled: Boolean(auctionHouseAddress),
   })
 
   // Combine loading states - use whichever one gives us data first, or wait if we have neither
@@ -146,7 +184,7 @@ export function DaoCard({
           </div>
 
           {!hideMembers && (
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
                 <span>{memberCount} members</span>
@@ -158,6 +196,13 @@ export function DaoCard({
                 </div>
               )}
             </div>
+          )}
+
+          {nounsAuction && (
+            <NounsAuctionStatusRow
+              label={nounsAuction.label}
+              status={nounsAuction.status}
+            />
           )}
 
           {showManageButton && (

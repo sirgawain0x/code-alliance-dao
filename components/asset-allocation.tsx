@@ -212,9 +212,11 @@ export function AssetAllocation() {
                       maximumFractionDigits: 6,
                     })}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {asset.percentage.toFixed(1)}%
-                  </p>
+                  {hasSingleUnit && (
+                    <p className="text-xs text-muted-foreground">
+                      {asset.percentage.toFixed(1)}%
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -229,7 +231,7 @@ export function AssetAllocation() {
                 </span>
               </div>
 
-              <Progress value={asset.percentage} className="h-1" />
+              {hasSingleUnit && <Progress value={asset.percentage} className="h-1" />}
             </div>
           ))}
         </div>

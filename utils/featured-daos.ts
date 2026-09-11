@@ -35,7 +35,6 @@ export const FEATURED_DAOS_CONFIG: FeaturedDao[] = [
         description:
             "The future is here, and it's a beautiful sight. At Creative Organization DAO we want to help fuel this innovative process by providing underserved children with access to the tools they need for creative expression and art, such as tablets, digital pencils, and software.",
         link: "https://nouns.build/dao/optimism/0x4281f0f00bbe9bfa54cf414a193711e17e7f1f02/22",
-        hideMembers: true,
     },
     {
         chainId: "0x1",
@@ -45,7 +44,6 @@ export const FEATURED_DAOS_CONFIG: FeaturedDao[] = [
         description:
             "The future is here, and it's a beautiful sight. At Creative Organization DAO we want to help fuel this innovative process by providing underserved children with access to the tools they need for creative expression and art, such as tablets, digital pencils, and software.",
         link: "https://nouns.build/dao/ethereum/0x5da6ae3d2cce42dd0b805b0bc3befeab0e0b9cca/23",
-        hideMembers: true,
     },
 ]
 

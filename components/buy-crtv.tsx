@@ -70,7 +70,12 @@ export function BuyCRTV() {
     const amountValidation = validateUsdcAmount(amount)
     const sellAmountValidation = validateMetokenAmount(sellAmount)
     const canQuote = Boolean(
-        isConnected && address && isBase && amountValidation.isValid && Number(amount) > 0,
+        activeTab === "buy" &&
+            isConnected &&
+            address &&
+            isBase &&
+            amountValidation.isValid &&
+            Number(amount) > 0,
     )
     const canQuoteSell = Boolean(
         activeTab === "sell" &&
@@ -161,8 +166,9 @@ export function BuyCRTV() {
     }, [activeTab])
 
     useEffect(() => {
-        if (!canQuote) {
+        if (activeTab !== "buy" || !canQuote) {
             setQuote(null)
+            setIsQuoting(false)
             return
         }
 
@@ -225,11 +231,12 @@ export function BuyCRTV() {
             cancelled = true
             window.clearTimeout(timer)
         }
-    }, [amount, canQuote])
+    }, [activeTab, amount, canQuote])
 
     useEffect(() => {
         if (activeTab !== "sell" || !canQuoteSell || !address) {
             setSellQuote(null)
+            setIsQuotingSell(false)
             return
         }
 

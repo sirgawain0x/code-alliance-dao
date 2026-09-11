@@ -6,8 +6,18 @@ import { RoleManagement } from "@/components/role-management"
 import { RagequitPanel } from "@/components/ragequit-panel"
 import { Button } from "@/components/ui/button"
 import { getDaoHausAdminMembersUrl } from "@/lib/dao-haus-links"
+import { createSiteMetadata, SITE_NAME } from "@/lib/site-metadata"
 import { ExternalLink } from "lucide-react"
 import Link from "next/link"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = createSiteMetadata({
+  title: `Members | ${SITE_NAME}`,
+  description:
+    "Browse Creative Organization DAO members, roles, reputation, and on-chain membership.",
+  path: "/members",
+  openGraphTitle: `Members | ${SITE_NAME}`,
+})
 
 export default function MembersPage() {
   const adminMembersUrl = getDaoHausAdminMembersUrl()

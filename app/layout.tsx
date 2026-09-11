@@ -5,10 +5,18 @@ import { Providers } from "@/components/providers"
 import { AppKitWrapper } from "@/components/appkit-wrapper"
 import { ScrollToTop } from "@/components/scroll-to-top"
 import { AppSerwistProvider } from "@/components/serwist-provider"
-import { createSiteMetadata } from "@/lib/site-metadata"
+import { createSiteMetadata, THEME_COLOR } from "@/lib/site-metadata"
 import { headers } from "next/headers"
+import type { Viewport } from "next"
 
 export const metadata = createSiteMetadata()
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLOR },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLOR },
+  ],
+}
 
 export default async function RootLayout({
   children,
@@ -20,10 +28,6 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <meta name="theme-color" content="#644698" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#644698" media="(prefers-color-scheme: dark)" />
-      </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <AppSerwistProvider>
           <AppKitWrapper cookies={cookies}>

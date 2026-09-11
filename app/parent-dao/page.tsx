@@ -4,6 +4,16 @@ import { ParentDAOOverview } from "@/components/parent-dao-overview"
 import { GovernanceMetrics } from "@/components/governance-metrics"
 import { RecentProposals } from "@/components/recent-proposals"
 import { TreasuryOverview } from "@/components/treasury-overview"
+import { createSiteMetadata, SITE_NAME } from "@/lib/site-metadata"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = createSiteMetadata({
+  title: `Parent DAO | ${SITE_NAME}`,
+  description:
+    "Overview of Creative Organization DAO governance metrics, treasury, and recent proposals.",
+  path: "/parent-dao",
+  openGraphTitle: `Parent DAO | ${SITE_NAME}`,
+})
 
 export default function ParentDAOPage() {
   return (

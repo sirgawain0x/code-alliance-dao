@@ -3,6 +3,16 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { SubDAOGrid } from "@/components/subdao-grid"
 import { SubDAOStats } from "@/components/subdao-stats"
 import { CreateSubDAOCard } from "@/components/create-subdao-card"
+import { createSiteMetadata, SITE_NAME } from "@/lib/site-metadata"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = createSiteMetadata({
+  title: `SubDAOs | ${SITE_NAME}`,
+  description:
+    "Explore Creative Organization DAO subDAOs, incubator projects, and ecosystem stats.",
+  path: "/subdaos",
+  openGraphTitle: `SubDAOs | ${SITE_NAME}`,
+})
 
 export default function SubDAOsPage() {
   return (

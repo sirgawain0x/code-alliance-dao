@@ -1,6 +1,16 @@
 import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { EcosystemGrid } from "@/components/ecosystem-grid"
+import { createSiteMetadata, SITE_NAME } from "@/lib/site-metadata"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = createSiteMetadata({
+  title: `Projects | ${SITE_NAME}`,
+  description:
+    "Discover projects and ecosystem partners in the Creative Organization DAO incubator.",
+  path: "/projects",
+  openGraphTitle: `Projects | ${SITE_NAME}`,
+})
 
 export default function ProjectsPage() {
   return (

@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
 
-export const SITE_URL = "https://dao.creativeplatform.xyz"
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://dao.creativeplatform.xyz")
 
 export const SITE_NAME = "Creative Organization DAO"
 
@@ -31,31 +35,36 @@ export const PWA_ICONS = {
   appleTouch: "/icons/apple-touch-icon.png",
 } as const
 
-const ogImageUrl = `${SITE_URL}${OG_IMAGE_PATH}`
-
 export function createSiteMetadata({
   title,
   description,
-  path = "/",
+  path,
   openGraphTitle,
 }: {
   title?: string
   description?: string
+  /** Route path for canonical/OG URL. Omit on root layout to avoid wrong defaults. */
   path?: string
   openGraphTitle?: string
 } = {}): Metadata {
   const pageTitle = title ?? SITE_NAME
   const pageDescription = description ?? SITE_DESCRIPTION
-  const canonicalUrl = path === "/" ? SITE_URL : `${SITE_URL}${path}`
+  const canonicalUrl =
+    path === undefined ? undefined : path === "/" ? SITE_URL : `${SITE_URL}${path}`
   const ogTitle = openGraphTitle ?? pageTitle
+  const ogImageUrl = `${SITE_URL}${OG_IMAGE_PATH}`
 
   return {
     title: pageTitle,
     description: pageDescription,
     metadataBase: new URL(SITE_URL),
-    alternates: {
-      canonical: canonicalUrl,
-    },
+    ...(canonicalUrl
+      ? {
+          alternates: {
+            canonical: canonicalUrl,
+          },
+        }
+      : {}),
     applicationName: SITE_SHORT_NAME,
     manifest: "/manifest.webmanifest",
     icons: {
@@ -78,7 +87,7 @@ export function createSiteMetadata({
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: canonicalUrl,
+      ...(canonicalUrl ? { url: canonicalUrl } : {}),
       siteName: SITE_NAME,
       title: ogTitle,
       description: pageDescription,

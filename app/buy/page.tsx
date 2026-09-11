@@ -1,6 +1,15 @@
 import { BuyCRTV } from "@/components/buy-crtv"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
+import { createSiteMetadata, SITE_NAME } from "@/lib/site-metadata"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = createSiteMetadata({
+  title: `Buy CRTV | ${SITE_NAME}`,
+  description: "Purchase CRTV tokens to participate in Creative Organization DAO governance.",
+  path: "/buy",
+  openGraphTitle: `Buy CRTV | ${SITE_NAME}`,
+})
 
 export default function BuyPage() {
     return (

@@ -42,12 +42,12 @@ export function TransactionHistory() {
   return (
     <Card className="stat-card-gradient p-6">
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold text-foreground">Transaction History</h3>
-            <p className="text-xs text-muted-foreground font-mono">{safeAddress}</p>
+            <p className="text-xs text-muted-foreground font-mono break-all">{safeAddress}</p>
           </div>
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm" className="shrink-0 self-start" asChild>
             <Link href={`${explorerBase}/address/${safeAddress}`} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4 mr-2" />
               View on BaseScan

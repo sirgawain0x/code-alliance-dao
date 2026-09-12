@@ -1,18 +1,22 @@
 import { Contract, JsonRpcProvider, formatEther, isAddress } from "ethers"
 
 import { FEATURED_DAOS_CONFIG, CHAIN_NAMES } from "@/utils/featured-daos"
+import { fetchDaohausActiveMemberCount, isBaalContract } from "@/utils/baal-contract"
+import { getRpcUrl } from "@/utils/endpoints"
+import { normalizeBaalTotalShares, normalizeTotalSupplyMemberCount } from "@/utils/member-count"
 
 const SUBDAO_STATS_ABI = [
   "function activeMemberCount() view returns (uint256)",
   "function memberCount() view returns (uint256)",
   "function membersCount() view returns (uint256)",
   "function totalMembers() view returns (uint256)",
+  "function totalShares() view returns (uint256)",
   "function totalSupply() view returns (uint256)",
+  "function owner() view returns (address)",
+  "function avatar() view returns (address)",
   "function safeAddress() view returns (address)",
   "function safe() view returns (address)",
-  "function avatar() view returns (address)",
   "function treasury() view returns (address)",
-  "function owner() view returns (address)",
 ]
 
 const MEMBER_COUNT_FUNCTIONS = [
@@ -22,20 +26,30 @@ const MEMBER_COUNT_FUNCTIONS = [
   "totalMembers",
 ]
 
+// Nouns Builder DAOs expose member count via totalSupply().
 const TREASURY_ADDRESS_FUNCTIONS = [
+  "owner",
+  "avatar",
   "safeAddress",
   "safe",
-  "avatar",
   "treasury",
-  "owner",
 ]
 
-const RPC_URLS: Record<string, string> = {
-  "0x2105": process.env.BASE_RPC_URL || "https://mainnet.base.org",
-  "0xa4b1": process.env.ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc",
-  "0xa": process.env.OPTIMISM_RPC_URL || "https://mainnet.optimism.io",
-  "0x1": process.env.MAINNET_RPC_URL || "https://ethereum.publicnode.com",
-  "0x64": process.env.GNOSIS_RPC_URL || "https://rpc.gnosischain.com",
+const TREASURY_FUNCTIONS_ALLOWING_FALLBACK_MATCH = new Set(["owner", "avatar"])
+
+const NATIVE_SYMBOLS: Record<string, string> = {
+  "0x2105": "ETH",
+  "0xa4b1": "ETH",
+  "0xa": "ETH",
+  "0x1": "ETH",
+  "0x64": "ETH",
+}
+
+export interface SubDaoTokenBalance {
+  symbol: string
+  balance: string
+  balanceFormatted: number
+  isNative: boolean
 }
 
 export interface SubDaoContractStat {
@@ -44,15 +58,20 @@ export interface SubDaoContractStat {
   chainName: string
   label: string
   members: number
+  /** Moloch/Baal share supply (÷1e18). Null for Nouns NFT featured DAOs. */
+  shares: number | null
   treasuryAddress: string
   treasuryBalance: string
   treasuryBalanceEth: number
+  tokenBalances: SubDaoTokenBalance[]
   status: "live" | "partial" | "unavailable"
 }
 
 export interface SubDaoAggregateStats {
   activeSubDAOs: number
   totalMembers: number
+  /** Sum of Baal totalShares across featured Moloch DAOs (excludes Nouns NFTs). */
+  totalFeaturedShares: number
   combinedTreasury: number
   combinedTreasuryEth: string
   networkCount: number
@@ -61,15 +80,22 @@ export interface SubDaoAggregateStats {
 }
 
 export async function getSubDaoAggregateStats(): Promise<SubDaoAggregateStats> {
-  const contracts = await Promise.all(
-    FEATURED_DAOS_CONFIG.map((daoConfig) => fetchSubDaoContractStat({
+  const contracts: SubDaoContractStat[] = []
+
+  for (const daoConfig of FEATURED_DAOS_CONFIG) {
+    const stat = await fetchSubDaoContractStat({
       address: daoConfig.address,
       chainId: daoConfig.chainId,
       label: daoConfig.label,
-    }))
-  )
+    })
+    contracts.push(stat)
+  }
 
   const totalMembers = contracts.reduce((sum, contract) => sum + contract.members, 0)
+  const totalFeaturedShares = contracts.reduce(
+    (sum, contract) => sum + (contract.shares ?? 0),
+    0
+  )
   const combinedTreasuryWei = contracts.reduce(
     (sum, contract) => sum + BigInt(contract.treasuryBalance),
     BigInt(0)
@@ -78,6 +104,7 @@ export async function getSubDaoAggregateStats(): Promise<SubDaoAggregateStats> {
   return {
     activeSubDAOs: contracts.length,
     totalMembers,
+    totalFeaturedShares,
     combinedTreasury: Number(formatEther(combinedTreasuryWei)),
     combinedTreasuryEth: formatEther(combinedTreasuryWei),
     networkCount: new Set(contracts.map((contract) => contract.chainId)).size,
@@ -96,38 +123,55 @@ async function fetchSubDaoContractStat({
   label: string
 }): Promise<SubDaoContractStat> {
   const chainName = CHAIN_NAMES[chainId] || chainId
-  const fallbackStat = {
+  const fallbackStat: SubDaoContractStat = {
     address,
     chainId,
     chainName,
     label,
     members: 0,
+    shares: null,
     treasuryAddress: address,
     treasuryBalance: "0",
     treasuryBalanceEth: 0,
-    status: "unavailable" as const,
+    tokenBalances: [],
+    status: "unavailable",
   }
 
   if (!isAddress(address)) return fallbackStat
 
   try {
-    const provider = new JsonRpcProvider(getRpcUrl(chainId))
+    const provider = new JsonRpcProvider(getRpcUrlForChain(chainId))
     const contract = new Contract(address, SUBDAO_STATS_ABI, provider)
-    const [members, treasuryAddress] = await Promise.all([
-      readMemberCount(contract),
-      readTreasuryAddress(contract, address),
-    ])
 
-    const treasuryBalance = await provider.getBalance(treasuryAddress)
+    const isBaal = await isBaalContract(contract)
+    const members = await readMemberCount({ contract, chainId, address, isBaal })
+    const shares = isBaal ? await readBaalTotalShares(contract) : null
+    const treasuryAddress = await readTreasuryAddress(contract, address)
+    const nativeBalance = await withRetry(() => provider.getBalance(treasuryAddress))
+
+    const tokenBalances: SubDaoTokenBalance[] = [
+      {
+        symbol: NATIVE_SYMBOLS[chainId] || "ETH",
+        balance: nativeBalance.toString(),
+        balanceFormatted: Number(formatEther(nativeBalance)),
+        isNative: true,
+      },
+    ]
+
+    const treasuryBalance = nativeBalance.toString()
+
     const hasLiveMembers = members > 0
-    const status = hasLiveMembers ? "live" : "partial"
+    const hasTreasuryBalance = nativeBalance > BigInt(0)
+    const status = hasLiveMembers || hasTreasuryBalance ? "live" : "partial"
 
     return {
       ...fallbackStat,
       members,
+      shares,
       treasuryAddress,
-      treasuryBalance: treasuryBalance.toString(),
-      treasuryBalanceEth: Number(formatEther(treasuryBalance)),
+      treasuryBalance,
+      treasuryBalanceEth: Number(formatEther(nativeBalance)),
+      tokenBalances,
       status,
     }
   } catch (error) {
@@ -136,31 +180,107 @@ async function fetchSubDaoContractStat({
   }
 }
 
-async function readMemberCount(contract: Contract): Promise<number> {
+async function readMemberCount({
+  contract,
+  chainId,
+  address,
+  isBaal,
+}: {
+  contract: Contract
+  chainId: string
+  address: string
+  isBaal: boolean
+}): Promise<number> {
+  if (isBaal) {
+    const activeMemberCount = await fetchDaohausActiveMemberCount({ chainId, address })
+    return activeMemberCount ?? 0
+  }
+
   for (const functionName of MEMBER_COUNT_FUNCTIONS) {
     try {
-      const value = await contract[functionName]()
-      return Number(value)
+      const value = await withRetry(() => contract[functionName]())
+      const members = Number(value)
+      if (members > 0) return members
     } catch {}
   }
 
+  try {
+    const totalSupply = await withRetry(() => contract.totalSupply())
+    return normalizeTotalSupplyMemberCount(totalSupply)
+  } catch {}
+
   return 0
+}
+
+async function readBaalTotalShares(contract: Contract): Promise<number> {
+  try {
+    const totalShares = await withRetry(() => contract.totalShares())
+    return normalizeBaalTotalShares(totalShares)
+  } catch {
+    return 0
+  }
 }
 
 async function readTreasuryAddress(contract: Contract, fallbackAddress: string): Promise<string> {
   for (const functionName of TREASURY_ADDRESS_FUNCTIONS) {
     try {
-      const value = await contract[functionName]()
-      if (isAddress(value)) return value
+      const value = await withRetry(() => contract[functionName]())
+      if (!isAddress(value)) continue
+
+      const isSameAsFallback = value.toLowerCase() === fallbackAddress.toLowerCase()
+      if (isSameAsFallback && !TREASURY_FUNCTIONS_ALLOWING_FALLBACK_MATCH.has(functionName)) {
+        continue
+      }
+
+      return value
     } catch {}
   }
 
   return fallbackAddress
 }
 
-function getRpcUrl(chainId: string): string {
-  const rpcUrl = RPC_URLS[chainId]
-  if (!rpcUrl) throw new Error(`Unsupported SubDAO chain ID: ${chainId}`)
+function getRpcUrlForChain(chainId: string): string {
+  const chainIdDecimal = parseInt(chainId, 16).toString()
+  const rpcKey =
+    process.env.ALCHEMY_API_KEY ||
+    process.env.NEXT_PUBLIC_ALCHEMY_API_KEY ||
+    undefined
 
-  return rpcUrl
+  return getRpcUrl({ chainid: chainIdDecimal, rpcKey })
+}
+
+function isTransientRpcError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false
+
+  const err = error as { code?: string | number; message?: string }
+  const message = err.message?.toLowerCase() ?? ""
+
+  if (err.code === "CALL_EXCEPTION" || err.code === "BAD_DATA") return false
+
+  return (
+    err.code === "NETWORK_ERROR" ||
+    err.code === "TIMEOUT" ||
+    err.code === "SERVER_ERROR" ||
+    err.code === 429 ||
+    message.includes("timeout") ||
+    message.includes("rate limit") ||
+    message.includes("econnreset") ||
+    message.includes("429")
+  )
+}
+
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error
+      if (!isTransientRpcError(error) || attempt >= attempts - 1) throw error
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)))
+    }
+  }
+
+  throw lastError
 }

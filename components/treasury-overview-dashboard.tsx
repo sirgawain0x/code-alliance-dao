@@ -83,12 +83,12 @@ export function TreasuryOverviewDashboard() {
       </div>
 
       <Card className="stat-card-gradient p-6">
-        <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold text-foreground">Safe Balances</h3>
-            <p className="text-sm text-muted-foreground font-mono">{safeAddress}</p>
+            <p className="text-sm text-muted-foreground font-mono break-all">{safeAddress}</p>
           </div>
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm" className="shrink-0 self-start" asChild>
             <Link href={explorerUrl} target="_blank" rel="noopener noreferrer">
               <Wallet className="h-4 w-4 mr-2" />
               View Safe

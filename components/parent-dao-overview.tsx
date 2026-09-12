@@ -100,9 +100,9 @@ export function ParentDAOOverview() {
             </Badge>
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row">
           {createProposalReady ? (
-            <Button asChild>
+            <Button className="w-full sm:w-auto" asChild>
               <Link
                 href={adminProposalsUrl!}
                 target="_blank"
@@ -114,6 +114,7 @@ export function ParentDAOOverview() {
             </Button>
           ) : (
             <Button
+              className="w-full sm:w-auto"
               disabled
               title={
                 !canCreateProposal
@@ -155,7 +156,10 @@ export function ParentDAOOverview() {
             <div>
               <p className="text-sm text-muted-foreground">Safe Treasury</p>
               <p className="text-2xl font-bold text-foreground">{stats.treasuryLabel}</p>
-              <p className="text-xs text-muted-foreground font-mono truncate max-w-[180px]">
+              <p
+                className="text-xs text-muted-foreground font-mono truncate max-w-[180px]"
+                title={treasury?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS}
+              >
                 {treasury?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS}
               </p>
             </div>

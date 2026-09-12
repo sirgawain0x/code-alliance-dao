@@ -58,8 +58,8 @@ export function MemberGrid() {
 
   if (isLoading) {
     return (
-      <Card className="stat-card-gradient p-6">
-        <div className="space-y-4">
+      <Card className="stat-card-gradient p-6 min-w-0 overflow-hidden">
+        <div className="space-y-4 min-w-0">
           <div className="h-8 w-48 bg-muted animate-pulse rounded" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -72,13 +72,13 @@ export function MemberGrid() {
   }
 
   return (
-    <Card className="stat-card-gradient p-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
+    <Card className="stat-card-gradient p-6 min-w-0 overflow-hidden">
+      <div className="space-y-4 min-w-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-lg font-semibold text-foreground">All Members</h3>
-          <div className="flex space-x-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-2 w-full sm:w-auto">
             {adminMembersUrl && (
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
                 <Link href={adminMembersUrl} target="_blank" rel="noopener noreferrer">
                   Open in DAOhaus
                   <ExternalLink className="ml-2 h-3 w-3" />
@@ -86,7 +86,7 @@ export function MemberGrid() {
               </Button>
             )}
             <Can profile={primaryProfile} capability="canViewDao">
-              <Button variant="outline" size="sm" disabled>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" disabled>
                 Export
               </Button>
             </Can>
@@ -94,20 +94,22 @@ export function MemberGrid() {
               profile={primaryProfile}
               capability="canManageMembers"
               fallback={
-                <Button size="sm" disabled>
+                <Button size="sm" className="w-full sm:w-auto" disabled>
                   Invite Members (Admin only)
                 </Button>
               }
             >
               {adminMembersUrl ? (
-                <Button size="sm" asChild>
+                <Button size="sm" className="w-full sm:w-auto" asChild>
                   <Link href={adminMembersUrl} target="_blank" rel="noopener noreferrer">
                     Manage Members
                     <ExternalLink className="ml-2 h-3 w-3" />
                   </Link>
                 </Button>
               ) : (
-                <Button size="sm">Invite Members</Button>
+                <Button size="sm" className="w-full sm:w-auto">
+                  Invite Members
+                </Button>
               )}
             </Can>
           </div>
@@ -119,76 +121,85 @@ export function MemberGrid() {
           </div>
         )}
 
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center min-w-0">
+          <div className="relative flex-1 min-w-0 w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search members..."
-              className="pl-10 bg-muted border-border"
+              className="pl-10 bg-muted border-border w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-32 bg-muted border-border">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="member">Voting</SelectItem>
-              <SelectItem value="observer">Non-voting</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-wrap gap-2">
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-full min-w-[8rem] sm:w-32 bg-muted border-border">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="member">Voting</SelectItem>
+                <SelectItem value="observer">Non-voting</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-32 bg-muted border-border">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full min-w-[8rem] sm:w-32 bg-muted border-border">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Button variant="outline" size="sm" disabled>
-            <Filter className="h-4 w-4 mr-2" />
-            More Filters
-          </Button>
+            <Button variant="outline" size="sm" className="w-full sm:w-auto" disabled>
+              <Filter className="h-4 w-4 mr-2" />
+              More Filters
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-3">
           {filteredMembers.map((member) => (
-            <div key={member.id} className="border border-border rounded-lg p-4 dao-card-hover">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center space-x-4 min-w-0">
-                  <Avatar className="h-10 w-10">
+            <div
+              key={member.id}
+              className="border border-border rounded-lg p-4 dao-card-hover min-w-0 overflow-hidden"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <Avatar className="h-10 w-10 shrink-0">
                     <AvatarFallback>
                       {member.memberAddress.slice(2, 4).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
 
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center space-x-2 flex-wrap">
-                      <h4 className="font-medium text-foreground font-mono">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <h4 className="font-medium text-foreground font-mono truncate min-w-0">
                         {member.memberAddress.slice(0, 6)}...{member.memberAddress.slice(-4)}
                       </h4>
-                      <Badge className={getRoleColor(member.shares)}>
-                        <span className="ml-1">{getRoleLabel(member.shares)}</span>
+                      <Badge className={`${getRoleColor(member.shares)} shrink-0`}>
+                        {getRoleLabel(member.shares)}
                       </Badge>
                     </div>
 
-                    <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                      <span className="font-mono truncate">{member.memberAddress}</span>
-                      <span>•</span>
-                      <span>Joined {new Date(Number(member.createdAt) * 1000).toLocaleDateString()}</span>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground min-w-0">
+                      <span className="font-mono truncate min-w-0" title={member.memberAddress}>
+                        {member.memberAddress}
+                      </span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="shrink-0">
+                        Joined {new Date(Number(member.createdAt) * 1000).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-6 flex-shrink-0">
-                  <div className="text-right text-sm">
+                <div className="flex items-center justify-between gap-4 shrink-0 border-t border-border/50 pt-3 sm:border-t-0 sm:pt-0 sm:justify-end">
+                  <div className="text-left sm:text-right text-sm">
                     <div className="text-foreground font-medium">
                       Shares: {formatTokenAmount(member.shares)}
                     </div>
@@ -198,7 +209,7 @@ export function MemberGrid() {
                   </div>
 
                   {adminMembersUrl && (
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="ghost" size="sm" className="shrink-0" asChild>
                       <Link href={adminMembersUrl} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="h-4 w-4" />
                       </Link>

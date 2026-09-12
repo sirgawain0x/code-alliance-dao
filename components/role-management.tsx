@@ -43,8 +43,8 @@ export function RoleManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="stat-card-gradient p-6">
+    <div className="space-y-6 min-w-0">
+      <Card className="stat-card-gradient p-6 min-w-0 overflow-hidden">
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-semibold text-foreground">On-chain Role Summary</h3>
@@ -55,10 +55,15 @@ export function RoleManagement() {
 
           <div className="space-y-3">
             {profiles.map((profile) => (
-              <div key={profile.daoId} className="border border-border rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono text-muted-foreground">{profile.daoAddress}</span>
-                  <div className="flex gap-1">
+              <div key={profile.daoId} className="border border-border rounded-lg p-3 space-y-2 min-w-0 overflow-hidden">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between min-w-0">
+                  <span
+                    className="font-mono text-xs text-muted-foreground truncate min-w-0"
+                    title={profile.daoAddress}
+                  >
+                    {profile.daoAddress}
+                  </span>
+                  <div className="flex flex-wrap gap-1 shrink-0">
                     <Badge
                       className={
                         profile.isAdmin
@@ -76,7 +81,7 @@ export function RoleManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                   <div className="rounded border border-border p-2">
                     <p className="text-muted-foreground">Shares</p>
                     <p className="text-foreground font-semibold">
@@ -109,41 +114,41 @@ export function RoleManagement() {
         </div>
       </Card>
 
-      <Card className="stat-card-gradient p-6">
-        <div className="space-y-4">
+      <Card className="stat-card-gradient p-6 min-w-0 overflow-hidden">
+        <div className="space-y-4 min-w-0">
           <h3 className="text-lg font-semibold text-foreground">Current DAO Capability Scope</h3>
           <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between border border-border rounded p-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border border-border rounded p-2 min-w-0">
               <span className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-blue-400" />
                 View DAO data
               </span>
-              <Badge variant="outline">{primaryProfile?.capabilities.canViewDao ? "Allowed" : "Blocked"}</Badge>
+              <Badge variant="outline" className="shrink-0 w-fit">{primaryProfile?.capabilities.canViewDao ? "Allowed" : "Blocked"}</Badge>
             </div>
-            <div className="flex items-center justify-between border border-border rounded p-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border border-border rounded p-2 min-w-0">
               <span className="flex items-center gap-2">
                 <Crown className="h-4 w-4 text-purple-400" />
                 Vote and create proposals
               </span>
-              <Badge variant="outline">
+              <Badge variant="outline" className="shrink-0 w-fit">
                 {primaryProfile?.capabilities.canVote ? "Voting enabled" : "Needs voting shares"}
               </Badge>
             </div>
-            <div className="flex items-center justify-between border border-border rounded p-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border border-border rounded p-2 min-w-0">
               <span className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-red-400" />
                 Manage members
               </span>
-              <Badge variant="outline">
+              <Badge variant="outline" className="shrink-0 w-fit">
                 {primaryProfile?.capabilities.canManageMembers ? "Admin only enabled" : "Admin only blocked"}
               </Badge>
             </div>
-            <div className="flex items-center justify-between border border-border rounded p-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border border-border rounded p-2 min-w-0">
               <span className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-green-400" />
                 View treasury
               </span>
-              <Badge variant="outline">
+              <Badge variant="outline" className="shrink-0 w-fit">
                 {primaryProfile?.capabilities.canViewTreasury ? "Allowed" : "Blocked"}
               </Badge>
             </div>

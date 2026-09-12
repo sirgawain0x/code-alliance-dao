@@ -3,6 +3,16 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { GovernanceOverview } from "@/components/governance-overview"
 import { ActiveProposals } from "@/components/active-proposals"
 import { VotingHistory } from "@/components/voting-history"
+import { createSiteMetadata, SITE_NAME } from "@/lib/site-metadata"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = createSiteMetadata({
+  title: `Governance | ${SITE_NAME}`,
+  description:
+    "View active proposals, voting history, and governance metrics for Creative Organization DAO.",
+  path: "/governance",
+  openGraphTitle: `Governance | ${SITE_NAME}`,
+})
 
 export default function GovernancePage() {
   return (

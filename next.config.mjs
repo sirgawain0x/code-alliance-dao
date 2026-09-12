@@ -1,31 +1,45 @@
+import { spawnSync } from "node:child_process"
+import withSerwistInit from "@serwist/next"
+
+const revision =
+  spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout?.trim() ||
+  crypto.randomUUID()
+
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+  disable: process.env.NODE_ENV === "development",
+  additionalPrecacheEntries: [{ url: "/", revision }],
+})
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  productionBrowserSourceMaps: true, // Enable source maps for better debugging
+  productionBrowserSourceMaps: true,
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
     unoptimized: true,
   },
-  // Optimize resource loading
-  transpilePackages: ['@reown/appkit', '@reown/appkit-adapter-ethers', '@phosphor-icons/webcomponents', 'lit'],
-  // experimental: {
-  //   optimizePackageImports: ['wagmi', '@tanstack/react-query'],
-  // },
+  transpilePackages: [
+    "@reown/appkit",
+    "@reown/appkit-adapter-ethers",
+    "@phosphor-icons/webcomponents",
+    "lit",
+  ],
   webpack: (config, { isServer }) => {
     config.externals.push(
       "pino-pretty",
       "lokijs",
       "encoding",
-      "@react-native-async-storage/async-storage"
-    );
+      "@react-native-async-storage/async-storage",
+    )
 
     if (isServer) {
-      // For server-side, provide a mock for indexedDB
       config.resolve.alias = {
         ...config.resolve.alias,
-        'idb-keyval': false,
-      };
+        "idb-keyval": false,
+      }
     } else {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -38,11 +52,11 @@ const nextConfig = {
         https: false,
         zlib: false,
         path: false,
-        os: false
-      };
+        os: false,
+      }
     }
-    return config;
+    return config
   },
 }
 
-export default nextConfig
+export default withSerwist(nextConfig)

@@ -4,6 +4,16 @@ import { StatsOverview } from "@/components/stats-overview"
 import { ChainGovernance } from "@/components/chain-governance"
 import { FeaturedDAOs } from "@/components/featured-daos"
 import { SubDAOStats } from "@/components/subdao-stats"
+import { PushNotificationStub } from "@/components/push-notification-stub"
+import { createSiteMetadata, SITE_NAME, SITE_TAGLINE } from "@/lib/site-metadata"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = createSiteMetadata({
+  title: `${SITE_NAME} | Dashboard`,
+  description: SITE_TAGLINE,
+  path: "/",
+  openGraphTitle: SITE_NAME,
+})
 
 export default function DashboardPage() {
   return (
@@ -17,6 +27,7 @@ export default function DashboardPage() {
             <StatsOverview />
             <ChainGovernance />
             <FeaturedDAOs />
+            <PushNotificationStub />
           </div>
         </div>
       </main>

@@ -11,7 +11,6 @@ import { useDaoMembers } from "@/hooks/useDaoMembers"
 import { useOnchainMembershipProfile } from "@/hooks/useOnchainMembershipProfile"
 import { Can } from "@/components/can"
 import { getDaoHausAdminMembersUrl } from "@/lib/dao-haus-links"
-import { getProposalDisplayId } from "@/lib/format-proposal-id"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { formatUnits } from "ethers"
@@ -59,8 +58,8 @@ export function MemberGrid() {
 
   if (isLoading) {
     return (
-      <Card className="stat-card-gradient p-6">
-        <div className="space-y-4">
+      <Card className="stat-card-gradient p-6 min-w-0 overflow-hidden">
+        <div className="space-y-4 min-w-0">
           <div className="h-8 w-48 bg-muted animate-pulse rounded" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (

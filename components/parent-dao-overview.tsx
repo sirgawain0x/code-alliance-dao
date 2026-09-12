@@ -156,7 +156,10 @@ export function ParentDAOOverview() {
             <div>
               <p className="text-sm text-muted-foreground">Safe Treasury</p>
               <p className="text-2xl font-bold text-foreground">{stats.treasuryLabel}</p>
-              <p className="text-xs text-muted-foreground font-mono truncate max-w-[180px]">
+              <p
+                className="text-xs text-muted-foreground font-mono truncate max-w-[180px]"
+                title={treasury?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS}
+              >
                 {treasury?.safeAddress || CREATIVE_ORG_SAFE_ADDRESS}
               </p>
             </div>

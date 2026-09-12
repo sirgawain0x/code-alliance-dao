@@ -13,21 +13,21 @@ export default function MembersPage() {
   const adminMembersUrl = getDaoHausAdminMembersUrl()
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background overflow-x-hidden">
       <Sidebar />
-      <main className="flex-1 min-w-0 relative z-0">
-        <div className="pt-16 md:pt-0">
+      <main className="flex-1 min-w-0 relative z-0 overflow-x-hidden">
+        <div className="pt-16 md:pt-0 min-w-0">
           <DashboardHeader />
-          <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Member Management</h1>
+          <div className="p-4 sm:p-6 space-y-6 min-w-0 max-w-full">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Member Management</h1>
                 <p className="text-muted-foreground">
                   Live membership from the Base Moloch v3 DAO, matching DAOhaus Admin.
                 </p>
               </div>
               {adminMembersUrl && (
-                <Button variant="outline" asChild>
+                <Button variant="outline" className="w-full sm:w-auto shrink-0" asChild>
                   <Link href={adminMembersUrl} target="_blank" rel="noopener noreferrer">
                     Open in DAOhaus
                     <ExternalLink className="ml-2 h-4 w-4" />
@@ -36,11 +36,11 @@ export default function MembersPage() {
               )}
             </div>
             <MembersOverview />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
+              <div className="lg:col-span-2 min-w-0">
                 <MemberGrid />
               </div>
-              <div className="space-y-6">
+              <div className="space-y-6 min-w-0">
                 <RagequitPanel />
                 <RoleManagement />
               </div>

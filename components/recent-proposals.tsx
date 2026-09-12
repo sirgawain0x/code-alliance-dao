@@ -7,6 +7,7 @@ import { Clock, User, MessageSquare } from "lucide-react"
 import { useDaoProposals } from "../hooks/useDaoProposals"
 import { useOnchainMembershipProfile } from "../hooks/useOnchainMembershipProfile"
 import { getDaoHausAdminProposalsUrl } from "@/lib/dao-haus-links"
+import { getProposalDisplayId } from "@/lib/format-proposal-id"
 import { ProposalItem } from "../utils/daotypes"
 import Link from "next/link"
 import { useMemo } from "react"
@@ -139,13 +140,7 @@ export function RecentProposals() {
               >
                 <div className="flex items-start justify-between min-w-0">
                   <div className="space-y-2 flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 min-w-0">
-                      <span
-                        className="text-xs text-muted-foreground font-mono truncate min-w-0 max-w-full"
-                        title={proposal.id}
-                      >
-                        {proposal.id}
-                      </span>
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline" className="text-xs shrink-0">
                         {proposal.category}
                       </Badge>
@@ -162,6 +157,12 @@ export function RecentProposals() {
                         {proposal.status}
                       </Badge>
                     </div>
+                    <span
+                      className="block text-xs text-muted-foreground font-mono truncate min-w-0"
+                      title={proposal.id}
+                    >
+                      {getProposalDisplayId(proposal.id)}
+                    </span>
                     <h4 className="font-medium text-foreground">{proposal.title}</h4>
                     <p className="text-sm text-muted-foreground line-clamp-2">{proposal.description}</p>
 

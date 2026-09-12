@@ -8,6 +8,7 @@ import { useDaoProposals } from "@/hooks/useDaoProposals"
 import { useMemo } from "react"
 import { ProposalItem } from "@/utils/daotypes"
 import { formatShareVotes } from "@/utils/format-share-votes"
+import { getProposalDisplayId } from "@/lib/format-proposal-id"
 
 export function GovernanceMetrics() {
   const { proposals, isLoading } = useDaoProposals({
@@ -66,11 +67,11 @@ export function GovernanceMetrics() {
   }
 
   return (
-    <Card className="stat-card-gradient p-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+    <Card className="stat-card-gradient p-6 min-w-0 overflow-hidden">
+      <div className="space-y-4 min-w-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-lg font-semibold text-foreground">Recent Governance Activity</h3>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             View All
           </Button>
         </div>
@@ -80,16 +81,15 @@ export function GovernanceMetrics() {
             <div className="text-center py-8 text-muted-foreground">No recent proposals found.</div>
           ) : (
             recentVotes.map((vote) => (
-              <div key={vote.id} className="border border-border rounded-lg p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-muted-foreground">{vote.id}</span>
+              <div key={vote.id} className="border border-border rounded-lg p-4 space-y-3 min-w-0 overflow-hidden">
+                <div className="flex items-start justify-between gap-3 min-w-0">
+                  <div className="space-y-2 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge
                         variant={
                           vote.status === "passed" ? "default" : vote.status === "active" ? "secondary" : "destructive"
                         }
-                        className="text-xs"
+                        className="text-xs shrink-0"
                       >
                         {vote.status === "passed" && <CheckCircle className="h-3 w-3 mr-1" />}
                         {vote.status === "active" && <Clock className="h-3 w-3 mr-1" />}
@@ -97,13 +97,19 @@ export function GovernanceMetrics() {
                         {vote.status}
                       </Badge>
                     </div>
+                    <span
+                      className="block text-xs text-muted-foreground font-mono truncate min-w-0"
+                      title={vote.id}
+                    >
+                      {getProposalDisplayId(vote.id)}
+                    </span>
                     <h4 className="font-medium text-foreground">{vote.title}</h4>
                     <p className="text-xs text-muted-foreground">{vote.endTime}</p>
                   </div>
-                  <Vote className="h-5 w-5 text-muted-foreground" />
+                  <Vote className="h-5 w-5 text-muted-foreground shrink-0" />
                 </div>
 
-                <div className="flex items-center space-x-4 text-xs">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                   <div className="flex items-center space-x-1">
                     <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                     <span className="text-muted-foreground">For: {vote.votes.for.toLocaleString()}</span>

@@ -84,24 +84,24 @@ export function RecentProposals() {
   }
 
   return (
-    <Card className="stat-card-gradient p-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+    <Card className="stat-card-gradient p-6 min-w-0 overflow-hidden">
+      <div className="space-y-4 min-w-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-lg font-semibold text-foreground">Recent Proposals</h3>
-          <div className="flex space-x-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-2 w-full sm:w-auto">
             {adminProposalsUrl ? (
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
                 <Link href={adminProposalsUrl} target="_blank" rel="noopener noreferrer">
                   View All
                 </Link>
               </Button>
             ) : (
-              <Button variant="outline" size="sm" disabled title="Set NEXT_PUBLIC_TARGET_DAO_ADDRESS">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" disabled title="Set NEXT_PUBLIC_TARGET_DAO_ADDRESS">
                 View All
               </Button>
             )}
             {createProposalReady ? (
-              <Button size="sm" asChild>
+              <Button size="sm" className="w-full sm:w-auto" asChild>
                 <Link
                   href={adminProposalsUrl!}
                   target="_blank"
@@ -114,6 +114,7 @@ export function RecentProposals() {
             ) : (
               <Button
                 size="sm"
+                className="w-full sm:w-auto"
                 disabled
                 title={
                   !canCreateProposal
@@ -134,13 +135,18 @@ export function RecentProposals() {
             proposalList.map((proposal) => (
               <div
                 key={proposal.id}
-                className="border border-border rounded-lg p-4 space-y-3 dao-card-hover cursor-pointer"
+                className="border border-border rounded-lg p-4 space-y-3 dao-card-hover cursor-pointer min-w-0 overflow-hidden"
               >
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-muted-foreground">{proposal.id}</span>
-                      <Badge variant="outline" className="text-xs">
+                <div className="flex items-start justify-between min-w-0">
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <span
+                        className="text-xs text-muted-foreground font-mono truncate min-w-0 max-w-full"
+                        title={proposal.id}
+                      >
+                        {proposal.id}
+                      </span>
+                      <Badge variant="outline" className="text-xs shrink-0">
                         {proposal.category}
                       </Badge>
                       <Badge
@@ -151,7 +157,7 @@ export function RecentProposals() {
                               ? "secondary"
                               : "outline"
                         }
-                        className="text-xs"
+                        className="text-xs shrink-0"
                       >
                         {proposal.status}
                       </Badge>
@@ -159,7 +165,7 @@ export function RecentProposals() {
                     <h4 className="font-medium text-foreground">{proposal.title}</h4>
                     <p className="text-sm text-muted-foreground line-clamp-2">{proposal.description}</p>
 
-                    <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <div className="flex items-center space-x-1">
                         <User className="h-3 w-3" />
                         <span>{proposal.author}</span>

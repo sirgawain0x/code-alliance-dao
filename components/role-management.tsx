@@ -55,10 +55,15 @@ export function RoleManagement() {
 
           <div className="space-y-3">
             {profiles.map((profile) => (
-              <div key={profile.daoId} className="border border-border rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono text-muted-foreground">{profile.daoAddress}</span>
-                  <div className="flex gap-1">
+              <div key={profile.daoId} className="border border-border rounded-lg p-3 space-y-2 min-w-0 overflow-hidden">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between min-w-0">
+                  <span
+                    className="font-mono text-xs text-muted-foreground truncate min-w-0"
+                    title={profile.daoAddress}
+                  >
+                    {profile.daoAddress}
+                  </span>
+                  <div className="flex flex-wrap gap-1 shrink-0">
                     <Badge
                       className={
                         profile.isAdmin
@@ -76,7 +81,7 @@ export function RoleManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                   <div className="rounded border border-border p-2">
                     <p className="text-muted-foreground">Shares</p>
                     <p className="text-foreground font-semibold">

@@ -40,10 +40,30 @@ const DAO_CONFIGS: DaoContractConfig[] = [
     metadataAddress: "0x0498d07048e879069c0ab9acc8c4ac7f17c33a22",
     ownerReadAddress: "0xaa42c1e7e767cefcd41536aa73e03bdf16cf1c34",
   },
+  {
+    chainId: "1",
+    daoAddress: "0x5da6ae3d2cce42dd0b805b0bc3befeab0e0b9cca",
+    name: "Creative Kidz DAO",
+    nftAddress: "0x5da6ae3d2cce42dd0b805b0bc3befeab0e0b9cca",
+    auctionHouseAddress: "0xe5a84e4dee728ce28455cd1874743161a6f84167",
+  },
 ]
 
 function normalizeAddress(address?: string): string {
   return address?.toLowerCase() || ""
+}
+
+export function normalizeChainId(chainId?: string): string {
+  if (!chainId) return ""
+
+  const normalizedChainId = chainId.toLowerCase()
+  if (normalizedChainId.startsWith("0x")) {
+    const parsedChainId = parseInt(normalizedChainId, 16)
+    if (Number.isNaN(parsedChainId)) return ""
+    return parsedChainId.toString()
+  }
+
+  return normalizedChainId
 }
 
 export function getDaoContractConfig({
@@ -54,12 +74,31 @@ export function getDaoContractConfig({
   daoAddress?: string
 }): DaoContractConfig | undefined {
   const normalizedDaoAddress = normalizeAddress(daoAddress)
-  if (!chainId || !normalizedDaoAddress) return undefined
+  const normalizedChainId = normalizeChainId(chainId)
+  if (!normalizedChainId || !normalizedDaoAddress) return undefined
 
   return DAO_CONFIGS.find(
     (config) =>
-      config.chainId === chainId &&
+      config.chainId === normalizedChainId &&
       normalizeAddress(config.daoAddress) === normalizedDaoAddress
+  )
+}
+
+export function getDaoContractConfigByNft({
+  chainId,
+  nftAddress,
+}: {
+  chainId?: string
+  nftAddress?: string
+}): DaoContractConfig | undefined {
+  const normalizedNftAddress = normalizeAddress(nftAddress)
+  const normalizedChainId = normalizeChainId(chainId)
+  if (!normalizedChainId || !normalizedNftAddress) return undefined
+
+  return DAO_CONFIGS.find(
+    (config) =>
+      config.chainId === normalizedChainId &&
+      normalizeAddress(config.nftAddress) === normalizedNftAddress
   )
 }
 
